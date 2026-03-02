@@ -24,15 +24,12 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const post = await getBlogPostBySlug(slug);
-
-  if (!post) {
-    return { title: "Post Not Found | SPEC" };
-  }
-
   return {
-    title: `${post.title} | SPEC`,
-    description: post.excerpt,
+    title: "SPEC Blog | SPEC",
+    description: "SPEC 팀의 인사이트와 소식을 전합니다.",
+    alternates: {
+      canonical: `/blog/${slug}`,
+    },
   };
 }
 
