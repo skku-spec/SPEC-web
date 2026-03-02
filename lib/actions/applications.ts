@@ -325,17 +325,29 @@ export async function getApplicationByCredentials(
     return { error: "학번은 8~10자리 숫자여야 합니다." };
   }
 
-  // Use admin client to bypass RLS (SELECT is admin-only)
-  const adminClient = createAdminClient();
+  let data: { status: string; name: string; batch: string; created_at: string } | null = null;
+  let error: { code?: string; message: string } | null = null;
 
-  const { data, error } = await adminClient
-    .from("applications")
-    .select("status, name, batch, created_at")
-    .eq("email", trimmedEmail)
-    .eq("student_id", trimmedStudentId)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  try {
+    // Use admin client to bypass RLS (SELECT is admin-only)
+    const adminClient = createAdminClient();
+    const result = await adminClient
+      .from("applications")
+      .select("status, name, batch, created_at")
+      .eq("email", trimmedEmail)
+      .eq("student_id", trimmedStudentId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    data = result.data;
+    error = result.error;
+  } catch (unexpectedError) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("Unexpected error creating admin client in getApplicationByCredentials:", unexpectedError);
+    }
+    return { error: "조회 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요." };
+  }
 
   if (error) {
     if (process.env.NODE_ENV === "development") {
@@ -383,105 +395,112 @@ export async function getMyApplication(): Promise<ApplicationStatusResult> {
 }
 
 export async function getMyApplicationDetail(): Promise<MyApplicationDetailResult> {
-  const supabase = await createClient();
+  try {
+    const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return { error: "로그인이 필요합니다." };
-  }
-
-  const adminClient = createAdminClient();
-  const { data, error } = await adminClient
-    .from("applications")
-    .select(MY_APPLICATION_DETAIL_SELECT)
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (error) {
-    if (process.env.NODE_ENV === "development") {
-      console.error("Error fetching own application:", error);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return { error: "로그인이 필요합니다." };
     }
-    return { error: "조회 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요." };
-  }
 
-  if (data) {
+    const adminClient = createAdminClient();
+    const { data, error } = await adminClient
+      .from("applications")
+      .select(MY_APPLICATION_DETAIL_SELECT)
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error fetching own application:", error);
+      }
+      return { error: "조회 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요." };
+    }
+
+    if (data) {
+      return {
+        success: true,
+        application: {
+          id: data.id,
+          status: data.status,
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          student_id: data.student_id,
+          major: data.major,
+          grade: data.grade,
+          enrollment_status: data.enrollment_status,
+          batch: data.batch,
+          introduction: data.introduction,
+          vision: data.vision,
+          startup_idea: data.startup_idea,
+          portfolio_url: data.portfolio_url,
+          experience_extra: data.experience_extra,
+          additional_comments: data.additional_comments,
+          created_at: data.created_at,
+        },
+      };
+    }
+
+    const userEmail = user.email?.trim().toLowerCase();
+    if (!userEmail) {
+      return { success: true };
+    }
+
+    const { data: emailMatched, error: emailMatchError } = await adminClient
+      .from("applications")
+      .select(MY_APPLICATION_DETAIL_SELECT)
+      .eq("email", userEmail)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (emailMatchError) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error fetching own application by email fallback:", emailMatchError);
+      }
+      return { error: "조회 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요." };
+    }
+
+    if (!emailMatched) {
+      return { success: true };
+    }
+
+    if (!emailMatched.user_id) {
+      await adminClient
+        .from("applications")
+        .update({ user_id: user.id })
+        .eq("id", emailMatched.id);
+    }
+
     return {
       success: true,
       application: {
-        id: data.id,
-        status: data.status,
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        student_id: data.student_id,
-        major: data.major,
-        grade: data.grade,
-        enrollment_status: data.enrollment_status,
-        batch: data.batch,
-        introduction: data.introduction,
-        vision: data.vision,
-        startup_idea: data.startup_idea,
-        portfolio_url: data.portfolio_url,
-        experience_extra: data.experience_extra,
-        additional_comments: data.additional_comments,
-        created_at: data.created_at,
+        id: emailMatched.id,
+        status: emailMatched.status,
+        name: emailMatched.name,
+        email: emailMatched.email,
+        phone: emailMatched.phone,
+        student_id: emailMatched.student_id,
+        major: emailMatched.major,
+        grade: emailMatched.grade,
+        enrollment_status: emailMatched.enrollment_status,
+        batch: emailMatched.batch,
+        introduction: emailMatched.introduction,
+        vision: emailMatched.vision,
+        startup_idea: emailMatched.startup_idea,
+        portfolio_url: emailMatched.portfolio_url,
+        experience_extra: emailMatched.experience_extra,
+        additional_comments: emailMatched.additional_comments,
+        created_at: emailMatched.created_at,
       },
     };
-  }
-
-  const userEmail = user.email?.trim().toLowerCase();
-  if (!userEmail) {
-    return { success: true };
-  }
-
-  const { data: emailMatched, error: emailMatchError } = await adminClient
-    .from("applications")
-    .select(MY_APPLICATION_DETAIL_SELECT)
-    .eq("email", userEmail)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (emailMatchError) {
+  } catch (unexpectedError) {
     if (process.env.NODE_ENV === "development") {
-      console.error("Error fetching own application by email fallback:", emailMatchError);
+      console.error("Unexpected error in getMyApplicationDetail:", unexpectedError);
     }
     return { error: "조회 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요." };
   }
-
-  if (!emailMatched) {
-    return { success: true };
-  }
-
-  if (!emailMatched.user_id) {
-    await adminClient
-      .from("applications")
-      .update({ user_id: user.id })
-      .eq("id", emailMatched.id);
-  }
-
-  return {
-    success: true,
-    application: {
-      id: emailMatched.id,
-      status: emailMatched.status,
-      name: emailMatched.name,
-      email: emailMatched.email,
-      phone: emailMatched.phone,
-      student_id: emailMatched.student_id,
-      major: emailMatched.major,
-      grade: emailMatched.grade,
-      enrollment_status: emailMatched.enrollment_status,
-      batch: emailMatched.batch,
-      introduction: emailMatched.introduction,
-      vision: emailMatched.vision,
-      startup_idea: emailMatched.startup_idea,
-      portfolio_url: emailMatched.portfolio_url,
-      experience_extra: emailMatched.experience_extra,
-      additional_comments: emailMatched.additional_comments,
-      created_at: emailMatched.created_at,
-    },
-  };
 }

@@ -348,6 +348,18 @@ describe("getApplicationByCredentials", () => {
     });
   });
 
+  it("returns graceful error when admin client creation throws", async () => {
+    mockedCreateAdminClient.mockImplementation(() => {
+      throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY");
+    });
+
+    const result = await getApplicationByCredentials("hong@skku.edu", "20240001");
+
+    expect(result).toEqual({
+      error: "조회 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+    });
+  });
+
   it("returns rate limit error when limited", async () => {
     mockedRateLimit.mockReturnValue({
       allowed: false,
@@ -440,6 +452,27 @@ describe("getMyApplication", () => {
     const result = await getMyApplication();
 
     expect(result).toEqual({ success: true });
+  });
+
+  it("returns graceful error when admin client creation throws", async () => {
+    const client = {
+      auth: {
+        getUser: vi
+          .fn()
+          .mockResolvedValue({ data: { user: { id: "user-1", email: "hong@skku.edu" } } }),
+      },
+      from: vi.fn(),
+    };
+    mockedCreateClient.mockResolvedValue(client as never);
+    mockedCreateAdminClient.mockImplementation(() => {
+      throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY");
+    });
+
+    const result = await getMyApplication();
+
+    expect(result).toEqual({
+      error: "조회 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+    });
   });
 
   it("returns fallback application by email and links user_id", async () => {
