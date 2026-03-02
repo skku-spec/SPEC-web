@@ -127,6 +127,7 @@ export interface CompanyDetail {
 
 import { createClient } from "@/lib/supabase/server";
 import type { Database, MemberType } from "@/lib/supabase/types";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 import {
   roleCategories,
@@ -219,6 +220,24 @@ type PostRow = Database["public"]["Tables"]["posts"]["Row"];
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
 type TagRow = Database["public"]["Tables"]["tags"]["Row"];
 
+function createReadonlySupabaseClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!url || !anonKey) {
+    throw new Error(
+      "Missing Supabase environment variables. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY."
+    );
+  }
+
+  return createSupabaseClient<Database>(url, anonKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
+}
+
 function formatBlogDate(dateString: string): string {
   return new Date(dateString).toLocaleDateString("ko-KR", {
     year: "numeric",
@@ -235,7 +254,7 @@ async function getTagsByPostIds(
     return tagsByPostId;
   }
 
-  const supabase = await createClient();
+  const supabase = createReadonlySupabaseClient();
   const { data: postTags, error: postTagsError } = await supabase
     .from("post_tags")
     .select("post_id,tag_id")
@@ -274,7 +293,7 @@ async function mapRowsToBlogPosts(rows: PostRow[]): Promise<BlogPost[]> {
     return [];
   }
 
-  const supabase = await createClient();
+  const supabase = createReadonlySupabaseClient();
   const authorIds = [...new Set(rows.map((row) => row.author_id))];
 
   const [profilesResult, tagsByPostId] = await Promise.all([
@@ -534,7 +553,7 @@ export async function getBlogPosts(
   tag?: string,
   type?: "news" | "blog"
 ): Promise<BlogPost[]> {
-  const supabase = await createClient();
+  const supabase = createReadonlySupabaseClient();
 
   let postIdsByTag: string[] | null = null;
   if (tag) {
@@ -592,7 +611,7 @@ export async function getBlogPosts(
 export async function getBlogPostBySlug(
   slug: string
 ): Promise<BlogPost | undefined> {
-  const supabase = await createClient();
+  const supabase = createReadonlySupabaseClient();
   const rowResult = await supabase
     .from("posts")
     .select("*")
@@ -614,7 +633,7 @@ export async function getBlogPostBySlug(
 }
 
 export async function getBlogTags(): Promise<TagInfo[]> {
-  const supabase = await createClient();
+  const supabase = createReadonlySupabaseClient();
   const result = await supabase.from("tags").select("slug,label");
   const data = handleQueryResult(result, "Failed to fetch blog tags", []);
 
@@ -625,7 +644,7 @@ export async function getBlogTags(): Promise<TagInfo[]> {
 }
 
 export async function getTagLabel(slug: string): Promise<string> {
-  const supabase = await createClient();
+  const supabase = createReadonlySupabaseClient();
   const dataResult = await supabase
     .from("tags")
     .select("label")
@@ -644,7 +663,7 @@ export async function getRelatedPosts(
   currentSlug: string,
   limit?: number
 ): Promise<BlogPost[]> {
-  const supabase = await createClient();
+  const supabase = createReadonlySupabaseClient();
   const cappedLimit = limit ?? 3;
 
   const currentPostResult = await supabase
