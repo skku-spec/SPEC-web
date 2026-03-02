@@ -393,7 +393,7 @@ values
   ('윤채빈', 'yun-chaebin', '경영학과', '1기', null, array['1기 러너'], '러너', null, '{}', null, null),
   ('임시우', 'lim-siwoo', '글로벌경제학과', '1기', null, array['1기 러너'], '러너', null, '{}', null, null),
   ('장진우', 'jang-jinwoo', '소프트웨어학과', '1기', null, array['1기 러너'], '러너', null, '{}', null, null),
-  ('황정민', 'hwang-jungmin', '글로벌바이오메디컬공학과', '1기', null, array['1기 러너'], '러너', null, '{}', null, null),
+  ('황정인', 'hwang-jungin', '글로벌바이오메디컬공학과', '1기', null, array['1기 러너'], '러너', null, '{}', null, null),
   (
     '이송목',
     'lee-songmok',
@@ -404,7 +404,7 @@ values
     '프러너',
     'Community Lead',
     array['Community'],
-    'https://images.unsplash.com/photo-1463453091185-61582044d556?w=300&h=300&fit=crop&crop=face',
+    null,
     $bio$SPEC 4기 Community Lead.
 멤버 간 네트워킹과 커뮤니티 활성화를 담당합니다.$bio$
   ),
@@ -420,7 +420,7 @@ values
     '프러너',
     'Managing Lead | Operations · Engineering · Partnerships',
     array['Operations', 'Engineering', 'Partnerships'],
-    'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=300&h=300&fit=crop&crop=face',
+    null,
     $bio$SPEC 4기 Managing Lead.
 Operations, Engineering, Partnerships 팀에서 활동하며 학회 전반의 운영과 전략을 총괄합니다.$bio$
   ),
@@ -438,7 +438,7 @@ Operations, Engineering, Partnerships 팀에서 활동하며 학회 전반의 �
     '프러너',
     'Design Lead | Engineering',
     array['Design', 'Engineering'],
-    'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=300&fit=crop&crop=face',
+    null,
     $bio$SPEC 4기 Design Lead.
 Engineering 팀에서도 활동하며 브랜드 디자인과 개발을 병행합니다.$bio$
   ),
@@ -452,7 +452,7 @@ Engineering 팀에서도 활동하며 브랜드 디자인과 개발을 병행합
     '프러너',
     'Design | Contents',
     array['Design', 'Contents'],
-    'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=300&h=300&fit=crop&crop=face',
+    null,
     $bio$SPEC 4기 Preneur.
 Design과 Contents 팀에서 활동하며 시각 디자인과 콘텐츠 제작을 담당합니다.$bio$
   ),
@@ -469,7 +469,7 @@ Design과 Contents 팀에서 활동하며 시각 디자인과 콘텐츠 제작�
     '프러너',
     'Managing Lead | Engineering · Contents',
     array['Engineering', 'Contents'],
-    'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=face',
+    null,
     $bio$SPEC 4기 Managing Lead.
 Engineering과 Contents 팀에서 활동하며 기술 및 콘텐츠 방향을 이끕니다.$bio$
   ),
@@ -484,7 +484,7 @@ Engineering과 Contents 팀에서 활동하며 기술 및 콘텐츠 방향을 �
     '프러너',
     'Contents Lead | Operations · Engineering · Partnerships',
     array['Contents', 'Operations', 'Engineering', 'Partnerships'],
-    'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=300&h=300&fit=crop&crop=face',
+    null,
     $bio$SPEC 4기 Contents Lead.
 Operations, Engineering, Partnerships 팀에서도 활동하며 다방면에서 기여합니다.$bio$
   ),
@@ -498,7 +498,7 @@ Operations, Engineering, Partnerships 팀에서도 활동하며 다방면에서 
     '프러너',
     'Partnerships Lead | Operations',
     array['Partnerships', 'Operations'],
-    'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=300&h=300&fit=crop&crop=face',
+    null,
     $bio$SPEC 4기 Partnerships Lead.
 Operations 팀에서도 활동하며 대외 협력과 운영을 담당합니다.$bio$
   ),
@@ -513,7 +513,7 @@ Operations 팀에서도 활동하며 대외 협력과 운영을 담당합니다.
     '프러너',
     'Engineering Lead | Design',
     array['Engineering', 'Design'],
-    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face',
+    null,
     $bio$SPEC 4기 Engineering Lead.
 Design 팀에서도 활동하며 기술 개발과 디자인을 병행합니다.$bio$
   ),
@@ -527,7 +527,7 @@ Design 팀에서도 활동하며 기술 개발과 디자인을 병행합니다.$
     '프러너',
     'Operations',
     array['Operations'],
-    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop&crop=face',
+    null,
     $bio$SPEC 4기 Preneur.
 Operations 팀에서 프로그램 운영을 지원합니다.$bio$
   ),
@@ -543,7 +543,7 @@ Operations 팀에서 프로그램 운영을 지원합니다.$bio$
     '프러너',
     'Operations | Engineering | Partnerships',
     array['Operations', 'Engineering', 'Partnerships'],
-    'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=300&h=300&fit=crop&crop=face',
+    null,
     $bio$SPEC 4기 Preneur.
 Operations, Engineering, Partnerships 세 팀에서 활동합니다.$bio$
   ),
@@ -557,7 +557,7 @@ Operations, Engineering, Partnerships 세 팀에서 활동합니다.$bio$
     '프러너',
     'Operations Lead',
     array['Operations'],
-    'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&h=300&fit=crop&crop=face',
+    null,
     $bio$SPEC 4기 Operations Lead.
 프로그램 전체 운영과 데모데이 기획을 담당합니다.$bio$
   )
