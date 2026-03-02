@@ -16,15 +16,7 @@ import {
 import InteractiveSection from "./InteractiveSection";
 import PostAuthorActions from "./PostAuthorActions";
 
-export const revalidate = 60;
-
-export const dynamicParams = true;
-
-export async function generateStaticParams() {
-  // Posts are fetched on-demand with ISR (revalidate = 60)
-  // Cannot call Supabase at build time (requires request context)
-  return [];
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -113,10 +105,16 @@ export default async function BlogPostPage({
     // Comments/reactions failure should not crash the page
   }
 
-  const tagLabelBySlug = new Map(tags.map((tag) => [tag.slug, tag.label]));
-  const sanitizedContent = DOMPurify.sanitize(post.content)
+  const tagLabelBySlug = new Map((tags ?? []).map((tag) => [tag.slug, tag.label]));
+  const sanitizedContent = DOMPurify.sanitize(post.content ?? "")
     .replace(/<img(?![^>]*\bloading=)/gi, '<img loading="lazy"')
     .replace(/<img(?![^>]*\bdecoding=)/gi, '<img decoding="async"');
+  const authorName = post.author?.trim() || "SPEC";
+  const authorInitials = authorName
+    .split(" ")
+    .map((name) => name[0] ?? "")
+    .join("")
+    .slice(0, 2) || "S";
 
   return (
     <section className="min-h-screen pb-24">
@@ -137,14 +135,11 @@ export default async function BlogPostPage({
 
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#FF6C0F] font-['Pretendard',sans-serif] text-[14px] font-semibold text-white">
-                {post.author
-                  .split(" ")
-                  .map((name) => name[0])
-                  .join("")}
+                {authorInitials}
               </div>
               <div>
                 <p className="font-['Pretendard',sans-serif] text-[14px] font-medium text-[#16140f]">
-                  {post.author}
+                  {authorName}
                 </p>
                 <p className="font-['Pretendard',sans-serif] text-[13px] text-[#6b6b5e]">
                   {post.date}
@@ -178,7 +173,7 @@ export default async function BlogPostPage({
               Tags
             </p>
             <div className="flex flex-wrap gap-2">
-              {post.tags.map((tag) => (
+              {(post.tags ?? []).map((tag) => (
                 <Link
                   key={tag}
                   href={`/blog/tag/${tag}`}
