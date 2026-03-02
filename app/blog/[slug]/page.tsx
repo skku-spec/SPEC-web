@@ -76,12 +76,21 @@ export default async function BlogPostPage({
 }) {
   const { slug } = await params;
 
-  const [post, related, tags, currentUser] = await Promise.all([
+  const [post, related, tags] = await Promise.all([
     getBlogPostBySlug(slug),
     getRelatedPosts(slug, 3),
     getBlogTags(),
-    getCurrentUser(),
   ]);
+
+  let currentUser: Awaited<ReturnType<typeof getCurrentUser>> = {
+    user: null,
+    profile: null,
+  };
+  try {
+    currentUser = await getCurrentUser();
+  } catch {
+    currentUser = { user: null, profile: null };
+  }
 
   if (!post) {
     notFound();
