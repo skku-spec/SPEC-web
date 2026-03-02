@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import DOMPurify from "isomorphic-dompurify";
 
 import "./blog-post-content.css";
 
@@ -112,7 +111,7 @@ export default async function BlogPostPage({
   }
 
   const tagLabelBySlug = new Map((tags ?? []).map((tag) => [tag.slug, tag.label]));
-  const sanitizedContent = DOMPurify.sanitize(post.content ?? "")
+  const sanitizedContent = (post.content ?? "")
     .replace(/<img(?![^>]*\bloading=)/gi, '<img loading="lazy"')
     .replace(/<img(?![^>]*\bdecoding=)/gi, '<img decoding="async"');
   const authorName = post.author?.trim() || "SPEC";
