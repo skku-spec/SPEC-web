@@ -4,7 +4,8 @@ test("login page renders core auth controls", async ({ page }) => {
   await page.goto("/login");
 
   await expect(page.getByRole("heading", { name: "Log in to access the SPEC Application" })).toBeVisible();
-  await expect(page.getByLabel("Username or email")).toBeVisible();
+  await expect(page.getByLabel("Email")).toBeVisible();
+  await expect(page.getByPlaceholder("you@example.com")).toBeVisible();
   await expect(page.getByLabel("Password")).toBeVisible();
   await expect(page.getByRole("button", { name: "Log In" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Create an account." })).toBeVisible();
