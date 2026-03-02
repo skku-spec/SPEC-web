@@ -18,7 +18,9 @@ for (const route of protectedRoutes) {
         page.getByRole("heading", { name: /Log in to access the SPEC Application/i }),
       ).toBeVisible();
     } else {
-      await expect(page.getByRole("heading", { name: /EXECUTION Over EVERYTHING\./i })).toBeVisible();
+      await expect(
+        page.getByRole("heading", { name: "EXECUTION Over EVERYTHING.", exact: true }),
+      ).toBeVisible();
     }
   });
 }

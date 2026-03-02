@@ -11,7 +11,7 @@ const publicPages: PublicPageCase[] = [
   {
     name: "home page",
     path: "/",
-    heading: /EXECUTION Over EVERYTHING\./i,
+    heading: /EXECUTION Over EVERYTHING\./,
     title: /SKKU SPEC \| 성균관대학교 창업 학회/i,
   },
   {
@@ -34,11 +34,6 @@ const publicPages: PublicPageCase[] = [
     name: "launches page",
     path: "/launches",
     heading: /Launch SPEC/i,
-  },
-  {
-    name: "apply page",
-    path: "/apply",
-    heading: /Apply to SPEC/i,
   },
 ];
 
@@ -67,7 +62,13 @@ for (const pageCase of publicPages) {
       await expect(page).toHaveTitle(pageCase.title);
     }
 
-    await expect(page.getByRole("heading", { name: pageCase.heading })).toBeVisible();
+    if (pageCase.path === "/") {
+      await expect(
+        page.getByRole("heading", { name: "EXECUTION Over EVERYTHING.", exact: true }),
+      ).toBeVisible();
+    } else {
+      await expect(page.getByRole("heading", { name: pageCase.heading })).toBeVisible();
+    }
 
     await page.waitForLoadState("networkidle");
     expect(consoleErrors).toEqual([]);

@@ -115,33 +115,6 @@ function makeMaybeSingleChain(result: {
   return chain;
 }
 
-function makeAdminFallbackClient(options: {
-  data?: Record<string, unknown> | null;
-  error?: { message?: string } | null;
-  updateError?: { message?: string } | null;
-}) {
-  const selectChain = makeMaybeSingleChain({
-    data: (options.data as Record<string, string>) ?? null,
-    error: options.error ?? null,
-  });
-
-  const updateEq = vi
-    .fn()
-    .mockResolvedValue({ error: options.updateError ?? null });
-  const update = vi.fn(() => ({ eq: updateEq }));
-
-  const from = vi
-    .fn()
-    .mockReturnValueOnce(selectChain)
-    .mockReturnValue({ update });
-
-  return {
-    adminClient: { from },
-    update,
-    updateEq,
-  };
-}
-
 const mockedCreateClient = mockedDeps.createClient;
 const mockedCreateAdminClient = mockedDeps.createAdminClient;
 const mockedRateLimit = mockedDeps.rateLimit;
@@ -394,12 +367,6 @@ describe("getMyApplication", () => {
   });
 
   it("returns application data when user has application", async () => {
-    const appData = {
-      status: "accepted",
-      name: "홍길동",
-      batch: "4",
-      created_at: "2026-01-01T00:00:00Z",
-    };
     const client = {
       auth: {
         getUser: vi.fn().mockResolvedValue({ data: { user: { id: "user-1", email: "hong@skku.edu" } } }),
@@ -408,53 +375,52 @@ describe("getMyApplication", () => {
     };
     mockedCreateClient.mockResolvedValue(client as never);
 
-    const detailData = {
+    const summaryData = {
       id: "app-1",
       user_id: "user-1",
-      ...appData,
+      status: "accepted",
+      name: "홍길동",
+      batch: "4",
+      created_at: "2026-01-01T00:00:00Z",
       email: "hong@skku.edu",
-      phone: null,
-      student_id: "20240001",
-      major: "컴퓨터공학과",
-      introduction: "intro",
-      vision: "vision",
-      startup_idea: "idea",
-      portfolio_url: "https://example.com",
-      experience_extra: null,
-      equip: false,
-      photo_exp: false,
-      design_exp: false,
-      figma: false,
-      illustrator: false,
     };
-    const { adminClient } = makeAdminFallbackClient({ data: detailData });
-    mockedCreateAdminClient.mockReturnValue(adminClient as never);
+    const firstSelect = makeMaybeSingleChain({ data: summaryData as unknown as Record<string, string> });
+    const from = vi.fn().mockReturnValue(firstSelect);
+    mockedCreateAdminClient.mockReturnValue({ from } as never);
 
     const result = await getMyApplication();
 
-    expect(result).toEqual({ success: true, application: appData });
+    expect(result).toEqual({
+      success: true,
+      application: {
+        status: "accepted",
+        name: "홍길동",
+        batch: "4",
+        created_at: "2026-01-01T00:00:00Z",
+      },
+    });
     expect(mockedCreateAdminClient).toHaveBeenCalledTimes(1);
   });
 
   it("returns success without application when user has no application", async () => {
-    const chain = makeMaybeSingleChain({ data: null });
     const client = {
       auth: {
         getUser: vi.fn().mockResolvedValue({ data: { user: { id: "user-1" } } }),
       },
-      from: vi.fn(() => chain),
+      from: vi.fn(),
     };
     mockedCreateClient.mockResolvedValue(client as never);
 
-    const { adminClient } = makeAdminFallbackClient({ data: null });
-    mockedCreateAdminClient.mockReturnValue(adminClient as never);
+    const firstSelect = makeMaybeSingleChain({ data: null });
+    const from = vi.fn().mockReturnValue(firstSelect);
+    mockedCreateAdminClient.mockReturnValue({ from } as never);
 
     const result = await getMyApplication();
 
     expect(result).toEqual({ success: true });
   });
 
-  it("returns graceful error when admin client creation throws", async () => {
+  it("returns success without application when admin client creation throws", async () => {
     const client = {
       auth: {
         getUser: vi
@@ -470,20 +436,17 @@ describe("getMyApplication", () => {
 
     const result = await getMyApplication();
 
-    expect(result).toEqual({
-      error: "조회 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
-    });
+    expect(result).toEqual({ success: true });
   });
 
   it("returns fallback application by email and links user_id", async () => {
-    const chain = makeMaybeSingleChain({ data: null });
     const client = {
       auth: {
         getUser: vi
           .fn()
           .mockResolvedValue({ data: { user: { id: "user-1", email: "hong@skku.edu" } } }),
       },
-      from: vi.fn(() => chain),
+      from: vi.fn(),
     };
     mockedCreateClient.mockResolvedValue(client as never);
 
@@ -495,19 +458,6 @@ describe("getMyApplication", () => {
       batch: "4",
       created_at: "2026-01-01T00:00:00Z",
       email: "hong@skku.edu",
-      phone: null,
-      student_id: "20240001",
-      major: "컴퓨터공학과",
-      introduction: "intro",
-      vision: "vision",
-      startup_idea: "idea",
-      portfolio_url: "https://example.com",
-      experience_extra: null,
-      equip: false,
-      photo_exp: false,
-      design_exp: false,
-      figma: false,
-      illustrator: false,
     };
     const firstSelect = makeMaybeSingleChain({ data: null });
     const secondSelect = makeMaybeSingleChain({ data: fallbackData as unknown as Record<string, string> });
@@ -538,14 +488,13 @@ describe("getMyApplication", () => {
   });
 
   it("returns fallback application by email without relinking when already linked", async () => {
-    const chain = makeMaybeSingleChain({ data: null });
     const client = {
       auth: {
         getUser: vi
           .fn()
           .mockResolvedValue({ data: { user: { id: "user-1", email: "hong@skku.edu" } } }),
       },
-      from: vi.fn(() => chain),
+      from: vi.fn(),
     };
     mockedCreateClient.mockResolvedValue(client as never);
 
@@ -557,19 +506,6 @@ describe("getMyApplication", () => {
       batch: "4",
       created_at: "2026-01-01T00:00:00Z",
       email: "hong@skku.edu",
-      phone: null,
-      student_id: "20240001",
-      major: "컴퓨터공학과",
-      introduction: "intro",
-      vision: "vision",
-      startup_idea: "idea",
-      portfolio_url: "https://example.com",
-      experience_extra: null,
-      equip: false,
-      photo_exp: false,
-      design_exp: false,
-      figma: false,
-      illustrator: false,
     };
     const firstSelect = makeMaybeSingleChain({ data: null });
     const secondSelect = makeMaybeSingleChain({ data: fallbackData as unknown as Record<string, string> });

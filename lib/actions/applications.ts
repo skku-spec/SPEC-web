@@ -294,6 +294,9 @@ export type MyApplicationDetailResult = {
 const MY_APPLICATION_DETAIL_SELECT =
   "id, user_id, status, name, email, phone, student_id, major, grade, enrollment_status, batch, introduction, vision, startup_idea, portfolio_url, experience_extra, additional_comments, created_at";
 
+const MY_APPLICATION_SUMMARY_SELECT =
+  "id, user_id, status, name, batch, created_at, email";
+
 const STATUS_CHECK_RATE_LIMIT = {
   maxRequests: 5,
   windowMs: 10 * 60 * 1000, // 10 minutes
@@ -374,24 +377,99 @@ export async function getApplicationByCredentials(
 // ── Get My Application (Logged-in User) ──────────────────────────────
 
 export async function getMyApplication(): Promise<ApplicationStatusResult> {
-  const detailResult = await getMyApplicationDetail();
-  if (detailResult.error) {
-    return { error: detailResult.error };
-  }
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  if (detailResult.success && detailResult.application) {
+    if (!user) {
+      return { error: "로그인이 필요합니다." };
+    }
+
+    let adminClient: ReturnType<typeof createAdminClient>;
+    try {
+      adminClient = createAdminClient();
+    } catch (unexpectedError) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("Unexpected error creating admin client in getMyApplication:", unexpectedError);
+      }
+      return { success: true };
+    }
+
+    const { data, error } = await adminClient
+      .from("applications")
+      .select(MY_APPLICATION_SUMMARY_SELECT)
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error fetching own application summary:", error);
+      }
+      return { success: true };
+    }
+
+    if (data) {
+      return {
+        success: true,
+        application: {
+          status: data.status,
+          name: data.name,
+          batch: data.batch,
+          created_at: data.created_at,
+        },
+      };
+    }
+
+    const userEmail = user.email?.trim().toLowerCase();
+    if (!userEmail) {
+      return { success: true };
+    }
+
+    const { data: emailMatched, error: emailMatchError } = await adminClient
+      .from("applications")
+      .select(MY_APPLICATION_SUMMARY_SELECT)
+      .eq("email", userEmail)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (emailMatchError) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error fetching own application summary by email fallback:", emailMatchError);
+      }
+      return { success: true };
+    }
+
+    if (!emailMatched) {
+      return { success: true };
+    }
+
+    if (!emailMatched.user_id) {
+      await adminClient
+        .from("applications")
+        .update({ user_id: user.id })
+        .eq("id", emailMatched.id);
+    }
+
     return {
       success: true,
       application: {
-        status: detailResult.application.status,
-        name: detailResult.application.name,
-        batch: detailResult.application.batch,
-        created_at: detailResult.application.created_at,
+        status: emailMatched.status,
+        name: emailMatched.name,
+        batch: emailMatched.batch,
+        created_at: emailMatched.created_at,
       },
     };
+  } catch (unexpectedError) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("Unexpected error in getMyApplication:", unexpectedError);
+    }
+    return { success: true };
   }
-
-  return { success: true };
 }
 
 export async function getMyApplicationDetail(): Promise<MyApplicationDetailResult> {

@@ -62,6 +62,7 @@ const alumni = [
 
 export default function AlumniGrid() {
   const sectionRef = useRef<HTMLDivElement>(null);
+  const marqueeRef = useRef<HTMLDivElement>(null);
   const isUserScrollingRef = useRef(false);
   const scrollRafRef = useRef(0);
   const reducedMotionInBrowser =
@@ -69,7 +70,6 @@ export default function AlumniGrid() {
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const [isVisible, setIsVisible] = useState(false);
   const [isMarqueeRunning, setIsMarqueeRunning] = useState(false);
-  const [isUserScrolling, setIsUserScrolling] = useState(false);
 
   useEffect(() => {
     const el = sectionRef.current;
@@ -99,12 +99,19 @@ export default function AlumniGrid() {
   useEffect(() => {
     let idleTimerId = 0;
 
+    const setScrollingStyle = (scrolling: boolean) => {
+      const el = marqueeRef.current;
+      if (!el) return;
+      el.style.animationPlayState = scrolling ? 'paused' : 'running';
+      el.style.willChange = scrolling ? 'auto' : 'transform';
+    };
+
     const processScroll = () => {
       scrollRafRef.current = 0;
 
       if (!isUserScrollingRef.current) {
         isUserScrollingRef.current = true;
-        setIsUserScrolling(true);
+        setScrollingStyle(true);
       }
 
       if (idleTimerId) {
@@ -114,7 +121,7 @@ export default function AlumniGrid() {
       idleTimerId = window.setTimeout(() => {
         if (isUserScrollingRef.current) {
           isUserScrollingRef.current = false;
-          setIsUserScrolling(false);
+          setScrollingStyle(false);
         }
       }, 220);
     };
@@ -260,17 +267,17 @@ export default function AlumniGrid() {
       {/* ── Mobile: horizontal marquee (<md) ── */}
       <div className="md:hidden overflow-hidden px-6">
         <div
+          ref={marqueeRef}
           className="flex w-max"
           style={{
             animation:
               !reducedMotionInBrowser && isVisible && isMarqueeRunning
                 ? 'alumni-marquee 22s linear infinite'
                 : 'none',
-            animationPlayState: isUserScrolling ? 'paused' : 'running',
             opacity: reducedMotionInBrowser || isVisible ? 1 : 0,
             transition: 'opacity 0.3s ease',
             willChange:
-              !reducedMotionInBrowser && isVisible && isMarqueeRunning && !isUserScrolling
+              !reducedMotionInBrowser && isVisible && isMarqueeRunning
                 ? 'transform'
                 : 'auto',
             backfaceVisibility: 'hidden',

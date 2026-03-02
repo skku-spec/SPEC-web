@@ -1,0 +1,56 @@
+Domain,Route Path,File Path,User Type,Auth Required,Entry Point,Expected Outcome
+LANDING,/,./app/page.tsx,All,No,Home link / Direct,View hero and features
+AUTH,/login,./app/login/page.tsx,Unauthenticated,No,Navbar or apply redirect,Authenticate user
+AUTH,/signup,./app/signup/page.tsx,Unauthenticated,No,Navbar dropdown,Create account
+AUTH,/forgot-password,./app/forgot-password/page.tsx,Unauthenticated,No,Login form,Reset password
+AUTH,/verify,./app/verify/page.tsx,Session required,Session/token,Auth flow,Verify email
+APPLY,/apply,./app/apply/page.tsx,Authenticated,Yes,Navbar banner,View application status or start new
+APPLY,/apply/form,./app/apply/form/page.tsx,Member,Yes,/apply button,Submit 4-step application
+APPLY,/apply/status,./app/apply/status/page.tsx,Authenticated,Yes,/apply link,Check application status
+APPLY,/apply/submitted,./app/apply/submitted/page.tsx,Authenticated,Yes,Auto-redirect from form,Confirmation view
+APPLY,/apply/dropbox,./app/apply/dropbox/page.tsx,Authenticated,Yes,Application flow,File upload option
+BLOG,/blog,./app/blog/page.tsx,All,No,Navbar link,View blog posts with tags
+BLOG,/blog/[slug],./app/blog/[slug]/page.tsx,All,No,/blog click,View blog post detail
+BLOG,/blog/tag/[tag],./app/blog/tag/[tag]/page.tsx,All,No,/blog tag filter,View filtered posts
+BLOG,/blog/write,./app/blog/write/page.tsx,Admin,Yes (admin),/blog button,Create new blog post
+BLOG,/blog/edit/[slug],./app/blog/edit/[slug]/page.tsx,Admin,Yes (admin),/blog/[slug] edit,Edit existing post
+JOBS,/jobs,./app/jobs/page.tsx,All,No,Navbar link,View job postings
+JOBS,/jobs/location/[city],./app/jobs/location/[city]/page.tsx,All,No,/jobs filter,View jobs by location
+JOBS,/jobs/role/[role],./app/jobs/role/[role]/page.tsx,All,No,/jobs filter,View jobs by role
+PEOPLE,/people,./app/people/page.tsx,All,No,Navbar dropdown,View team directory
+PEOPLE,/people/[slug],./app/people/[slug]/page.tsx,All,No,/people click,View member profile
+LIBRARY,/library,./app/library/page.tsx,All,No,Navbar or direct,Browse resources
+LIBRARY,/library/[slug],./app/library/[slug]/page.tsx,All,No,/library click,View resource detail
+LIBRARY,/library/search,./app/library/search/page.tsx,All,No,/library search,Search resources
+ADMIN,/admin,./app/admin/page.tsx,Admin,Yes (admin),Navbar dropdown,Admin dashboard
+ADMIN,/admin/users,./app/admin/users/page.tsx,Admin,Yes (admin),/admin nav,Manage users
+ADMIN,/admin/applications,./app/admin/applications/page.tsx,Admin,Yes (admin),/admin nav,Manage applications
+ADMIN,/admin/posts,./app/admin/posts/page.tsx,Admin,Yes (admin),/admin nav,Manage posts
+ADMIN,/admin/posts/new,./app/admin/posts/new/page.tsx,Admin,Yes (admin),/admin/posts button,Create post
+ADMIN,/admin/jobs,./app/admin/jobs/page.tsx,Admin,Yes (admin),/admin nav,Manage jobs
+ADMIN,/admin/library,./app/admin/library/page.tsx,Admin,Yes (admin),/admin nav,Manage library
+ADMIN,/admin/launches,./app/admin/launches/page.tsx,Admin,Yes (admin),/admin nav,Manage launches
+DASHBOARD,/dashboard,./app/dashboard/page.tsx,Member,Yes,Navbar or apply,Redirect to /dashboard/applications
+DASHBOARD,/dashboard/applications,./app/dashboard/applications/page.tsx,Member,Yes,Navbar or /dashboard,View user's applications
+DASHBOARD,/dashboard/applications/[id],./app/dashboard/applications/[id]/page.tsx,Member,Yes,/dashboard click,View application detail
+PROFILE,/profile,./app/profile/page.tsx,Authenticated,Yes,Navbar dropdown,Edit user profile
+ABOUT,/about,./app/about/page.tsx,All,No,Navbar dropdown,Learn about SPEC
+CURRICULUM,/curriculum,./app/curriculum/page.tsx,All,No,Navbar dropdown,View 30-week roadmap
+FAQ,/faq,./app/faq/page.tsx,All,No,Navbar or app flow,View FAQs
+DEMODAY,/demoday,./app/demoday/page.tsx,All,No,Navbar or direct,View DemoDay info
+DEMODAY,/demoday/faq,./app/demoday/faq/page.tsx,All,No,/demoday link,View DemoDay FAQs
+DEMODAY,/demoday/tips,./app/demoday/tips/page.tsx,All,No,/demoday link,View pitch tips
+LAUNCHES,/launches,./app/launches/page.tsx,All,No,Navbar or direct,View batch history
+COMPANIES,/companies,./app/companies/page.tsx,All,No,Navbar dropdown,View company directory
+COMPANIES,/companies/[slug],./app/companies/[slug]/page.tsx,All,No,/companies click,View company detail
+FOUNDERS,/founders,./app/founders/page.tsx,All,No,Navbar dropdown,View founder profiles
+PARTNERS,/partners,./app/partners/page.tsx,All,No,Navbar link,View partners
+PRESS,/press,./app/press/page.tsx,All,No,Footer link,View press coverage
+LEGAL,/legal,./app/legal/page.tsx,All,No,Footer or signup,View terms and privacy
+CONTACT,/contact,./app/contact/page.tsx,All,No,Footer link,Contact form
+SUBSCRIBE,/subscribe,./app/subscribe/page.tsx,All,No,Navbar dropdown,Subscribe to newsletter
+COFOUNDER,/cofounder-matching,./app/cofounder-matching/page.tsx,All,No,Navbar dropdown,Find cofounders
+VCC,/vcc,./app/vcc/page.tsx,All,No,Navbar or direct,View VCC info
+API,/api/auth/callback,./app/auth/callback/route.ts,Session,Session/token,OAuth flow,Handle auth callback
+API,/api/profile/avatar,./app/api/profile/avatar/route.ts,Authenticated,Yes,Profile upload,Upload avatar
+API,/api/upload/blog-image,./app/api/upload/blog-image/route.ts,Admin,Yes (admin),Blog editor,Upload blog image

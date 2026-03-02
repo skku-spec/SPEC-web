@@ -47,6 +47,14 @@ export default function ScrollBackground() {
       return;
     }
 
+    // Release GPU layer after opacity transition completes
+    const onTransitionEnd = (e: TransitionEvent) => {
+      if (e.propertyName === 'opacity') {
+        (e.target as HTMLElement).style.willChange = 'auto';
+      }
+    };
+    layerA.addEventListener('transitionend', onTransitionEnd);
+    layerB.addEventListener('transitionend', onTransitionEnd);
     const updateMetrics = () => {
       maxScrollRef.current = Math.max(
         1,
@@ -109,6 +117,9 @@ export default function ScrollBackground() {
       const hiddenEl = activeLayer.current === 'a' ? layerB : layerA;
 
       const reveal = () => {
+        // Promote layers to GPU only during transition
+        hiddenEl.style.willChange = 'opacity';
+        activeEl.style.willChange = 'opacity';
         hiddenEl.style.opacity = '0.25';
         activeEl.style.opacity = '0';
         activeLayer.current = activeLayer.current === 'a' ? 'b' : 'a';
@@ -129,8 +140,13 @@ export default function ScrollBackground() {
         return;
       }
 
-      hiddenEl.onload = reveal;
-      hiddenEl.onerror = reveal;
+      // Use decode() for off-main-thread image decoding when available
+      if (typeof hiddenEl.decode === 'function') {
+        hiddenEl.decode().then(reveal, reveal);
+      } else {
+        hiddenEl.onload = reveal;
+        hiddenEl.onerror = reveal;
+      }
     };
 
     const tick = () => {
@@ -191,6 +207,8 @@ export default function ScrollBackground() {
       layerA.onerror = null;
       layerB.onload = null;
       layerB.onerror = null;
+      layerA.removeEventListener('transitionend', onTransitionEnd);
+      layerB.removeEventListener('transitionend', onTransitionEnd);
     };
   }, []);
 
@@ -204,7 +222,7 @@ export default function ScrollBackground() {
         src={entrepreneurImages[0]}
         alt=""
         className="absolute inset-0 h-full w-full object-cover object-[48%_center] md:object-center"
-        style={{ opacity: 0.25, transition: 'opacity 0.65s ease-out', willChange: 'opacity' }}
+        style={{ opacity: 0.25, transition: 'opacity 0.65s ease-out', willChange: 'auto' }}
         loading="eager"
         fetchPriority="high"
         decoding="async"
@@ -214,7 +232,7 @@ export default function ScrollBackground() {
         src={entrepreneurImages[1]}
         alt=""
         className="absolute inset-0 h-full w-full object-cover object-[48%_center] md:object-center"
-        style={{ opacity: 0, transition: 'opacity 0.65s ease-out', willChange: 'opacity' }}
+        style={{ opacity: 0, transition: 'opacity 0.65s ease-out', willChange: 'auto' }}
         loading="lazy"
         fetchPriority="low"
         decoding="async"
