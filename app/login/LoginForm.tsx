@@ -38,14 +38,15 @@ export default function LoginForm({ registered, redirect }: LoginFormProps) {
 
       <div className="space-y-1">
         <label htmlFor="email" className="block text-sm font-medium text-[#666]">
-          Username or email
+          Email
         </label>
         <input
           id="email"
           name="email"
-          type="text"
+          type="email"
+          placeholder="you@example.com"
           required
-          autoComplete="username"
+          autoComplete="email"
           className="w-full border-0 border-b border-[#ccc] rounded-none bg-transparent px-0 py-3 text-base outline-none transition-colors focus:border-[#FF6C0F] focus:ring-0"
         />
       </div>
@@ -66,10 +67,6 @@ export default function LoginForm({ registered, redirect }: LoginFormProps) {
 
       <p className="text-sm text-[#555]">
         Forgot your{" "}
-        <Link href="/forgot-password" className="text-[#FF6C0F] hover:underline">
-          username
-        </Link>{" "}
-        or{" "}
         <Link href="/forgot-password" className="text-[#FF6C0F] hover:underline">
           password?
         </Link>
