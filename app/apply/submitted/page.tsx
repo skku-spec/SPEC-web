@@ -27,7 +27,7 @@ export default async function SubmittedApplicationPage() {
     redirect("/login");
   }
 
-  const result = await getMyApplicationDetail();
+  const result = await getMyApplicationDetail({ id: user.id, email: user.email });
 
   if (result.error) {
     return (

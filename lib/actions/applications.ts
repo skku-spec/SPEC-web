@@ -291,6 +291,11 @@ export type MyApplicationDetailResult = {
   };
 };
 
+type AuthUserContext = {
+  id: string;
+  email?: string | null;
+};
+
 const MY_APPLICATION_DETAIL_SELECT =
   "id, user_id, status, name, email, phone, student_id, major, grade, enrollment_status, batch, introduction, vision, startup_idea, portfolio_url, experience_extra, additional_comments, created_at";
 
@@ -376,15 +381,23 @@ export async function getApplicationByCredentials(
 
 // ── Get My Application (Logged-in User) ──────────────────────────────
 
-export async function getMyApplication(): Promise<ApplicationStatusResult> {
+export async function getMyApplication(authUser?: AuthUserContext): Promise<ApplicationStatusResult> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    let userId = authUser?.id;
+    let userEmail = authUser?.email?.trim().toLowerCase();
 
-    if (!user) {
-      return { error: "로그인이 필요합니다." };
+    if (!userId) {
+      const supabase = await createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        return { error: "로그인이 필요합니다." };
+      }
+
+      userId = user.id;
+      userEmail = user.email?.trim().toLowerCase();
     }
 
     let adminClient: ReturnType<typeof createAdminClient>;
@@ -400,7 +413,7 @@ export async function getMyApplication(): Promise<ApplicationStatusResult> {
     const { data, error } = await adminClient
       .from("applications")
       .select(MY_APPLICATION_SUMMARY_SELECT)
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -424,7 +437,6 @@ export async function getMyApplication(): Promise<ApplicationStatusResult> {
       };
     }
 
-    const userEmail = user.email?.trim().toLowerCase();
     if (!userEmail) {
       return { success: true };
     }
@@ -451,7 +463,7 @@ export async function getMyApplication(): Promise<ApplicationStatusResult> {
     if (!emailMatched.user_id) {
       await adminClient
         .from("applications")
-        .update({ user_id: user.id })
+        .update({ user_id: userId })
         .eq("id", emailMatched.id);
     }
 
@@ -472,20 +484,27 @@ export async function getMyApplication(): Promise<ApplicationStatusResult> {
   }
 }
 
-export async function getMyApplicationDetail(): Promise<MyApplicationDetailResult> {
+export async function getMyApplicationDetail(authUser?: AuthUserContext): Promise<MyApplicationDetailResult> {
   try {
-    const supabase = await createClient();
+    let userId = authUser?.id;
+    let userEmail = authUser?.email?.trim().toLowerCase();
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return { error: "로그인이 필요합니다." };
+    if (!userId) {
+      const supabase = await createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return { error: "로그인이 필요합니다." };
+      }
+
+      userId = user.id;
+      userEmail = user.email?.trim().toLowerCase();
     }
 
     const adminClient = createAdminClient();
     const { data, error } = await adminClient
       .from("applications")
       .select(MY_APPLICATION_DETAIL_SELECT)
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -522,7 +541,6 @@ export async function getMyApplicationDetail(): Promise<MyApplicationDetailResul
       };
     }
 
-    const userEmail = user.email?.trim().toLowerCase();
     if (!userEmail) {
       return { success: true };
     }
@@ -549,7 +567,7 @@ export async function getMyApplicationDetail(): Promise<MyApplicationDetailResul
     if (!emailMatched.user_id) {
       await adminClient
         .from("applications")
-        .update({ user_id: user.id })
+        .update({ user_id: userId })
         .eq("id", emailMatched.id);
     }
 

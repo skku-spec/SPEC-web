@@ -23,7 +23,7 @@ export default async function ApplyPage() {
   let hasApplication = false;
   let applicationData: { status: string; name: string; batch: string; created_at: string } | undefined;
   if (user) {
-    const result = await getMyApplication();
+    const result = await getMyApplication({ id: user.id, email: user.email });
     if (result.success && result.application) {
       hasApplication = true;
       applicationData = result.application;

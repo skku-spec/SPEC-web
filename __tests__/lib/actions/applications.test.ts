@@ -366,6 +366,38 @@ describe("getMyApplication", () => {
     expect(result).toEqual({ error: "로그인이 필요합니다." });
   });
 
+  it("uses provided auth context without calling createClient", async () => {
+    mockedCreateClient.mockImplementation(() => {
+      throw new Error("createClient should not be called");
+    });
+
+    const summaryData = {
+      id: "app-1",
+      user_id: "user-1",
+      status: "accepted",
+      name: "홍길동",
+      batch: "4",
+      created_at: "2026-01-01T00:00:00Z",
+      email: "hong@skku.edu",
+    };
+    const firstSelect = makeMaybeSingleChain({ data: summaryData as unknown as Record<string, string> });
+    const from = vi.fn().mockReturnValue(firstSelect);
+    mockedCreateAdminClient.mockReturnValue({ from } as never);
+
+    const result = await getMyApplication({ id: "user-1", email: "hong@skku.edu" });
+
+    expect(result).toEqual({
+      success: true,
+      application: {
+        status: "accepted",
+        name: "홍길동",
+        batch: "4",
+        created_at: "2026-01-01T00:00:00Z",
+      },
+    });
+    expect(mockedCreateClient).not.toHaveBeenCalled();
+  });
+
   it("returns application data when user has application", async () => {
     const client = {
       auth: {

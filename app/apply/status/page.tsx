@@ -17,7 +17,7 @@ export default async function ApplicationStatusPage() {
   let lookupError: string | null = null;
 
   if (user) {
-    const result = await getMyApplication();
+    const result = await getMyApplication({ id: user.id, email: user.email });
     if (result.success && result.application) {
       linkedApplication = result.application;
     } else if (result.error) {
