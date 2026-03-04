@@ -65,7 +65,7 @@ export default async function ApplicationDetailPage({ params }: PageProps) {
               {app.major}
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-x-8 gap-y-4 text-sm text-[#6b6b5e] md:grid-cols-3 md:text-right">
+          <div className="grid grid-cols-3 gap-4 text-sm text-[#6b6b5e] md:text-right">
             <div>
               <p className="text-xs font-semibold text-[#16140f] sm:text-sm">학번</p>
               <p className="text-xs sm:text-sm break-all">{app.student_id || "-"}</p>
