@@ -92,10 +92,3 @@ export async function forgotPassword(formData: FormData): Promise<AuthActionResu
 
   return { success: true };
 }
-
-export async function signOut(): Promise<void> {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
-  revalidatePath("/", "layout");
-  redirect("/");
-}
