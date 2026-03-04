@@ -76,16 +76,16 @@ export default async function ApplyPage() {
             <ApplicationStatusCard application={applicationData} />
             <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <Link
+                href="/apply/status"
+                className="inline-flex h-[44px] items-center rounded-full border border-[#d9d9cc] px-6 font-['Pretendard',sans-serif] text-[14px] font-semibold text-[#4a4a40] transition-colors hover:bg-white hover:text-[#16140f]"
+              >
+                지원 현황 상세
+              </Link>
+              <Link
                 href="/apply/submitted"
                 className="inline-flex h-[44px] items-center rounded-full border border-[#d9d9cc] px-6 font-['Pretendard',sans-serif] text-[14px] font-semibold text-[#4a4a40] transition-colors hover:bg-white hover:text-[#16140f]"
               >
                 제출한 지원서 다시 보기
-              </Link>
-              <Link
-                href="/apply/edit"
-                className="inline-flex h-[44px] items-center rounded-full border border-[#FF6C0F] bg-[#FF6C0F] px-6 font-['Pretendard',sans-serif] text-[14px] font-semibold text-white transition-colors hover:bg-[#e55d0b] hover:text-white"
-              >
-                지원서 수정하기
               </Link>
             </div>
           </div>
