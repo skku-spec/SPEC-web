@@ -7,6 +7,10 @@ const BLOG_IMAGE_BUCKET = "blog-images";
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 const ALLOWED_IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif"];
 
+function hasServiceRoleAccess() {
+  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+}
+
 function resolveFileExtension(file: File) {
   const fileNameParts = file.name.split(".");
   const fromName = fileNameParts.length > 1 ? fileNameParts[fileNameParts.length - 1] : "";
@@ -25,6 +29,10 @@ function resolveFileExtension(file: File) {
 }
 
 async function ensureBlogImageBucket() {
+  if (!hasServiceRoleAccess()) {
+    return;
+  }
+
   const adminClient = createAdminClient();
   const { data: bucket, error: getBucketError } = await adminClient.storage.getBucket(BLOG_IMAGE_BUCKET);
 
@@ -122,18 +130,31 @@ export async function POST(request: Request) {
 
     await ensureBlogImageBucket();
 
-    const adminClient = createAdminClient();
+    const canUseAdminClient = hasServiceRoleAccess();
+    const storageClient = canUseAdminClient ? createAdminClient() : supabase;
     const extension = resolveFileExtension(image);
     const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${extension}`;
     const filePath = `images/${fileName}`;
 
-    const { error: uploadError } = await adminClient.storage.from(BLOG_IMAGE_BUCKET).upload(filePath, image, {
+    const { error: uploadError } = await storageClient.storage.from(BLOG_IMAGE_BUCKET).upload(filePath, image, {
       cacheControl: "3600",
       upsert: false,
       contentType: image.type,
     });
 
     if (uploadError) {
+      const normalizedUploadError = uploadError.message.toLowerCase();
+      if (!canUseAdminClient && normalizedUploadError.includes("bucket")) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "썸네일 저장소 설정이 완료되지 않았어요. Supabase에 blog-images 버킷을 생성하거나 SUPABASE_SERVICE_ROLE_KEY를 배포 환경에 추가해 주세요.",
+          },
+          { status: 500 },
+        );
+      }
+
       return NextResponse.json(
         {
           success: false,
@@ -143,7 +164,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data: publicUrlData } = adminClient.storage.from(BLOG_IMAGE_BUCKET).getPublicUrl(filePath);
+    const { data: publicUrlData } = storageClient.storage.from(BLOG_IMAGE_BUCKET).getPublicUrl(filePath);
     if (!publicUrlData.publicUrl) {
       return NextResponse.json(
         {
