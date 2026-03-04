@@ -420,7 +420,7 @@ describe("getMyApplication", () => {
     expect(result).toEqual({ success: true });
   });
 
-  it("returns success without application when admin client creation throws", async () => {
+  it("returns error when admin client creation throws", async () => {
     const client = {
       auth: {
         getUser: vi
@@ -436,7 +436,34 @@ describe("getMyApplication", () => {
 
     const result = await getMyApplication();
 
-    expect(result).toEqual({ success: true });
+    expect(result).toEqual({
+      error: "지원서 조회 설정 오류가 발생했습니다. 관리자에게 문의해주세요.",
+    });
+  });
+
+  it("returns lookup error when summary query fails", async () => {
+    const client = {
+      auth: {
+        getUser: vi
+          .fn()
+          .mockResolvedValue({ data: { user: { id: "user-1", email: "hong@skku.edu" } } }),
+      },
+      from: vi.fn(),
+    };
+    mockedCreateClient.mockResolvedValue(client as never);
+
+    const failingSelect = makeMaybeSingleChain({
+      data: null,
+      error: { message: "query failed" },
+    });
+    const from = vi.fn().mockReturnValue(failingSelect);
+    mockedCreateAdminClient.mockReturnValue({ from } as never);
+
+    const result = await getMyApplication();
+
+    expect(result).toEqual({
+      error: "조회 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+    });
   });
 
   it("returns fallback application by email and links user_id", async () => {

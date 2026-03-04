@@ -394,7 +394,7 @@ export async function getMyApplication(): Promise<ApplicationStatusResult> {
       if (process.env.NODE_ENV === "development") {
         console.error("Unexpected error creating admin client in getMyApplication:", unexpectedError);
       }
-      return { success: true };
+      return { error: "지원서 조회 설정 오류가 발생했습니다. 관리자에게 문의해주세요." };
     }
 
     const { data, error } = await adminClient
@@ -409,7 +409,7 @@ export async function getMyApplication(): Promise<ApplicationStatusResult> {
       if (process.env.NODE_ENV === "development") {
         console.error("Error fetching own application summary:", error);
       }
-      return { success: true };
+      return { error: "조회 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요." };
     }
 
     if (data) {
@@ -441,7 +441,7 @@ export async function getMyApplication(): Promise<ApplicationStatusResult> {
       if (process.env.NODE_ENV === "development") {
         console.error("Error fetching own application summary by email fallback:", emailMatchError);
       }
-      return { success: true };
+      return { error: "조회 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요." };
     }
 
     if (!emailMatched) {
@@ -468,7 +468,7 @@ export async function getMyApplication(): Promise<ApplicationStatusResult> {
     if (process.env.NODE_ENV === "development") {
       console.error("Unexpected error in getMyApplication:", unexpectedError);
     }
-    return { success: true };
+    return { error: "조회 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요." };
   }
 }
 
