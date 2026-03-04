@@ -67,9 +67,7 @@ export default async function ApplicationStatusPage() {
             {user && (
               <div className="mt-8 rounded-lg border border-[#d9d9cc] bg-[#FFF0E5] px-5 py-4">
                 <p className="font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">
-                  {lookupError
-                    ? "지원서 조회 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
-                    : "현재 로그인한 계정으로 제출된 지원서가 없습니다."}
+                  {lookupError || "현재 로그인한 계정으로 제출된 지원서가 없습니다."}
                 </p>
               </div>
             )}

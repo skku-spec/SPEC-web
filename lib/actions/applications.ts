@@ -411,10 +411,7 @@ export async function getMyApplication(): Promise<ApplicationStatusResult> {
     try {
       adminClient = createAdminClient();
     } catch (unexpectedError) {
-      if (process.env.NODE_ENV === "development") {
-        console.error("Unexpected error creating admin client in getMyApplication:", unexpectedError);
-      }
-      return { success: true };
+      return { error: "환경 변수 설정 오류가 발생했습니다. (Service Role Key 확인 필요)" };
     }
 
     const { data, error } = await adminClient
@@ -425,10 +422,7 @@ export async function getMyApplication(): Promise<ApplicationStatusResult> {
       .maybeSingle();
 
     if (error) {
-      if (process.env.NODE_ENV === "development") {
-        console.error("Error fetching own application summary:", error);
-      }
-      return { success: true };
+      return { error: "데이터베이스 조회 중 오류가 발생했습니다." };
     }
 
     if (data) {
