@@ -340,7 +340,6 @@ export async function getApplicationByCredentials(
       .eq("email", trimmedEmail)
       .eq("student_id", trimmedStudentId)
       .order("created_at", { ascending: false })
-      .limit(1)
       .maybeSingle();
 
     data = result.data;
@@ -402,7 +401,6 @@ export async function getMyApplication(): Promise<ApplicationStatusResult> {
       .select(MY_APPLICATION_SUMMARY_SELECT)
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
-      .limit(1)
       .maybeSingle();
 
     if (error) {
@@ -441,7 +439,7 @@ export async function getMyApplication(): Promise<ApplicationStatusResult> {
       if (process.env.NODE_ENV === "development") {
         console.error("Error fetching own application summary by email fallback:", emailMatchError);
       }
-      return { success: true };
+      return { error: "지원서 조회 중 오류가 발생했습니다." };
     }
 
     if (!emailMatched) {
@@ -468,7 +466,7 @@ export async function getMyApplication(): Promise<ApplicationStatusResult> {
     if (process.env.NODE_ENV === "development") {
       console.error("Unexpected error in getMyApplication:", unexpectedError);
     }
-    return { success: true };
+    return { error: "지원서 조회 중 예기치 못한 오류가 발생했습니다." };
   }
 }
 

@@ -4,6 +4,8 @@ import { getMyApplication } from "@/lib/actions/applications";
 import ApplicationStatusCard from "./ApplicationStatusCard";
 import StatusCheckForm from "./StatusCheckForm";
 
+export const dynamic = "force-dynamic";
+
 export default async function ApplicationStatusPage() {
   const { user } = await getCurrentUser();
 
@@ -38,10 +40,8 @@ export default async function ApplicationStatusPage() {
           {linkedApplication
             ? "로그인 계정에 연결된 지원서 현황입니다."
             : user
-              ? lookupError
-                ? "지원서 조회 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
-                : "현재 로그인한 계정으로 제출된 지원서가 없습니다."
-            : "지원서 제출 시 입력한 이메일과 학번으로 현재 지원 상태를 확인할 수 있습니다."}
+              ? "로그인 계정에 연결된 지원서가 없습니다. 지원 시 입력한 이메일과 학번으로 조회하실 수도 있습니다."
+              : "지원서 제출 시 입력한 이메일과 학번으로 현재 지원 상태를 확인할 수 있습니다."}
         </p>
 
         {linkedApplication ? (
@@ -56,22 +56,19 @@ export default async function ApplicationStatusPage() {
               </Link>
             </div>
           </>
-        ) : user ? (
-          lookupError ? (
-            <div className="mt-10 rounded-lg border border-[#f5c2c2] bg-[#FEE2E2] px-5 py-4">
-              <p className="font-['Pretendard',sans-serif] text-sm text-[#b42318]">
-                지원서 조회 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.
-              </p>
-            </div>
-          ) : (
-            <div className="mt-10 rounded-lg border border-[#d9d9cc] bg-[#FFF0E5] px-5 py-4">
-              <p className="font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">
-                현재 로그인한 계정으로 제출된 지원서가 없습니다.
-              </p>
-            </div>
-          )
         ) : (
-          <StatusCheckForm />
+          <>
+            {user && (
+              <div className="mt-8 rounded-lg border border-[#d9d9cc] bg-[#FFF0E5] px-5 py-4">
+                <p className="font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">
+                  {lookupError
+                    ? "지원서 조회 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
+                    : "현재 로그인한 계정으로 제출된 지원서가 없습니다."}
+                </p>
+              </div>
+            )}
+            <StatusCheckForm />
+          </>
         )}
 
         <div className="mt-10 text-center">

@@ -15,11 +15,15 @@ const STATUS_BADGE_CLASSES: Record<string, string> = {
 const RESULT_ANNOUNCEMENT_DATE = "3월 23일 (월)";
 
 function formatDate(dateString: string) {
+  if (!dateString) return "-";
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString; // Return original string if invalid
+
   return new Intl.DateTimeFormat("ko-KR", {
     year: "numeric",
     month: "long",
     day: "numeric",
-  }).format(new Date(dateString));
+  }).format(date);
 }
 
 type ApplicationInfo = {
