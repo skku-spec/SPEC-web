@@ -319,7 +319,7 @@ const MY_APPLICATION_SUMMARY_SELECT =
   "id, user_id, status, name, batch, created_at, email";
 
 const STATUS_CHECK_RATE_LIMIT = {
-  maxRequests: 5,
+  maxRequests: process.env.GITHUB_ACTIONS === "true" ? 100 : 10,
   windowMs: 10 * 60 * 1000, // 10 minutes
 } as const;
 
@@ -361,6 +361,7 @@ export async function getApplicationByCredentials(
       .eq("email", trimmedEmail)
       .eq("student_id", trimmedStudentId)
       .order("created_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     data = result.data;
