@@ -573,3 +573,84 @@ export async function getMyApplicationDetail(): Promise<MyApplicationDetailResul
     return { error: "조회 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요." };
   }
 }
+
+// ── Update My Application ──────────────────────────────────────────────
+
+export async function updateMyApplication(formData: FormData): Promise<ApplicationState> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "로그인이 필요합니다." };
+  }
+
+  // Extract form data
+  const name = (formData.get("name") as string)?.trim() ?? "";
+  const student_id = (formData.get("student_id") as string)?.trim() ?? "";
+  const email = (formData.get("email") as string)?.trim().toLowerCase() ?? "";
+  const phone = (formData.get("phone") as string)?.trim() ?? "";
+  const major = (formData.get("major") as string)?.trim() ?? "";
+  const batch = (formData.get("batch") as string)?.trim() ?? "";
+  const introduction = (formData.get("introduction") as string)?.trim() ?? "";
+  const vision = (formData.get("vision") as string)?.trim() ?? "";
+  const startup_idea = (formData.get("startup_idea") as string)?.trim() ?? "";
+  const portfolio_url = (formData.get("portfolio_url") as string)?.trim() ?? "";
+  const grade = (formData.get("grade") as string)?.trim() ?? "";
+  const enrollment_status = (formData.get("enrollment_status") as string)?.trim() ?? "";
+  const experience_extra = (formData.get("experience_extra") as string)?.trim() ?? "";
+  const additional_comments = (formData.get("additional_comments") as string)?.trim() ?? "";
+
+  // Required field validation
+  if (!name || !email || !introduction || !student_id || !vision || !startup_idea || !batch || !grade || !enrollment_status || !portfolio_url || !experience_extra) {
+    return { error: "필수 항목을 모두 입력해주세요." };
+  }
+
+  if (!EMAIL_REGEX.test(email)) {
+    return { error: "올바른 이메일 형식을 입력해주세요." };
+  }
+
+  if (!STUDENT_ID_REGEX.test(student_id)) {
+    return { error: "학번은 8~10자리 숫자여야 합니다." };
+  }
+
+  try {
+    const adminClient = createAdminClient();
+    const { error } = await adminClient
+      .from("applications")
+      .update({
+        name,
+        student_id,
+        email,
+        phone: phone || null,
+        major: major || null,
+        batch,
+        grade: grade || null,
+        enrollment_status: enrollment_status || null,
+        introduction,
+        vision,
+        startup_idea,
+        portfolio_url: portfolio_url || null,
+        experience_extra: experience_extra || null,
+        additional_comments: additional_comments || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", user.id);
+
+    if (error) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("Application update error:", error);
+      }
+      return { error: "지원서 수정 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요." };
+    }
+  } catch (unexpectedError) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("Unexpected error in updateMyApplication:", unexpectedError);
+    }
+    return { error: "지원서 수정 중 예기치 못한 오류가 발생했습니다." };
+  }
+
+  revalidatePath("/apply");
+  revalidatePath("/apply/status");
+  revalidatePath("/apply/submitted");
+  return { success: true };
+}
