@@ -147,11 +147,17 @@ jobs:
         run: |
           for i in 1 2 3; do
             echo "Attempt $i..."
-            url=$(vercel deploy --prebuilt --archive=tgz --token=$VERCEL_TOKEN 2>&1) && {
-              echo "url=$url" >> $GITHUB_OUTPUT
-              echo "Preview deployed: $url"
+            # 1. 배포 실행 후 전체 출력을 변수에 저장
+            deploy_output=$(vercel deploy --prebuilt --archive=tgz --token=$VERCEL_TOKEN 2>&1)
+            # 2. 출력 내용 중 https://로 시작하는 URL만 추출
+            deploy_url=$(echo "$deploy_output" | grep -o 'https://[^\ ]*' | head -n 1)
+            
+            if [ -n "$deploy_url" ]; then
+              echo "url=$deploy_url" >> $GITHUB_OUTPUT
+              echo "Preview deployed: $deploy_url"
               exit 0
-            }
+            fi
+            
             echo "Attempt $i failed, retrying in 15s..."
             sleep 15
           done
@@ -186,11 +192,17 @@ jobs:
         run: |
           for i in 1 2 3; do
             echo "Attempt $i..."
-            url=$(vercel deploy --prebuilt --prod --archive=tgz --token=$VERCEL_TOKEN 2>&1) && {
-              echo "url=$url" >> $GITHUB_OUTPUT
-              echo "Production deployed: $url"
+            # 1. 배포 실행 후 전체 출력을 변수에 저장 (--prod 포함)
+            deploy_output=$(vercel deploy --prebuilt --prod --archive=tgz --token=$VERCEL_TOKEN 2>&1)
+            # 2. 출력 내용 중 https://로 시작하는 URL만 추출
+            deploy_url=$(echo "$deploy_output" | grep -o 'https://[^\ ]*' | head -n 1)
+            
+            if [ -n "$deploy_url" ]; then
+              echo "url=$deploy_url" >> $GITHUB_OUTPUT
+              echo "Production deployed: $deploy_url"
               exit 0
-            }
+            fi
+            
             echo "Attempt $i failed, retrying in 15s..."
             sleep 15
           done
