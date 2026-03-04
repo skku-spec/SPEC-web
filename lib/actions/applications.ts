@@ -31,20 +31,9 @@ const RATE_LIMIT_CONFIG = {
   windowMs: 15 * 60 * 1000, // 15 minutes
 } as const;
 
-// ── Submit Application ────────────────────────────────────────────────
+// ── Validate Application Data ───────────────────────────────────────
 
-export async function submitApplication(formData: FormData): Promise<ApplicationState> {
-  // 1. Rate limit check
-  const headerStore = await headers();
-  const ip = headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  const rateLimitResult = rateLimit(`apply:${ip}`, RATE_LIMIT_CONFIG);
-
-  if (!rateLimitResult.allowed) {
-    const retryMinutes = Math.ceil(rateLimitResult.retryAfterMs / 60_000);
-    return { error: `너무 많은 요청입니다. ${retryMinutes}분 후에 다시 시도해주세요.` };
-  }
-
-  // 2. Extract form data
+function validateApplicationData(formData: FormData) {
   const name = (formData.get("name") as string)?.trim() ?? "";
   const student_id = (formData.get("student_id") as string)?.trim() ?? "";
   const email = (formData.get("email") as string)?.trim().toLowerCase() ?? "";
@@ -55,19 +44,15 @@ export async function submitApplication(formData: FormData): Promise<Application
   const vision = (formData.get("vision") as string)?.trim() ?? "";
   const startup_idea = (formData.get("startup_idea") as string)?.trim() ?? "";
   const portfolio_url = (formData.get("portfolio_url") as string)?.trim() ?? "";
-
-  // New fields (4기)
   const grade = (formData.get("grade") as string)?.trim() ?? "";
   const enrollment_status = (formData.get("enrollment_status") as string)?.trim() ?? "";
   const experience_extra = (formData.get("experience_extra") as string)?.trim() ?? "";
   const additional_comments = (formData.get("additional_comments") as string)?.trim() ?? "";
 
-  // 3. Required field validation
   if (!name || !email || !introduction || !student_id || !vision || !startup_idea || !batch || !grade || !enrollment_status || !portfolio_url || !experience_extra) {
     return { error: "필수 항목을 모두 입력해주세요." };
   }
 
-  // 4. Format validation
   if (!EMAIL_REGEX.test(email)) {
     return { error: "올바른 이메일 형식을 입력해주세요." };
   }
@@ -80,7 +65,6 @@ export async function submitApplication(formData: FormData): Promise<Application
     return { error: "올바른 전화번호 형식을 입력해주세요. (예: 010-1234-5678)" };
   }
 
-  // 5. Length validation
   const lengthErrors = [
     validateLength(name, "이름", 2, 50),
     validateLength(introduction, "Q1 답변", 50, 5000),
@@ -96,62 +80,99 @@ export async function submitApplication(formData: FormData): Promise<Application
     return { error: lengthErrors[0]! };
   }
 
-  // 6. Insert application
-  // NOTE: Do NOT chain .select() here — the SELECT RLS policy is admin-only,
-  // so non-admin users would get a 42501 error even though INSERT succeeded.
-  // The INSERT policy is WITH CHECK (true), so silent failures cannot occur.
-  const supabase = await createClient();
+  return {
+    data: {
+      name, student_id, email, phone, major, batch, grade, enrollment_status,
+      introduction, vision, startup_idea, portfolio_url, experience_extra, additional_comments
+    }
+  };
+}
 
-  // Attempt to get authenticated user — if logged in, link application to account
+// ── Submit Application ────────────────────────────────────────────────
+
+export async function submitApplication(formData: FormData): Promise<ApplicationState> {
+  const headerStore = await headers();
+  const ip = headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const rateLimitResult = rateLimit(`apply:${ip}`, RATE_LIMIT_CONFIG);
+
+  if (!rateLimitResult.allowed) {
+    const retryMinutes = Math.ceil(rateLimitResult.retryAfterMs / 60_000);
+    return { error: `너무 많은 요청입니다. ${retryMinutes}분 후에 다시 시도해주세요.` };
+  }
+
+  const validation = validateApplicationData(formData);
+  if (validation.error || !validation.data) return { error: validation.error || "올바르지 않은 데이터입니다." };
+  const { data } = validation;
+
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   const { error } = await supabase
     .from("applications")
     .insert({
-      name,
-      student_id,
-      email,
-      phone: phone || null,
-      major: major || null,
-      batch,
-      grade: grade || null,
-      enrollment_status: enrollment_status || null,
-      introduction,
-      vision,
-      startup_idea,
-      portfolio_url: portfolio_url || null,
-      experience_extra: experience_extra || null,
-      additional_comments: additional_comments || null,
+      ...data,
+      phone: data.phone || null,
+      major: data.major || null,
+      grade: data.grade || null,
+      enrollment_status: data.enrollment_status || null,
+      portfolio_url: data.portfolio_url || null,
+      experience_extra: data.experience_extra || null,
+      additional_comments: data.additional_comments || null,
       user_id: user?.id ?? null,
     });
 
   if (error) {
-    if (process.env.NODE_ENV === "development") {
-      console.error("Application submission error:", error);
-    }
-
-    // Duplicate submission (unique constraint on student_id + batch)
-    if (error.code === "23505") {
-      return { error: "이미 해당 기수에 지원서를 제출하셨습니다." };
-    }
-
-    // RLS violation
-    if (error.code === "42501") {
-      return { error: "지원서 제출 권한이 없습니다. 관리자에게 문의해주세요." };
-    }
-
-    // Column missing
-    if (error.message.includes("column") && error.message.includes("does not exist")) {
-      return { error: "데이터베이스 설정 오류가 발생했습니다. 관리자에게 문의해주세요." };
-    }
-
+    if (error.code === "23505") return { error: "이미 해당 기수에 지원서를 제출하셨습니다." };
+    if (error.code === "42501") return { error: "지원서 제출 권한이 없습니다. 관리자에게 문의해주세요." };
     return { error: "지원서 제출 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요." };
   }
 
-  // 7. Success — INSERT policy is permissive (WITH CHECK true),
-  // so if error is null the row was definitely saved.
-
   revalidatePath("/dashboard/applications");
+  return { success: true };
+}
+
+// ── Update My Application ──────────────────────────────────────────────
+
+export async function updateMyApplication(formData: FormData): Promise<ApplicationState> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "로그인이 필요합니다." };
+  }
+
+  const validation = validateApplicationData(formData);
+  if (validation.error || !validation.data) return { error: validation.error || "올바르지 않은 데이터입니다." };
+  const { data } = validation;
+
+  // Use admin client to bypass SELECT RLS to find the application, 
+  // but ensure we only update the one linked to this user_id.
+  const adminClient = createAdminClient();
+  const { error } = await adminClient
+    .from("applications")
+    .update({
+      ...data,
+      phone: data.phone || null,
+      major: data.major || null,
+      grade: data.grade || null,
+      enrollment_status: data.enrollment_status || null,
+      portfolio_url: data.portfolio_url || null,
+      experience_extra: data.experience_extra || null,
+      additional_comments: data.additional_comments || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", user.id);
+
+  if (error) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("Application update error:", error);
+    }
+    return { error: "지원서 수정 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요." };
+  }
+
+  revalidatePath("/apply");
+  revalidatePath("/apply/status");
+  revalidatePath("/apply/submitted");
   return { success: true };
 }
 
@@ -340,7 +361,6 @@ export async function getApplicationByCredentials(
       .eq("email", trimmedEmail)
       .eq("student_id", trimmedStudentId)
       .order("created_at", { ascending: false })
-      .limit(1)
       .maybeSingle();
 
     data = result.data;
@@ -402,7 +422,6 @@ export async function getMyApplication(): Promise<ApplicationStatusResult> {
       .select(MY_APPLICATION_SUMMARY_SELECT)
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
-      .limit(1)
       .maybeSingle();
 
     if (error) {
@@ -441,7 +460,7 @@ export async function getMyApplication(): Promise<ApplicationStatusResult> {
       if (process.env.NODE_ENV === "development") {
         console.error("Error fetching own application summary by email fallback:", emailMatchError);
       }
-      return { success: true };
+      return { error: "지원서 조회 중 오류가 발생했습니다." };
     }
 
     if (!emailMatched) {
@@ -468,7 +487,7 @@ export async function getMyApplication(): Promise<ApplicationStatusResult> {
     if (process.env.NODE_ENV === "development") {
       console.error("Unexpected error in getMyApplication:", unexpectedError);
     }
-    return { success: true };
+    return { error: "지원서 조회 중 예기치 못한 오류가 발생했습니다." };
   }
 }
 
