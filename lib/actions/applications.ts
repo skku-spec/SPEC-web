@@ -298,7 +298,7 @@ const MY_APPLICATION_SUMMARY_SELECT =
   "id, user_id, status, name, batch, created_at, email";
 
 const STATUS_CHECK_RATE_LIMIT = {
-  maxRequests: 5,
+  maxRequests: process.env.GITHUB_ACTIONS === "true" ? 100 : 10,
   windowMs: 10 * 60 * 1000, // 10 minutes
 } as const;
 
@@ -346,10 +346,7 @@ export async function getApplicationByCredentials(
     data = result.data;
     error = result.error;
   } catch (unexpectedError) {
-    if (process.env.NODE_ENV === "development") {
-      console.error("Unexpected error creating admin client in getApplicationByCredentials:", unexpectedError);
-    }
-    return { error: "조회 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요." };
+    return { error: "환경 변수 설정 오류가 발생했습니다. (Service Role Key 확인 필요)" };
   }
 
   if (error) {
