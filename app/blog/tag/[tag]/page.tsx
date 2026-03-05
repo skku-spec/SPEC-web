@@ -1,15 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 
 import { getBlogPosts, getBlogTags, getTagLabel } from "@/lib/api";
 
-export const revalidate = 60;
+export const revalidate = 3600;
 
 export const dynamicParams = true;
 
 export async function generateStaticParams() {
-  // Tags are fetched on-demand with ISR (revalidate = 60)
-  // Cannot call Supabase at build time (requires request context)
   return [];
 }
 
@@ -17,7 +16,7 @@ export async function generateMetadata({
   params,
 }: {
   params: Promise<{ tag: string }>;
-}) {
+}): Promise<Metadata> {
   const { tag } = await params;
   const label = await getTagLabel(tag);
 
