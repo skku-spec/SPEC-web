@@ -58,84 +58,95 @@ function countWords(text: string): number {
 }
 
 /**
- * Slash 메뉴 아이템의 이름을 마크다운 문법을 포함하도록 변경합니다.
+ * Slash 메뉴 아이템을 Notion 스타일로 필터링하고 이름을 변경합니다.
  */
 const getCustomSlashMenuItems = (editor: any) => {
   const items = getDefaultReactSlashMenuItems(editor);
 
-  return items.map((item) => {
-    switch (item.title) {
-      case "Heading 1":
+  const notionLikeItems = [
+    {
+      key: "paragraph",
+      title: "텍스트",
+      aliases: ["p", "text", "텍스트", "t"],
+    },
+    {
+      key: "heading",
+      title: "제목 1",
+      aliases: ["h1", "heading1", "제목1", "#"],
+    },
+    {
+      key: "heading_2",
+      title: "제목 2",
+      aliases: ["h2", "heading2", "제목2", "##"],
+    },
+    {
+      key: "heading_3",
+      title: "제목 3",
+      aliases: ["h3", "heading3", "제목3", "###"],
+    },
+    {
+      key: "table",
+      title: "표",
+      aliases: ["table", "grid", "표", "t"],
+    },
+    {
+      key: "check_list",
+      title: "할 일 목록",
+      aliases: ["todo", "checklist", "체크", "[]"],
+    },
+    {
+      key: "bullet_list",
+      title: "글머리 기호 목록",
+      aliases: ["ul", "bulletlist", "목록", "-"],
+    },
+    {
+      key: "numbered_list",
+      title: "번호 매기기 목록",
+      aliases: ["ol", "numberedlist", "순서", "1."],
+    },
+    {
+      key: "toggle_list",
+      title: "토글 목록",
+      aliases: ["toggle", "togglelist", "토글", "> "],
+    },
+    {
+      key: "quote",
+      title: "인용",
+      aliases: ["quote", "blockquote", "인용", ">"],
+    },
+    {
+      key: "divider",
+      title: "구분선",
+      aliases: ["divider", "hr", "line", "구분선", "---"],
+    },
+    {
+      key: "image",
+      title: "이미지",
+      aliases: ["image", "img", "picture", "이미지", "![]"],
+    },
+    {
+      key: "code_block",
+      title: "코드 블록",
+      aliases: ["code", "codeblock", "코드", "```"],
+    },
+  ];
+
+  // 기존 아이템들 중에서 notionLikeItems에 정의된 key들만 필터링하고 내용을 업데이트합니다.
+  return notionLikeItems
+    .map((notionItem) => {
+      const originalItem = items.find(
+        (item: any) => item.key === notionItem.key,
+      );
+      if (originalItem) {
         return {
-          ...item,
-          title: "# 제목 1",
-          aliases: ["#", "h1", "heading1", "제목1"],
+          ...originalItem,
+          title: notionItem.title,
+          aliases: notionItem.aliases,
         };
-      case "Heading 2":
-        return {
-          ...item,
-          title: "## 제목 2",
-          aliases: ["##", "h2", "heading2", "제목2"],
-        };
-      case "Heading 3":
-        return {
-          ...item,
-          title: "### 제목 3",
-          aliases: ["###", "h3", "heading3", "제목3"],
-        };
-      case "Bullet List":
-        return {
-          ...item,
-          title: "- 불렛 리스트",
-          aliases: ["-", "ul", "bulletlist", "리스트"],
-        };
-      case "Numbered List":
-        return {
-          ...item,
-          title: "1. 번호 리스트",
-          aliases: ["1.", "ol", "numberedlist", "순서"],
-        };
-      case "Check List":
-        return {
-          ...item,
-          title: "[ ] 체크 리스트",
-          aliases: ["[]", "checklist", "할일"],
-        };
-      case "Quote":
-        return {
-          ...item,
-          title: "> 인용구",
-          aliases: [">", "quote", "인용"],
-        };
-      case "Code Block":
-        return {
-          ...item,
-          title: "``` 코드 블록",
-          aliases: ["```", "code", "코드"],
-        };
-      case "Divider":
-      case "Horizontal Rule":
-        return {
-          ...item,
-          title: "--- 구분선",
-          aliases: ["---", "divider", "line", "구분선"],
-        };
-      case "Image":
-        return {
-          ...item,
-          title: "![] 이미지",
-          aliases: ["![]", "image", "img", "이미지"],
-        };
-      case "Table":
-        return {
-          ...item,
-          title: "| 표",
-          aliases: ["|", "table", "표"],
-        };
-      default:
-        return item;
-    }
-  });
+      }
+      return null;
+    })
+    .filter((item): item is Exclude<typeof item, null> => item !== null);
 };
 
 export default function BlockNoteEditor({
