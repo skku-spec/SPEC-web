@@ -3,10 +3,34 @@
 import { useEffect, useMemo, useRef } from "react";
 
 import { BlockNoteView, type Theme } from "@blocknote/mantine";
-import { useCreateBlockNote } from "@blocknote/react";
+import {
+  useCreateBlockNote,
+  SuggestionMenuController,
+  getDefaultReactSlashMenuItems,
+} from "@blocknote/react";
+import {
+  BlockNoteSchema,
+  defaultBlockSpecs,
+  createCodeBlockSpec,
+} from "@blocknote/core";
+import { codeBlockOptions } from "@blocknote/code-block";
 
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
+
+/**
+ * 전역적으로 Suggestion 아이템을 필터링하는 유틸리티 함수입니다.
+ * @blocknote/core 에서 가져오기 힘든 경우를 위해 직접 구현합니다.
+ */
+const filterSuggestionItems = (items: any[], query: string) => {
+  return items.filter((item) => {
+    const titleMatch = item.title.toLowerCase().includes(query.toLowerCase());
+    const aliasMatch = item.aliases?.some((alias: string) =>
+      alias.toLowerCase().includes(query.toLowerCase()),
+    );
+    return titleMatch || aliasMatch;
+  });
+};
 
 interface BlockNoteEditorProps {
   initialHTML?: string;
@@ -32,6 +56,87 @@ function countWords(text: string): number {
 
   return text.split(/\s+/).filter(Boolean).length;
 }
+
+/**
+ * Slash 메뉴 아이템의 이름을 마크다운 문법을 포함하도록 변경합니다.
+ */
+const getCustomSlashMenuItems = (editor: any) => {
+  const items = getDefaultReactSlashMenuItems(editor);
+
+  return items.map((item) => {
+    switch (item.title) {
+      case "Heading 1":
+        return {
+          ...item,
+          title: "# 제목 1",
+          aliases: ["#", "h1", "heading1", "제목1"],
+        };
+      case "Heading 2":
+        return {
+          ...item,
+          title: "## 제목 2",
+          aliases: ["##", "h2", "heading2", "제목2"],
+        };
+      case "Heading 3":
+        return {
+          ...item,
+          title: "### 제목 3",
+          aliases: ["###", "h3", "heading3", "제목3"],
+        };
+      case "Bullet List":
+        return {
+          ...item,
+          title: "- 불렛 리스트",
+          aliases: ["-", "ul", "bulletlist", "리스트"],
+        };
+      case "Numbered List":
+        return {
+          ...item,
+          title: "1. 번호 리스트",
+          aliases: ["1.", "ol", "numberedlist", "순서"],
+        };
+      case "Check List":
+        return {
+          ...item,
+          title: "[ ] 체크 리스트",
+          aliases: ["[]", "checklist", "할일"],
+        };
+      case "Quote":
+        return {
+          ...item,
+          title: "> 인용구",
+          aliases: [">", "quote", "인용"],
+        };
+      case "Code Block":
+        return {
+          ...item,
+          title: "``` 코드 블록",
+          aliases: ["```", "code", "코드"],
+        };
+      case "Divider":
+      case "Horizontal Rule":
+        return {
+          ...item,
+          title: "--- 구분선",
+          aliases: ["---", "divider", "line", "구분선"],
+        };
+      case "Image":
+        return {
+          ...item,
+          title: "![] 이미지",
+          aliases: ["![]", "image", "img", "이미지"],
+        };
+      case "Table":
+        return {
+          ...item,
+          title: "| 표",
+          aliases: ["|", "table", "표"],
+        };
+      default:
+        return item;
+    }
+  });
+};
 
 export default function BlockNoteEditor({
   initialHTML,
@@ -76,15 +181,27 @@ export default function BlockNoteEditor({
     [],
   );
 
+  const schema = useMemo(
+    () =>
+      BlockNoteSchema.create({
+        blockSpecs: {
+          ...defaultBlockSpecs,
+          codeBlock: createCodeBlockSpec(codeBlockOptions),
+        },
+      }),
+    [],
+  );
+
   const editor = useCreateBlockNote(
     {
+      schema,
       uploadFile,
       placeholders: {
         default: placeholder,
         emptyDocument: placeholder,
       },
     },
-    [uploadFile, placeholder],
+    [uploadFile, placeholder, schema],
   );
 
   const emitWordCount = (html: string) => {
@@ -133,7 +250,15 @@ export default function BlockNoteEditor({
         onChange={handleEditorChange}
         theme={theme}
         className="blocknote-editor-view"
-      />
+        sideMenu={false}
+      >
+        <SuggestionMenuController
+          triggerCharacter="/"
+          getItems={async (query) =>
+            filterSuggestionItems(getCustomSlashMenuItems(editor), query)
+          }
+        />
+      </BlockNoteView>
 
       <style jsx global>{`
         .blocknote-editor-root .bn-container {
