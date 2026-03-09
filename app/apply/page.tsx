@@ -260,6 +260,16 @@ export default async function ApplyPage() {
             SPEC은 데모데이에서 끝나지 않습니다. 알럼나이 네트워크를 통해 창업
             여정을 계속 함께합니다.
           </p>
+
+          <div className="rounded-lg border border-[#d9d9cc] bg-white px-6 py-5">
+            <p className="mb-1.5 font-['Pretendard',sans-serif] text-[14px] font-bold text-[#16140f]">
+              RISE CREW와 고민 중이신가요?
+            </p>
+            <p className="font-['Pretendard',sans-serif] text-[15px] leading-[1.75] text-[#4a4a40]">
+              SPEC에 합류하면 팀빌딩 이후 별도 면접 없이 RISE CREW에 합류할 수
+              있습니다. 둘 중 하나를 선택할 필요가 없습니다.
+            </p>
+          </div>
           <p>
             구체적인 커리큘럼과 트랙별 활동은{" "}
             <a
