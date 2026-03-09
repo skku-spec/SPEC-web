@@ -341,72 +341,6 @@ const learnerWeeks = [
   },
 ];
 
-const vccModules = [
-  {
-    num: '01',
-    title: '문제 정의 & 기회 탐색',
-    subtitle: 'Problem Definition & Opportunity Discovery',
-    description:
-      '모빌리티·물류·라이프스타일 영역에서 실제 고객의 불편을 발굴합니다. 카카오모빌리티 현업 데이터를 활용해 시장 기회를 검증합니다.',
-    partner: 'Kakao Mobility',
-    activities: [
-      '카카오모빌리티 현업 세션 — 모빌리티 산업 인사이트',
-      '고객 인터뷰 워크숍 (20명 이상 직접 인터뷰)',
-      'Pain Point 매핑 & 기회 영역 도출',
-      '시장 규모 추정 (TAM/SAM/SOM) 실습',
-    ],
-  },
-  {
-    num: '02',
-    title: '솔루션 설계 & 프로토타이핑',
-    subtitle: 'Solution Design & Rapid Prototyping',
-    description:
-      '검증된 문제에 대한 솔루션을 설계하고, 빠르게 프로토타입을 만듭니다. RISE 사업단의 기술 멘토링을 통해 실현 가능성을 높입니다.',
-    partner: 'RISE 사업단',
-    activities: [
-      '린 캔버스 & 비즈니스 모델 캔버스 작성',
-      'No-code / Low-code 프로토타이핑 스프린트',
-      'RISE 사업단 기술 멘토 1:1 코칭',
-      '사용자 테스트 — 최소 30명 피드백 수집',
-    ],
-  },
-  {
-    num: '03',
-    title: 'MVP 개발 & 시장 검증',
-    subtitle: 'MVP Development & Market Validation',
-    description:
-      '프로토타입을 실제 MVP로 발전시키고, 초기 사용자를 확보합니다. 실제 매출이나 사전 예약을 통해 시장 수요를 증명합니다.',
-    partner: 'SPEC',
-    activities: [
-      'MVP 4주 집중 개발 스프린트',
-      '얼리 어답터 100명 확보 캠페인',
-      'SPEC Learner 트랙과 합동 그로스 해킹 세션',
-      '유닛 이코노믹스 분석 & 가격 전략 수립',
-    ],
-  },
-  {
-    num: '04',
-    title: 'IR 피칭 & 데모데이',
-    subtitle: 'Investor Pitch & Demo Day',
-    description:
-      '투자자 앞에서 사업을 증명합니다. RISE 사업단 네트워크와 카카오모빌리티 임원진 앞에서 최종 피칭을 진행합니다.',
-    partner: 'RISE × Kakao × SPEC',
-    activities: [
-      '피치덱 작성 & 스토리텔링 워크숍',
-      'VC / 엔젤 투자자 모의 IR 세션',
-      '합동 데모데이 — RISE·카카오모빌리티·SPEC 공동 개최',
-      '후속 투자 연결 & 액셀러레이팅 프로그램 추천',
-    ],
-  },
-];
-
-const vccTimeline = [
-  { month: '4월', label: '문제 정의 & 팀 빌딩' },
-  { month: '6월', label: '프로토타입 완성' },
-  { month: '9월', label: 'MVP & 시장 검증' },
-  { month: '11월', label: '합동 데모데이' },
-];
-
 type Track = 'preneur' | 'learner' | 'vcc';
 
 export default function CurriculumPage() {
@@ -619,7 +553,12 @@ function VccTrack() {
       </div>
 
       <div className="mb-12 grid grid-cols-2 md:grid-cols-4 divide-x divide-[#d9d9cc] rounded-lg border border-[#d9d9cc] bg-[#f5f5ee]">
-        {vccTimeline.map((ms) => (
+        {[
+          { month: '4월', label: '문제 정의 & 팀 빌딩' },
+          { month: '6월', label: '프로토타입 완성' },
+          { month: '9월', label: 'MVP & 시장 검증' },
+          { month: '11월', label: '합동 데모데이' },
+        ].map((ms) => (
           <div key={ms.month} className="flex flex-col items-center justify-center px-2 py-4">
             <span
               className="text-sm font-black uppercase tracking-tight text-[#FF6C0F]"
@@ -634,81 +573,15 @@ function VccTrack() {
         ))}
       </div>
 
-      <div className="space-y-8">
-        {vccModules.map((mod) => (
-          <div
-            key={mod.num}
-            className="rounded-lg border border-[#d9d9cc] bg-white p-6 md:p-8"
-          >
-            <div className="mb-4 flex flex-wrap items-baseline gap-3">
-              <span
-                className="text-[clamp(2rem,4vw,3rem)] font-black leading-none tracking-tighter text-[#16140f]/10"
-                style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
-              >
-                {mod.num}
-              </span>
-            </div>
-
-            <h3
-              className="text-[clamp(1.25rem,2.5vw,1.75rem)] font-black uppercase leading-tight tracking-tight text-[#16140f]"
-              style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
-            >
-              {mod.title}
-            </h3>
-
-            <p className="mt-1 font-['Pretendard',sans-serif] text-[15px] font-semibold text-[#FF6C0F]">
-              {mod.subtitle}
-            </p>
-
-            <p className="mt-3 font-['MaruBuri',serif] text-[16px] leading-[1.75] text-[#16140f]/70">
-              {mod.description}
-            </p>
-
-            <ul className="mt-5 space-y-2">
-              {mod.activities.map((item, j) => (
-                <li
-                  key={j}
-                  className="flex items-start gap-2.5 font-['MaruBuri',serif] text-[15px] leading-[1.6] text-[#16140f]/80"
-                >
-                  <span className="mt-[9px] block h-1 w-1 shrink-0 rounded-full bg-[#FF6C0F]" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-14">
-        <p
-          className="mb-6 text-center text-xs font-bold uppercase tracking-[0.25em] text-[#16140f]/40"
-          style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
-        >
-          VCC Core Values
-        </p>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-          {[
-            { title: 'CONVERGENCE', desc: '산학 협력으로 실전 벤처 창출' },
-            { title: 'MOBILITY', desc: '모빌리티 산업의 미래를 설계' },
-            { title: 'VALIDATION', desc: '시장이 인정하는 솔루션만 생존' },
-            { title: 'NETWORK', desc: 'RISE · 카카오 · SPEC 삼각 네트워크' },
-          ].map((value) => (
-            <div
-              key={value.title}
-              className="rounded-lg border border-[#d9d9cc] bg-[#f5f5ee] p-4 text-center"
-            >
-              <h4
-                className="text-sm font-black uppercase tracking-wide text-[#16140f] md:text-base"
-                style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
-              >
-                {value.title}
-              </h4>
-              <p className="mt-2 font-['MaruBuri',serif] text-sm text-[#16140f]/50">
-                {value.desc}
-              </p>
-            </div>
-          ))}
-        </div>
+      <div className="flex justify-center">
+        <Image
+          src="/vcc-poster.jpeg"
+          alt="Venture Creation Course 포스터"
+          width={800}
+          height={1131}
+          className="w-full max-w-2xl rounded-xl shadow-lg"
+          priority
+        />
       </div>
     </div>
   );
