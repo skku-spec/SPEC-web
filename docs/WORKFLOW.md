@@ -1,13 +1,15 @@
-# SPEC 웹사이트 개발 워크플로우 (Soft Rules)
+# SPEC 웹사이트 개발 워크플로우
 
-이 문서는 "강제 규정"이 아니라, 팀이 같은 방향으로 빠르게 개발/배포하기 위한 **공유 가이드**입니다.
+이 문서는 팀의 실제 브랜치 운영 규칙과 배포 흐름을 정리한 기준 문서입니다.
+브랜치 정책의 단일 기준은 `docs/BRANCH_POLICY.md`이며, 이 문서는 그 정책을 실무 흐름으로 풀어쓴 버전입니다.
 
 ## TL;DR
 
 - 브랜치: `main`(프로덕션), `dev`(통합/검증), `feat/*`(작업 브랜치)
-- PR: 보통 `feat/* -> dev`, 릴리즈는 `dev -> main`
+- PR: 기본은 `feat/* -> dev`, 릴리즈는 항상 `dev -> main`
 - CI: PR/push 시 `lint`, `typecheck`, `build` 확인
 - 배포: Vercel 프로덕션 도메인 `https://skku-spec.com`
+- 예외적으로 `main`에 hotfix가 직접 들어가면 즉시 `main -> dev` 동기화
 
 ---
 
@@ -17,6 +19,13 @@
 
 - `main`: 프로덕션(실사용) 기준 브랜치
 - `dev`: 통합/검증 브랜치(여러 작업을 모아 확인)
+
+### 핵심 규칙
+
+- 일반 기능 개발과 버그 수정은 모두 `dev` 기준으로 진행합니다.
+- 작업 브랜치는 반드시 `dev`에서 분기합니다.
+- `main`은 릴리즈 브랜치입니다. 일반 작업 브랜치에서 직접 머지하지 않습니다.
+- `main`에 예외적으로 hotfix가 들어가면, 같은 변경을 즉시 `dev`에도 반영합니다.
 
 ### 작업 브랜치 네이밍(권장)
 
@@ -49,8 +58,15 @@ git checkout -b feat/about-curriculum
 2. 머지
 3. Vercel 프로덕션(`skku-spec.com`)에서 확인
 
+### 예외 처리: main hotfix
+
+1. 긴급 대응으로 `main`에 hotfix 머지
+2. 즉시 `dev` 체크아웃
+3. `main`을 `dev`로 fast-forward 또는 `main -> dev` PR 생성
+4. `dev`와 `main`이 다시 같은 HEAD인지 확인
+
 > 참고: 팀 운영상 AI(Claude Code 같은 CLI)가 PR 생성/머지까지 할 수 있습니다.
-> 이 문서는 그 흐름을 "사람이 하는 것처럼" 정리한 것입니다.
+> 사람과 에이전트 모두 같은 브랜치 규칙을 따라야 합니다.
 
 ---
 
