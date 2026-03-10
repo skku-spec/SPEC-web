@@ -42,7 +42,11 @@ feature/xxx (작업 브랜치)
 
 - `main`, `dev` 브랜치에 **직접 push 금지** (PR을 통해서만 머지)
 - 모든 작업은 `dev`에서 새 브랜치를 생성하여 진행
+- 일반 작업 PR은 반드시 `dev`를 대상으로 생성하고, 배포는 `dev -> main` 승격으로만 진행
+- `main`에 긴급 hotfix가 직접 머지되면 즉시 `dev`를 `main`에 다시 맞춰야 함
 - 브랜치 네이밍: `feature/기능명`, `fix/버그명`, `ui/화면명` 등
+
+상세 운영 규칙은 [docs/BRANCH_POLICY.md](docs/BRANCH_POLICY.md)를 기준으로 합니다.
 
 ---
 
@@ -87,6 +91,8 @@ feature 브랜치에서 작업
         v
   main에 머지 ------> CI 검사 + Production 배포 (Vercel)
 ```
+
+예외적으로 `main`에 직접 들어간 hotfix가 있으면, 같은 변경을 `dev`에도 즉시 반영한 뒤 다음 작업을 진행합니다.
 
 ---
 
