@@ -62,9 +62,6 @@ const alumni = [
 
 export default function AlumniGrid() {
   const sectionRef = useRef<HTMLDivElement>(null);
-  const marqueeRef = useRef<HTMLDivElement>(null);
-  const isUserScrollingRef = useRef(false);
-  const scrollRafRef = useRef(0);
   const reducedMotionInBrowser =
     typeof window !== 'undefined' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -97,66 +94,20 @@ export default function AlumniGrid() {
   }, []);
 
   useEffect(() => {
-    let idleTimerId = 0;
-
-    const setScrollingStyle = (scrolling: boolean) => {
-      const el = marqueeRef.current;
-      if (!el) return;
-      el.style.animationPlayState = scrolling ? 'paused' : 'running';
-      el.style.willChange = scrolling ? 'auto' : 'transform';
-    };
-
-    const processScroll = () => {
-      scrollRafRef.current = 0;
-
-      if (!isUserScrollingRef.current) {
-        isUserScrollingRef.current = true;
-        setScrollingStyle(true);
-      }
-
-      if (idleTimerId) {
-        window.clearTimeout(idleTimerId);
-      }
-
-      idleTimerId = window.setTimeout(() => {
-        if (isUserScrollingRef.current) {
-          isUserScrollingRef.current = false;
-          setScrollingStyle(false);
-        }
-      }, 220);
-    };
-
-    const onScroll = () => {
-      if (scrollRafRef.current) return;
-      scrollRafRef.current = requestAnimationFrame(processScroll);
-    };
-
-    window.addEventListener('scroll', onScroll, { passive: true });
-
-    return () => {
-      window.removeEventListener('scroll', onScroll);
-      if (scrollRafRef.current) {
-        cancelAnimationFrame(scrollRafRef.current);
-      }
-      if (idleTimerId) {
-        window.clearTimeout(idleTimerId);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
     const el = sectionRef.current;
     if (!el) return;
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReducedMotion) return;
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
         setIsMarqueeRunning(entry.isIntersecting);
       },
       {
-        threshold: 0,
-        rootMargin: '120px 0px 120px 0px',
+        threshold: 0.2,
+        rootMargin: '0px 0px -10% 0px',
       },
     );
 
@@ -164,7 +115,6 @@ export default function AlumniGrid() {
     return () => observer.disconnect();
   }, []);
 
-  /* Duplicate cards for seamless horizontal marquee loop */
   const marqueeCards = [...alumni, ...alumni].map((person, i) => ({
     person,
     index: i,
@@ -264,15 +214,14 @@ export default function AlumniGrid() {
         </div>
       </div>
 
-      {/* ── Mobile: horizontal marquee (<md) ── */}
-      <div className="md:hidden overflow-hidden px-6">
+      {/* ── Mobile: lightweight marquee (<md) ── */}
+      <div className="scrollbar-none md:hidden overflow-hidden px-6 pb-2">
         <div
-          ref={marqueeRef}
-          className="flex w-max"
+          className="flex w-max gap-4"
           style={{
             animation:
               !reducedMotionInBrowser && isVisible && isMarqueeRunning
-                ? 'alumni-marquee 22s linear infinite'
+                ? 'alumni-marquee 30s linear infinite'
                 : 'none',
             opacity: reducedMotionInBrowser || isVisible ? 1 : 0,
             transition: 'opacity 0.3s ease',
@@ -280,14 +229,17 @@ export default function AlumniGrid() {
               !reducedMotionInBrowser && isVisible && isMarqueeRunning
                 ? 'transform'
                 : 'auto',
-            backfaceVisibility: 'hidden',
           }}
         >
           {marqueeCards.map(({ person, index, isClone }) => (
             <div
               key={`m-${person.name}-${index}`}
-              className="group relative w-[65vw] max-w-[260px] shrink-0 overflow-hidden rounded-xl border border-white/[0.08]"
-              style={{ aspectRatio: '3 / 4', marginRight: '16px' }}
+              className="group relative w-[62vw] max-w-[244px] shrink-0 overflow-hidden rounded-xl border border-white/[0.08]"
+              style={{
+                aspectRatio: '3 / 4',
+                transform: reducedMotionInBrowser || isVisible ? 'translateY(0)' : 'translateY(20px)',
+                transition: `transform 0.45s ease ${index * 0.04}s`,
+              }}
               aria-hidden={isClone}
             >
               <Image
@@ -295,7 +247,7 @@ export default function AlumniGrid() {
                 alt={person.name}
                 fill
                 className="object-cover"
-                sizes="65vw"
+                sizes="62vw"
                 loading={isClone ? 'lazy' : index < 2 ? 'eager' : 'lazy'}
                 priority={!isClone && index === 0}
               />
@@ -351,7 +303,7 @@ export default function AlumniGrid() {
       <style>{`
         @keyframes alumni-marquee {
           from { transform: translate3d(0, 0, 0); }
-          to { transform: translate3d(-50%, 0, 0); }
+          to { transform: translate3d(calc(-50% - 8px), 0, 0); }
         }
       `}</style>
     </section>
