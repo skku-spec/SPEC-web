@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import NextImage from 'next/image';
+import { useEffect, useRef, useState } from 'react';
 
 const entrepreneurImages = [
   '/member/spec1.jpg',
@@ -21,6 +22,15 @@ const specImages = [
 ];
 
 const allBackgroundImages = [...entrepreneurImages, ...specImages];
+const mobileBackgroundImages = [
+  entrepreneurImages[0],
+  entrepreneurImages[2],
+  entrepreneurImages[4],
+  specImages[1],
+  specImages[3],
+];
+
+type BackgroundMode = 'desktop' | 'mobile' | 'static';
 
 export default function ScrollBackground() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -33,11 +43,33 @@ export default function ScrollBackground() {
   const activeLayer = useRef<'a' | 'b'>('a');
   const activeSrcRef = useRef(entrepreneurImages[0]);
   const loadedImageSetRef = useRef<Set<string>>(new Set([entrepreneurImages[0], entrepreneurImages[1]]));
+  const [backgroundMode, setBackgroundMode] = useState<BackgroundMode>('static');
 
   useEffect(() => {
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const isMobileViewport = window.matchMedia('(max-width: 767px)').matches;
-    if (prefersReducedMotion) {
+    const reducedMotionMedia = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const mobileViewportMedia = window.matchMedia('(max-width: 767px)');
+
+    const updateMode = () => {
+      if (reducedMotionMedia.matches) {
+        setBackgroundMode('static');
+        return;
+      }
+
+      setBackgroundMode(mobileViewportMedia.matches ? 'mobile' : 'desktop');
+    };
+
+    updateMode();
+    reducedMotionMedia.addEventListener('change', updateMode);
+    mobileViewportMedia.addEventListener('change', updateMode);
+
+    return () => {
+      reducedMotionMedia.removeEventListener('change', updateMode);
+      mobileViewportMedia.removeEventListener('change', updateMode);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (backgroundMode !== 'desktop') {
       return;
     }
 
@@ -65,6 +97,15 @@ export default function ScrollBackground() {
     let preloadCancelled = false;
     let preloadTimerId = 0;
 
+    layerA.src = entrepreneurImages[0];
+    layerA.style.opacity = '0.22';
+    layerB.src = entrepreneurImages[1];
+    layerB.style.opacity = '0';
+    activeLayer.current = 'a';
+    activeSrcRef.current = entrepreneurImages[0];
+    prevPhase.current = 'entrepreneur';
+    prevIndex.current = 0;
+
     const preloadOne = (src: string) =>
       new Promise<void>((resolve) => {
         if (loadedImageSetRef.current.has(src)) {
@@ -72,7 +113,7 @@ export default function ScrollBackground() {
           return;
         }
 
-        const img = new Image();
+        const img = new window.Image();
         img.decoding = 'async';
         img.setAttribute('fetchpriority', 'low');
         img.onload = () => {
@@ -85,12 +126,8 @@ export default function ScrollBackground() {
         img.src = src;
       });
 
-    const preloadSources = isMobileViewport
-      ? [entrepreneurImages[0], entrepreneurImages[1], entrepreneurImages[2], specImages[0], specImages[1]]
-      : allBackgroundImages;
-
     const preloadInBackground = async () => {
-      for (const src of preloadSources) {
+      for (const src of allBackgroundImages) {
         if (preloadCancelled) {
           break;
         }
@@ -98,7 +135,7 @@ export default function ScrollBackground() {
         await preloadOne(src);
 
         await new Promise<void>((resolve) => {
-          preloadTimerId = window.setTimeout(resolve, isMobileViewport ? 120 : 60);
+          preloadTimerId = window.setTimeout(resolve, 60);
         });
       }
     };
@@ -210,35 +247,225 @@ export default function ScrollBackground() {
       layerA.removeEventListener('transitionend', onTransitionEnd);
       layerB.removeEventListener('transitionend', onTransitionEnd);
     };
-  }, []);
+  }, [backgroundMode]);
+
+  useEffect(() => {
+    if (backgroundMode !== 'mobile') {
+      return;
+    }
+
+    const layerA = layerARef.current;
+    const layerB = layerBRef.current;
+    if (!layerA || !layerB) {
+      return;
+    }
+
+    let preloadCancelled = false;
+    let preloadTimerId = 0;
+
+    const onTransitionEnd = (e: TransitionEvent) => {
+      if (e.propertyName === 'opacity') {
+        (e.target as HTMLElement).style.willChange = 'auto';
+      }
+    };
+    layerA.addEventListener('transitionend', onTransitionEnd);
+    layerB.addEventListener('transitionend', onTransitionEnd);
+
+    layerA.src = mobileBackgroundImages[0];
+    layerA.style.opacity = '0.18';
+    layerB.src = mobileBackgroundImages[1];
+    layerB.style.opacity = '0';
+    activeLayer.current = 'a';
+    activeSrcRef.current = mobileBackgroundImages[0];
+
+    const preloadOne = (src: string) =>
+      new Promise<void>((resolve) => {
+        if (loadedImageSetRef.current.has(src)) {
+          resolve();
+          return;
+        }
+
+        const img = new window.Image();
+        img.decoding = 'async';
+        img.setAttribute('fetchpriority', 'low');
+        img.onload = () => {
+          loadedImageSetRef.current.add(src);
+          resolve();
+        };
+        img.onerror = () => {
+          resolve();
+        };
+        img.src = src;
+      });
+
+    const preloadInBackground = async () => {
+      for (const src of mobileBackgroundImages) {
+        if (preloadCancelled) {
+          break;
+        }
+
+        await preloadOne(src);
+
+        await new Promise<void>((resolve) => {
+          preloadTimerId = window.setTimeout(resolve, 120);
+        });
+      }
+    };
+
+    void preloadInBackground();
+
+    const setDisplayedSrc = (nextSrc: string) => {
+      if (nextSrc === activeSrcRef.current) {
+        return;
+      }
+
+      const activeEl = activeLayer.current === 'a' ? layerA : layerB;
+      const hiddenEl = activeLayer.current === 'a' ? layerB : layerA;
+
+      const reveal = () => {
+        hiddenEl.style.willChange = 'opacity';
+        activeEl.style.willChange = 'opacity';
+        hiddenEl.style.opacity = '0.18';
+        activeEl.style.opacity = '0';
+        activeLayer.current = activeLayer.current === 'a' ? 'b' : 'a';
+        activeSrcRef.current = nextSrc;
+        loadedImageSetRef.current.add(nextSrc);
+      };
+
+      if (hiddenEl.getAttribute('src') === nextSrc && hiddenEl.complete) {
+        reveal();
+        return;
+      }
+
+      hiddenEl.onload = null;
+      hiddenEl.onerror = null;
+      hiddenEl.src = nextSrc;
+
+      if (hiddenEl.complete) {
+        reveal();
+        return;
+      }
+
+      hiddenEl.onload = reveal;
+      hiddenEl.onerror = reveal;
+    };
+
+    const targets = Array.from(
+      document.querySelectorAll<HTMLElement>('#hero, .landing-section'),
+    );
+
+    if (!targets.length) {
+      return () => {
+        preloadCancelled = true;
+        if (preloadTimerId) {
+          window.clearTimeout(preloadTimerId);
+        }
+      };
+    }
+
+    const ratios = new Map<HTMLElement, number>();
+
+    const syncImageToMostVisibleSection = () => {
+      let bestTarget = targets[0];
+      let bestRatio = -1;
+
+      for (const target of targets) {
+        const ratio = ratios.get(target) ?? 0;
+        if (ratio > bestRatio) {
+          bestRatio = ratio;
+          bestTarget = target;
+        }
+      }
+
+      const targetIndex = targets.indexOf(bestTarget);
+      const imageIndex = Math.round(
+        (targetIndex * (mobileBackgroundImages.length - 1)) /
+          Math.max(targets.length - 1, 1),
+      );
+
+      setDisplayedSrc(mobileBackgroundImages[imageIndex] ?? mobileBackgroundImages[0]);
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          ratios.set(
+            entry.target as HTMLElement,
+            entry.isIntersecting ? entry.intersectionRatio : 0,
+          );
+        }
+
+        syncImageToMostVisibleSection();
+      },
+      {
+        threshold: [0.12, 0.28, 0.44, 0.6],
+        rootMargin: '-8% 0px -8% 0px',
+      },
+    );
+
+    targets.forEach((target, index) => {
+      ratios.set(target, index === 0 ? 1 : 0);
+      observer.observe(target);
+    });
+
+    syncImageToMostVisibleSection();
+
+    return () => {
+      preloadCancelled = true;
+      if (preloadTimerId) {
+        window.clearTimeout(preloadTimerId);
+      }
+      observer.disconnect();
+      layerA.onload = null;
+      layerA.onerror = null;
+      layerB.onload = null;
+      layerB.onerror = null;
+      layerA.removeEventListener('transitionend', onTransitionEnd);
+      layerB.removeEventListener('transitionend', onTransitionEnd);
+    };
+  }, [backgroundMode]);
 
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-0 pointer-events-none bg-[#0a0a0a] grayscale"
+      className="pointer-events-none fixed inset-0 z-0 bg-[#0a0a0a] grayscale"
     >
-      <img
-        ref={layerARef}
-        src={entrepreneurImages[0]}
-        alt=""
-        className="absolute inset-0 h-full w-full object-cover object-[48%_center] md:object-center"
-        style={{ opacity: 0.25, transition: 'opacity 0.65s ease-out', willChange: 'auto' }}
-        loading="eager"
-        fetchPriority="high"
-        decoding="async"
-      />
-      <img
-        ref={layerBRef}
-        src={entrepreneurImages[1]}
-        alt=""
-        className="absolute inset-0 h-full w-full object-cover object-[48%_center] md:object-center"
-        style={{ opacity: 0, transition: 'opacity 0.65s ease-out', willChange: 'auto' }}
-        loading="lazy"
-        fetchPriority="low"
-        decoding="async"
-      />
+      {backgroundMode !== 'static' ? (
+        <>
+          <img
+            ref={layerARef}
+            src={backgroundMode === 'mobile' ? mobileBackgroundImages[0] : entrepreneurImages[0]}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover object-[48%_center] md:object-center"
+            style={{ opacity: backgroundMode === 'mobile' ? 0.18 : 0.22, transition: 'opacity 0.65s ease-out', willChange: 'auto' }}
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
+          />
+          <img
+            ref={layerBRef}
+            src={backgroundMode === 'mobile' ? mobileBackgroundImages[1] : entrepreneurImages[1]}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover object-[48%_center] md:object-center"
+            style={{ opacity: 0, transition: 'opacity 0.65s ease-out', willChange: 'auto' }}
+            loading="lazy"
+            fetchPriority="low"
+            decoding="async"
+          />
+        </>
+      ) : (
+        <NextImage
+          src={entrepreneurImages[0]}
+          alt=""
+          fill
+          priority
+          quality={55}
+          sizes="100vw"
+          className="object-cover object-[48%_center] opacity-[0.16] md:object-center"
+        />
+      )}
 
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/20 to-black/70" />
     </div>
   );
 }
