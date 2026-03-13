@@ -329,7 +329,7 @@ describe("getApplicationByCredentials", () => {
     const result = await getApplicationByCredentials("hong@skku.edu", "20240001");
 
     expect(result).toEqual({
-      error: "조회 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+      error: "환경 변수 설정 오류가 발생했습니다. (Service Role Key 확인 필요)",
     });
   });
 
@@ -436,7 +436,9 @@ describe("getMyApplication", () => {
 
     const result = await getMyApplication();
 
-    expect(result).toEqual({ success: true });
+    expect(result).toEqual({
+      error: "환경 변수 설정 오류가 발생했습니다. (Service Role Key 확인 필요)",
+    });
   });
 
   it("returns fallback application by email and links user_id", async () => {

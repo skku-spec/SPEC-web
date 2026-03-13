@@ -1,3 +1,5 @@
+import { RECRUITMENT_RESULT_ANNOUNCEMENT_DATE } from "@/lib/recruitment-schedule";
+
 const STATUS_LABELS: Record<string, string> = {
   pending: "접수완료",
   under_review: "심사중",
@@ -11,8 +13,6 @@ const STATUS_BADGE_CLASSES: Record<string, string> = {
   accepted: "bg-[#E6F9E6] text-[#2f9e44]",
   rejected: "bg-[#FEE2E2] text-[#b42318]",
 };
-
-const RESULT_ANNOUNCEMENT_DATE = "3월 23일 (월)";
 
 function formatDate(dateString: string) {
   return new Intl.DateTimeFormat("ko-KR", {
@@ -83,7 +83,7 @@ export default function ApplicationStatusCard({
             결과 발표
           </span>
           <span className="font-['Pretendard',sans-serif] text-sm font-medium text-[#16140f]">
-            {RESULT_ANNOUNCEMENT_DATE}
+            {RECRUITMENT_RESULT_ANNOUNCEMENT_DATE}
           </span>
         </div>
       </div>

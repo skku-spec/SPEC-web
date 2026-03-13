@@ -4,6 +4,7 @@ import { useTransition, useState, useEffect } from "react";
 import { updateMyApplication, getMyApplicationDetail } from "@/lib/actions/applications";
 import { useRouter } from "next/navigation";
 import CustomSelect from "@/components/ui/CustomSelect";
+import { RECRUITMENT_BATCH } from "@/lib/recruitment-schedule";
 
 export default function EditApplicationPage() {
   const router = useRouter();
@@ -248,7 +249,7 @@ export default function EditApplicationPage() {
                 </label>
                 <label className="block">
                   <span className="mb-2 block text-sm font-semibold text-[#16140f]">지원 차수 *</span>
-                  <CustomSelect name="batch" defaultValue="4" options={[{ value: "4", label: "SPEC 4기 러너" }]} className="h-12" />
+                  <CustomSelect name="batch" defaultValue={RECRUITMENT_BATCH.value} options={[{ value: RECRUITMENT_BATCH.value, label: RECRUITMENT_BATCH.learnerLabel }]} className="h-12" />
                 </label>
               </div>
             </div>

@@ -1,6 +1,10 @@
 "use client";
 
 import ApplyButton from "@/components/ui/ApplyButton";
+import {
+  RECRUITMENT_BATCH,
+  RECRUITMENT_DEADLINE_LABEL,
+} from "@/lib/recruitment-schedule";
 export default function Hero() {
   return (
     <section
@@ -12,7 +16,7 @@ export default function Hero() {
           {/* Batch badge */}
           <div className="relative inline-flex rounded-full p-[1px]" style={{ background: 'linear-gradient(135deg, rgba(249,115,22,0.6) 0%, rgba(255,255,255,0.12) 100%)' }}>
             <span className="inline-block rounded-full bg-black/80 px-5 py-1.5 font-['Outfit',sans-serif] text-xs uppercase tracking-[0.1em] text-white/75">
-              2026 Spring · 4기 모집중
+              {RECRUITMENT_BATCH.heroBadgeLabel}
             </span>
           </div>
 
@@ -41,9 +45,9 @@ export default function Hero() {
               <ApplyButton href="/apply" size="md">
                 Apply Now
               </ApplyButton>
-               <span className="font-['Pretendard',sans-serif] text-sm text-white/40">
-                 마감: 2026년 3월
-               </span>
+                  <span className="font-['Pretendard',sans-serif] text-sm text-white/40">
+                   {RECRUITMENT_DEADLINE_LABEL}
+                 </span>
              </div>
         </div>
 

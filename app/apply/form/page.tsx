@@ -4,6 +4,10 @@ import { useTransition, useState } from "react";
 import { submitApplication } from "@/lib/actions/applications";
 import { useRouter } from "next/navigation";
 import CustomSelect from "@/components/ui/CustomSelect";
+import {
+  RECRUITMENT_BATCH,
+  RECRUITMENT_SCHEDULE_SUMMARY,
+} from "@/lib/recruitment-schedule";
 
 
 export default function ApplicationFormPage() {
@@ -145,22 +149,28 @@ export default function ApplicationFormPage() {
           
           <div className="space-y-6 text-lg leading-relaxed text-[#6b6b5e] font-['Pretendard',sans-serif]">
             <p>
-              성균관대학교 실전창업동아리 <span className="font-bold text-[#16140f]">SPEC 4기</span>에 <br className="hidden md:block"/>
+              성균관대학교 실전창업동아리 <span className="font-bold text-[#16140f]">{RECRUITMENT_BATCH.shortLabel}</span>에 <br className="hidden md:block"/>
               소중한 시간을 내어 지원해주셔서 진심으로 감사합니다.
             </p>
             
             <div className="mx-auto max-w-[480px] rounded-lg bg-[#fcfcf8] p-6 text-sm text-left border border-[#f0efe6]">
               <h3 className="font-bold text-[#16140f] mb-4 flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#FF6C0F]"></span> 모집 절차
+                <span className="h-1.5 w-1.5 rounded-full bg-[#FF6C0F]"></span> 추가 모집 절차
               </h3>
               <div className="space-y-3 text-[#4a4a40]">
-                <div className="flex justify-between"><span>1차 서류 접수</span><span className="font-semibold text-[#16140f]">3/1(일) ~ 3/12(목)</span></div>
-                <div className="flex justify-between"><span>서류 결과 발표</span><span className="font-semibold text-[#16140f]">3/15(일)</span></div>
-                <div className="h-px bg-[#eae9e2] my-1"></div>
-                <div className="flex justify-between"><span>2차 온라인 면접</span><span className="font-semibold text-[#16140f]">3/16(월) ~ 3/22(일)</span></div>
-                <div className="flex justify-between"><span>최종 결과 발표</span><span className="font-semibold text-[#16140f]">3/23(월)</span></div>
-                <div className="flex justify-between"><span>OT (필참)</span><span className="font-semibold text-[#16140f]">3/27(금)</span></div>
-                <div className="h-px bg-[#eae9e2] my-1"></div>
+                {RECRUITMENT_SCHEDULE_SUMMARY.map((step, index) => (
+                  <div key={step.title}>
+                    <div className="flex justify-between">
+                      <span>{step.title}</span>
+                      <span className={`font-semibold ${step.highlight ? "text-[#FF6C0F]" : "text-[#16140f]"}`}>
+                        {step.date}
+                      </span>
+                    </div>
+                    {index === 1 || index === RECRUITMENT_SCHEDULE_SUMMARY.length - 1 ? (
+                      <div className="h-px bg-[#eae9e2] my-1"></div>
+                    ) : null}
+                  </div>
+                ))}
                 <div className="space-y-1 text-[#6b6b5e]">
                   <p>• <span className="font-semibold text-[#4a4a40]">안내 채널:</span> 지원서에 기재하신 개별 이메일</p>
                   <p>• <span className="font-semibold text-[#4a4a40]">문의:</span> 전도현 (회장) 010-9445-0964</p>
@@ -325,7 +335,7 @@ export default function ApplicationFormPage() {
                   <CustomSelect
                     name="batch"
                     defaultValue="4"
-                    options={[{ value: "4", label: "SPEC 4기 러너" }]}
+                    options={[{ value: RECRUITMENT_BATCH.value, label: RECRUITMENT_BATCH.learnerLabel }]}
                     className="h-12"
                   />
                 </label>
@@ -550,7 +560,7 @@ export default function ApplicationFormPage() {
         <input type="hidden" name="portfolio_url" value={fridayParticipation} />
         <input type="hidden" name="experience_extra" value={teamRole} />
         <input type="hidden" name="additional_comments" value={additionalComments} />
-        <input type="hidden" name="batch" value="4" />
+        <input type="hidden" name="batch" value={RECRUITMENT_BATCH.value} />
 
         {/* ── Step 3: 동의 확인 ──────────────────────────────── */}
         {step === 3 && (
@@ -568,7 +578,7 @@ export default function ApplicationFormPage() {
                 <h3 className="font-bold text-[#16140f] mb-3">개인정보 수집 및 이용 안내</h3>
                 <ul className="space-y-2 list-disc pl-4">
                   <li>수집 항목: 성명, 학번, 이메일, 연락처, 전공, 학년, 재학 상태, 자기소개 등 지원 시 기재한 내용</li>
-                  <li>수집 목적: SPEC 4기 회원 선발 및 활동 관리</li>
+                  <li>수집 목적: {RECRUITMENT_BATCH.shortLabel} 선발 및 활동 관리</li>
                   <li>보유 기간: 선발 종료 후 1년 간 보관 후 파기</li>
                 </ul>
                 <p className="mt-4 text-xs font-medium text-[#16140f]">

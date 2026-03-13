@@ -4,16 +4,18 @@ import { redirect } from "next/navigation";
 import ApplyButton from "@/components/ui/ApplyButton";
 import { getCurrentUser } from "@/lib/auth";
 import { getMyApplication } from "@/lib/actions/applications";
+import { getRecruitmentTimeline } from "@/lib/recruitment-schedule";
 import ApplicationStatusCard from "./status/ApplicationStatusCard";
 
 export const metadata: Metadata = {
   title: "지원하기 | SPEC — 성균관대 창업학회",
   description:
-    "SPEC 4기 러너를 모집합니다. 30주 동안 팀을 만들고, 프로덕트를 런칭하고, 실제 매출을 만드는 실전 창업 트랙.",
+    "SPEC 4기 러너 추가 모집을 진행합니다. 30주 동안 팀을 만들고, 프로덕트를 런칭하고, 실제 매출을 만드는 실전 창업 트랙.",
 };
 
 export default async function ApplyPage() {
   const { user } = await getCurrentUser();
+  const recruitmentTimeline = getRecruitmentTimeline();
 
   if (!user) {
     redirect("/login?redirect=/apply");
@@ -61,7 +63,7 @@ export default async function ApplyPage() {
             <strong className="font-semibold text-[#16140f]">
               SPEC 4기 러너(Learner)
             </strong>
-            를 모집하고 있습니다. 러너 트랙은 30주 동안 팀을 만들고, 프로덕트를
+            를 추가 모집하고 있습니다. 러너 트랙은 30주 동안 팀을 만들고, 프로덕트를
             런칭하고, 실제 매출을 만드는 실전 창업 트랙입니다. 완성된 아이디어는
             필요 없습니다. 사업 경험도 필요 없습니다. 필요한 건 하나 —{" "}
             <strong className="font-semibold text-[#16140f]">
@@ -135,26 +137,11 @@ export default async function ApplyPage() {
         {/* ── 모집 일정 ── */}
         <div className="mt-12 rounded-lg border border-[#d9d9cc] bg-white p-8 md:p-10">
           <h3 className="font-['Pretendard',sans-serif] text-lg font-bold text-[#16140f]">
-            모집 일정
+            추가 모집 일정
           </h3>
 
           <div className="mt-6 font-['Pretendard',sans-serif] text-[16px]">
-            {(
-              [
-                { title: "1차 서류 접수", date: "3/1(일) ~ 3/12(목)", status: "completed", highlight: false },
-                { title: "서류 심사", date: "3/13(금) ~ 3/14(토)", status: "completed", highlight: false },
-                { title: "1차 결과 발표", date: "3/15(일)", status: "completed", highlight: false },
-                { title: "2차 온라인 면접", date: "3/16(월) ~ 3/22(일)", status: "completed", highlight: false },
-                { title: "최종 결과 발표", date: "3/23(월)", status: "completed", highlight: false },
-                { title: "OT 사전 안내", date: "3/24(화) ~ 3/26(목)", status: "completed", highlight: false },
-                { title: "OT (필참)", date: "3/27(금)", status: "completed", highlight: true },
-              ] as {
-                title: string;
-                date: string;
-                status: "completed" | "active" | "upcoming";
-                highlight: boolean;
-              }[]
-            ).map((step, i, arr) => (
+            {recruitmentTimeline.map((step, i, arr) => (
               <div key={step.title} className="relative flex gap-4">
                 {/* Spine: dot + connector */}
                 <div className="flex flex-col items-center">

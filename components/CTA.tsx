@@ -3,6 +3,7 @@
 import { startTransition, useEffect, useRef, useState } from "react";
 
 import ApplyButton from "@/components/ui/ApplyButton";
+import { RECRUITMENT_DEADLINE_LABEL } from "@/lib/recruitment-schedule";
 
 export default function CTA() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -53,9 +54,9 @@ export default function CTA() {
             Apply
           </ApplyButton>
 
-           <p className="mt-4 font-['Pretendard',sans-serif] text-sm text-white/40">
-              마감: 2026년 3월 | 성균관대 재학생 대상
-           </p>
+            <p className="mt-4 font-['Pretendard',sans-serif] text-sm text-white/40">
+              {RECRUITMENT_DEADLINE_LABEL} | 성균관대 재학생 대상
+            </p>
        </div>
      </section>
    );
