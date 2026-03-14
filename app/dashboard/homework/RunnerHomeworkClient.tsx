@@ -8,6 +8,7 @@ type Homework = {
   title: string;
   individual_content: string[];
   team_content: string[];
+  submission_link?: string;
   is_individual: boolean;
   is_team: boolean;
   created_at: string;
@@ -233,7 +234,16 @@ export function RunnerHomeworkClient() {
                             <p className="text-sm font-black text-[#16140f]">과제를 완료하셨나요?</p>
                             <p className="text-[11px] font-medium text-[#6b6b5e] mt-1">결과물을 정리하여 제출해 주세요.</p>
                           </div>
-                          <button className="w-full rounded-xl bg-[#16140f] py-3 text-xs font-black text-white shadow-xl shadow-gray-100 hover:scale-105 active:scale-95 transition-all">
+                          <button 
+                            onClick={() => {
+                              if (hw.submission_link) {
+                                window.open(hw.submission_link, '_blank');
+                              } else {
+                                alert("관리자가 등록한 제출 링크가 없습니다.");
+                              }
+                            }}
+                            className="w-full rounded-xl bg-[#16140f] py-3 text-xs font-black text-white shadow-xl shadow-gray-100 hover:scale-105 active:scale-95 transition-all"
+                          >
                             과제 제출하기 (Submit)
                           </button>
                         </div>

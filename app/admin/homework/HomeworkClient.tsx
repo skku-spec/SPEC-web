@@ -6,7 +6,9 @@ import { createClient } from "@/lib/supabase/client";
 type Homework = {
   id: string;
   title: string;
-  content: string;
+  individual_content: any;
+  team_content: any;
+  submission_link?: string;
   is_individual: boolean;
   is_team: boolean;
   created_at: string;
@@ -31,6 +33,7 @@ export function HomeworkClient() {
   
   // Form States
   const [newTitle, setNewTitle] = useState("");
+  const [submissionLink, setSubmissionLink] = useState("");
   const [individualTasks, setIndividualTasks] = useState<string[]>([""]);
   const [teamTasks, setTeamTasks] = useState<string[]>([""]);
   const [isIndividual, setIsIndividual] = useState(true);
@@ -103,6 +106,7 @@ export function HomeworkClient() {
       .insert([
         {
           title: newTitle,
+          submission_link: submissionLink.trim() || null,
           individual_content: isIndividual ? individualTasks.filter(t => t.trim() !== "") : [],
           team_content: isTeam ? teamTasks.filter(t => t.trim() !== "") : [],
           is_individual: isIndividual,
@@ -143,6 +147,7 @@ export function HomeworkClient() {
 
   const resetForm = () => {
     setNewTitle("");
+    setSubmissionLink("");
     setIndividualTasks([""]);
     setTeamTasks([""]);
     setIsIndividual(true);
@@ -224,6 +229,16 @@ export function HomeworkClient() {
                     placeholder="예: 3월 2주차 기획 및 개발 과제"
                     className="w-full rounded-xl border border-[#d9d9cc] bg-[#fcfcfb] px-4 py-3 text-sm focus:border-[#FF6C0F] focus:ring-1 focus:ring-[#FF6C0F] focus:outline-none transition-all"
                     required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-[#16140f] mb-2 mt-4">과제 제출 링크 (Submission Link)</label>
+                  <input
+                    type="url"
+                    value={submissionLink}
+                    onChange={(e) => setSubmissionLink(e.target.value)}
+                    placeholder="https://forms.gle/..."
+                    className="w-full rounded-xl border border-[#d9d9cc] bg-[#fcfcfb] px-4 py-3 text-sm focus:border-[#FF6C0F] focus:ring-1 focus:ring-[#FF6C0F] focus:outline-none transition-all"
                   />
                 </div>
               </section>

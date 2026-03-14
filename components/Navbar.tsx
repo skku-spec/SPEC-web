@@ -106,7 +106,7 @@ export default function Navbar() {
       </div>
 
       <nav>
-          <div className="relative hidden min-[1024px]:flex items-center justify-center w-full max-w-[1400px] mx-auto px-8 py-2">
+          <div className="relative hidden min-[1024px]:flex items-center justify-center w-full max-w-[1600px] mx-auto px-8 lg:px-10 py-2">
           <div className="flex w-[320px] items-center justify-end gap-10">
             <div className="nav-item relative">
               <button className={`nav-link ${textColor} ${hoverColor} flex items-center gap-1 font-['Pretendard',sans-serif] text-sm`}>
@@ -230,7 +230,7 @@ export default function Navbar() {
             </Link>
           </div>
 
-          <div className="absolute right-8 flex items-center gap-3">
+          <div className="absolute right-8 lg:right-10 flex items-center gap-3">
            <ApplyButton href={isAuthenticated ? "/apply" : "/login?redirect=/apply"} size="sm">
               Apply
             </ApplyButton>
