@@ -15,7 +15,7 @@ type ActionResult = {
 type PostRow = Database["public"]["Tables"]["posts"]["Row"];
 type TagRow = Database["public"]["Tables"]["tags"]["Row"];
 
-const WRITER_ROLES: UserRole[] = ["member", "admin"];
+const WRITER_ROLES: UserRole[] = ["runner", "preneur", "admin"];
 
 function isValidPostType(value: string): value is PostType {
   return value === "blog" || value === "news";

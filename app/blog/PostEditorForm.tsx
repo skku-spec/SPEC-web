@@ -22,7 +22,7 @@ import { createClient } from "@/lib/supabase/client";
 
 /* ─── Constants & Types ─────────────────────────────────────────── */
 
-const WRITER_ROLES: UserRole[] = ["member", "admin"];
+const WRITER_ROLES: UserRole[] = ["runner", "preneur", "admin"];
 
 type PostEditorFormProps = {
   mode: "create" | "edit";
@@ -423,7 +423,7 @@ export default function PostEditorForm({ mode, post, initialTags = [] }: PostEdi
           </h1>
           <p className="mt-3 font-['Pretendard',sans-serif] text-[15px] text-[#6b6b5e]">
             {mode === "create"
-              ? "글쓰기는 member 이상 권한에서만 가능합니다."
+              ? "글쓰기는 runner 이상 권한에서만 가능합니다."
               : "본인 글 작성자 또는 관리자만 수정할 수 있습니다."}
           </p>
           <Link

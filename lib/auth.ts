@@ -4,12 +4,13 @@ import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 
-export type UserRole = "outsider" | "member" | "admin";
+export type UserRole = "outsider" | "runner" | "preneur" | "admin";
 
 /** DB role 값을 UserRole로 변환. 알 수 없는 값은 outsider로 처리. */
 export function normalizeRole(role: string | null | undefined): UserRole {
   if (role === "admin") return "admin";
-  if (role === "member") return "member";
+  if (role === "preneur") return "preneur";
+  if (role === "runner") return "runner";
   return "outsider";
 }
 
@@ -22,8 +23,9 @@ type AuthResult = {
 
 const ROLE_LEVEL: Record<UserRole, number> = {
   outsider: 0,
-  member: 1,
-  admin: 2,
+  runner: 1,
+  preneur: 2,
+  admin: 3,
 };
 
 export async function getCurrentUser(): Promise<AuthResult | { user: null; profile: null }> {
@@ -74,5 +76,5 @@ export function isAdmin(role: string | null): boolean {
 }
 
 export function canWrite(role: string | null): boolean {
-  return role === "member" || role === "admin";
+  return role === "runner" || role === "preneur" || role === "admin";
 }

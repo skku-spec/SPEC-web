@@ -13,24 +13,26 @@ type UsersClientProps = {
   initialProfiles: Profile[];
 };
 
-type UserRole = "outsider" | "member" | "admin";
+type UserRole = "outsider" | "runner" | "preneur" | "admin";
 
-const ROLE_OPTIONS: UserRole[] = ["admin", "member", "outsider"];
+const ROLE_OPTIONS: UserRole[] = ["admin", "preneur", "runner", "outsider"];
 
 const ROLE_COLORS: Record<UserRole, string> = {
   admin: "#DC2626",
-  member: "#2563EB",
+  preneur: "#F59E0B", // Amber/Orange
+  runner: "#2563EB", // Blue
   outsider: "#6b6b5e",
 };
 
 function formatRoleLabel(role: UserRole) {
   if (role === "outsider") return "외부인";
-  if (role === "member") return "부원";
+  if (role === "runner") return "러너";
+  if (role === "preneur") return "프러너";
   return "관리자";
 }
 
 function isProfileRole(value: string): value is UserRole {
-  return value === "admin" || value === "member" || value === "outsider";
+  return value === "admin" || value === "preneur" || value === "runner" || value === "outsider";
 }
 
 function formatJoinedDate(date: string) {

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/lib/supabase/server";
 
-type UserRole = "outsider" | "member" | "admin";
+type UserRole = "outsider" | "runner" | "preneur" | "admin";
 
 type AdminActionResult = {
   success: boolean;
@@ -13,7 +13,8 @@ type AdminActionResult = {
 
 const VALID_ROLES: Record<UserRole, string> = {
   outsider: "외부인",
-  member: "부원",
+  runner: "러너",
+  preneur: "프러너",
   admin: "관리자",
 };
 
