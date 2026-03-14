@@ -552,13 +552,13 @@ export function HomeworkClient() {
                         : "bg-[#f5f5ee] text-[#16140f] hover:bg-[#16140f] hover:text-white"
                       }`}
                     >
-                      {viewingId === hw.id ? "Close Panel" : "Manage Details"}
+                      {viewingId === hw.id ? "닫기" : "열람하기"}
                     </button>
                     <button
                       onClick={() => handleDeleteHomework(hw.id)}
                       className="rounded-2xl border-2 border-red-50 px-4 py-3 text-xs font-black text-red-300 transition-all hover:bg-red-500 hover:text-white hover:border-red-500"
                     >
-                      Delete
+                      삭제
                     </button>
                   </div>
                 </div>
