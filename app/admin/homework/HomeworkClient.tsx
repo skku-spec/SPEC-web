@@ -9,9 +9,30 @@ type Homework = {
   individual_content: any;
   team_content: any;
   submission_link?: string;
+  padlet_board_id?: string;
   is_individual: boolean;
   is_team: boolean;
   created_at: string;
+};
+
+type PadletSection = {
+  id: string;
+  title: string;
+};
+
+type PadletPost = {
+  id: string;
+  subject?: string;
+  body?: string;
+  author?: { name?: string; email?: string };
+  section_id?: string;
+};
+
+type SubmissionRow = {
+  label: string;         // runner name or team name
+  isTeam: boolean;
+  memberNames: string[];
+  sectionStatus: Record<string, boolean>; // sectionId -> submitted
 };
 
 type Profile = {
@@ -34,6 +55,7 @@ export function HomeworkClient() {
   // Form States
   const [newTitle, setNewTitle] = useState("");
   const [submissionLink, setSubmissionLink] = useState("");
+  const [padletBoardId, setPadletBoardId] = useState("");
   const [individualTasks, setIndividualTasks] = useState<string[]>([""]);
   const [teamTasks, setTeamTasks] = useState<string[]>([""]);
   const [isIndividual, setIsIndividual] = useState(true);
@@ -43,6 +65,8 @@ export function HomeworkClient() {
 
   const [viewingId, setViewingId] = useState<string | null>(null);
   const [viewingTeams, setViewingTeams] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<Record<string, 'content' | 'status'>>({});
+  const [padletData, setPadletData] = useState<Record<string, { sections: PadletSection[]; posts: PadletPost[]; loading: boolean; error: string | null }>>({});
 
   const supabase = createClient();
 
@@ -107,6 +131,7 @@ export function HomeworkClient() {
         {
           title: newTitle,
           submission_link: submissionLink.trim() || null,
+          padlet_board_id: padletBoardId.trim() || null,
           individual_content: isIndividual ? individualTasks.filter(t => t.trim() !== "") : [],
           team_content: isTeam ? teamTasks.filter(t => t.trim() !== "") : [],
           is_individual: isIndividual,
@@ -148,6 +173,7 @@ export function HomeworkClient() {
   const resetForm = () => {
     setNewTitle("");
     setSubmissionLink("");
+    setPadletBoardId("");
     setIndividualTasks([""]);
     setTeamTasks([""]);
     setIsIndividual(true);
@@ -188,6 +214,88 @@ export function HomeworkClient() {
     if (!error) {
       setHomeworks(homeworks.filter((hw) => hw.id !== id));
     }
+  };
+
+  const fetchPadletSubmissions = async (hw: Homework) => {
+    if (!hw.padlet_board_id) return;
+    const hwId = hw.id;
+
+    setPadletData(prev => ({ ...prev, [hwId]: { sections: [], posts: [], loading: true, error: null } }));
+
+    try {
+      const res = await fetch(`/api/padlet/board?board_id=${hw.padlet_board_id}`);
+      const json = await res.json();
+
+      if (!res.ok) {
+        setPadletData(prev => ({ ...prev, [hwId]: { sections: [], posts: [], loading: false, error: json.error || '불러오기 실패' } }));
+        return;
+      }
+
+      // Parse sections and posts from Padlet JSON:API response
+      const included: any[] = json.included || [];
+      const sections: PadletSection[] = included
+        .filter((r: any) => r.type === 'section')
+        .map((r: any) => ({ id: r.id, title: r.attributes?.title || '(섹션 없음)' }));
+      const posts: PadletPost[] = included
+        .filter((r: any) => r.type === 'post')
+        .map((r: any) => ({
+          id: r.id,
+          subject: r.attributes?.subject,
+          body: r.attributes?.body,
+          author: r.attributes?.author,
+          section_id: r.relationships?.section?.data?.id,
+        }));
+
+      setPadletData(prev => ({ ...prev, [hwId]: { sections, posts, loading: false, error: null } }));
+    } catch (e: any) {
+      setPadletData(prev => ({ ...prev, [hwId]: { sections: [], posts: [], loading: false, error: e.message } }));
+    }
+  };
+
+  const buildSubmissionRows = (hw: Homework): SubmissionRow[] => {
+    const pData = padletData[hw.id];
+    if (!pData) return [];
+    const { sections, posts } = pData;
+
+    // Helper: check if a runner name matches any padlet post author in a section
+    const postedInSection = (names: string[], sectionId: string | undefined) =>
+      posts.some(p => {
+        const sMatch = sectionId ? p.section_id === sectionId : !p.section_id;
+        const authorName = p.author?.name?.toLowerCase() || '';
+        return sMatch && names.some(n => authorName.includes(n.toLowerCase()) || n.toLowerCase().includes(authorName));
+      });
+
+    const rows: SubmissionRow[] = [];
+
+    if (hw.is_team && viewingTeams.length > 0) {
+      // Group by team
+      const teamNames = Array.from(new Set(viewingTeams.map((vt: any) => vt.team_name)));
+      teamNames.forEach(teamName => {
+        const members = viewingTeams.filter((vt: any) => vt.team_name === teamName);
+        const memberNames = members.map((m: any) => m.profiles?.name || '');
+        const sectionStatus: Record<string, boolean> = {};
+        sections.forEach(s => {
+          sectionStatus[s.id] = postedInSection(memberNames, s.id);
+        });
+        // No section case
+        if (sections.length === 0) {
+          sectionStatus['__none__'] = postedInSection(memberNames, undefined);
+        }
+        rows.push({ label: teamName, isTeam: true, memberNames, sectionStatus });
+      });
+    } else if (hw.is_individual) {
+      availableRunners.forEach(runner => {
+        const sectionStatus: Record<string, boolean> = {};
+        sections.forEach(s => {
+          sectionStatus[s.id] = postedInSection([runner.name], s.id);
+        });
+        if (sections.length === 0) {
+          sectionStatus['__none__'] = postedInSection([runner.name], undefined);
+        }
+        rows.push({ label: runner.name, isTeam: false, memberNames: [runner.name], sectionStatus });
+      });
+    }
+    return rows;
   };
 
 
@@ -232,12 +340,23 @@ export function HomeworkClient() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-[#16140f] mb-2 mt-4">과제 제출 링크 (Submission Link)</label>
+                  <label className="block text-sm font-bold text-[#16140f] mb-1 mt-4">Padlet Board ID</label>
+                  <p className="text-[11px] text-[#a1a196] mb-2">Padlet URL에서 숫자 ID를 입력하세요. (예: padlet.com/user/<strong>12345678</strong>)</p>
+                  <input
+                    type="text"
+                    value={padletBoardId}
+                    onChange={(e) => setPadletBoardId(e.target.value)}
+                    placeholder="예: 123456789"
+                    className="w-full rounded-xl border border-[#d9d9cc] bg-[#fcfcfb] px-4 py-3 text-sm focus:border-[#FF6C0F] focus:ring-1 focus:ring-[#FF6C0F] focus:outline-none transition-all font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-[#16140f] mb-2 mt-4">과제 제출 링크 (Submission Link, 러너에게 표시)</label>
                   <input
                     type="url"
                     value={submissionLink}
                     onChange={(e) => setSubmissionLink(e.target.value)}
-                    placeholder="https://forms.gle/..."
+                    placeholder="https://padlet.com/..."
                     className="w-full rounded-xl border border-[#d9d9cc] bg-[#fcfcfb] px-4 py-3 text-sm focus:border-[#FF6C0F] focus:ring-1 focus:ring-[#FF6C0F] focus:outline-none transition-all"
                   />
                 </div>
@@ -581,69 +700,207 @@ export function HomeworkClient() {
               
               {/* Detail Area */}
               {viewingId === hw.id && (
-                <div className="border-t-2 border-[#f0efe6] bg-[#fcfcfb] p-10 animate-in slide-in-from-top-6 duration-500">
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-                    <div className="lg:col-span-12 xl:col-span-8 space-y-10">
-                      {hw.is_individual && hw.individual_content && (
-                        <div className="space-y-4">
-                          <h4 className="flex items-center gap-2.5 text-sm font-black text-blue-600 uppercase tracking-widest">
-                            <span className="h-2 w-2 rounded-full bg-blue-600" /> 개인 과제 목록
-                          </h4>
-                          <div className="space-y-4">
-                            {(Array.isArray(hw.individual_content) ? hw.individual_content : [hw.individual_content]).map((task: string, tIdx: number) => (
-                              <div key={tIdx} className="rounded-[28px] bg-white p-8 shadow-sm border border-[#f0efe6] whitespace-pre-wrap text-[#4a4a40] leading-[1.8] font-medium transition-all hover:shadow-md">
-                                <span className="text-blue-500 font-bold mr-2">#{tIdx + 1}</span> {task}
+                <div className="border-t-2 border-[#f0efe6] bg-[#fcfcfb] animate-in slide-in-from-top-6 duration-500">
+                  {/* Tabs */}
+                  <div className="flex items-center gap-1 px-10 pt-8 border-b border-[#f0efe6]">
+                    <button
+                      onClick={() => setActiveTab(prev => ({ ...prev, [hw.id]: 'content' }))}
+                      className={`px-5 py-2.5 text-xs font-black rounded-t-xl transition-all ${
+                        (activeTab[hw.id] ?? 'content') === 'content'
+                          ? 'bg-white border-2 border-b-white border-[#f0efe6] text-[#16140f] -mb-[2px]'
+                          : 'text-[#a1a196] hover:text-[#16140f]'
+                      }`}
+                    >
+                      📋 과제 내용
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActiveTab(prev => ({ ...prev, [hw.id]: 'status' }));
+                        if (!padletData[hw.id]) fetchPadletSubmissions(hw);
+                      }}
+                      className={`px-5 py-2.5 text-xs font-black rounded-t-xl transition-all ${
+                        activeTab[hw.id] === 'status'
+                          ? 'bg-white border-2 border-b-white border-[#f0efe6] text-[#FF6C0F] -mb-[2px]'
+                          : 'text-[#a1a196] hover:text-[#FF6C0F]'
+                      }`}
+                    >
+                      📊 제출 현황
+                      {!hw.padlet_board_id && <span className="ml-1 text-[9px] text-red-400">(Board ID 없음)</span>}
+                    </button>
+                  </div>
+
+                  <div className="p-10">
+                    {/* Tab: 과제 내용 */}
+                    {(activeTab[hw.id] ?? 'content') === 'content' && (
+                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                        <div className="lg:col-span-12 xl:col-span-8 space-y-10">
+                          {hw.is_individual && hw.individual_content && (
+                            <div className="space-y-4">
+                              <h4 className="flex items-center gap-2.5 text-sm font-black text-blue-600 uppercase tracking-widest">
+                                <span className="h-2 w-2 rounded-full bg-blue-600" /> 개인 과제 목록
+                              </h4>
+                              <div className="space-y-4">
+                                {(Array.isArray(hw.individual_content) ? hw.individual_content : [hw.individual_content]).map((task: string, tIdx: number) => (
+                                  <div key={tIdx} className="rounded-[28px] bg-white p-8 shadow-sm border border-[#f0efe6] whitespace-pre-wrap text-[#4a4a40] leading-[1.8] font-medium transition-all hover:shadow-md">
+                                    <span className="text-blue-500 font-bold mr-2">#{tIdx + 1}</span> {task}
+                                  </div>
+                                ))}
                               </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      
-                      {hw.is_team && hw.team_content && (
-                        <div className="space-y-4">
-                          <h4 className="flex items-center gap-2.5 text-sm font-black text-purple-600 uppercase tracking-widest">
-                            <span className="h-2 w-2 rounded-full bg-purple-600" /> 팀 협동 과제 목록
-                          </h4>
-                          <div className="space-y-4">
-                            {(Array.isArray(hw.team_content) ? hw.team_content : [hw.team_content]).map((task: string, tIdx: number) => (
-                              <div key={tIdx} className="rounded-[28px] bg-white p-8 shadow-sm border border-[#f0efe6] whitespace-pre-wrap text-[#4a4a40] leading-[1.8] font-medium transition-all hover:shadow-md">
-                                <span className="text-purple-500 font-bold mr-2">#{tIdx + 1}</span> {task}
+                            </div>
+                          )}
+                          {hw.is_team && hw.team_content && (
+                            <div className="space-y-4">
+                              <h4 className="flex items-center gap-2.5 text-sm font-black text-purple-600 uppercase tracking-widest">
+                                <span className="h-2 w-2 rounded-full bg-purple-600" /> 팀 협동 과제 목록
+                              </h4>
+                              <div className="space-y-4">
+                                {(Array.isArray(hw.team_content) ? hw.team_content : [hw.team_content]).map((task: string, tIdx: number) => (
+                                  <div key={tIdx} className="rounded-[28px] bg-white p-8 shadow-sm border border-[#f0efe6] whitespace-pre-wrap text-[#4a4a40] leading-[1.8] font-medium transition-all hover:shadow-md">
+                                    <span className="text-purple-500 font-bold mr-2">#{tIdx + 1}</span> {task}
+                                  </div>
+                                ))}
                               </div>
-                            ))}
-                          </div>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                    
-                    {hw.is_team && viewingTeams.length > 0 && (
-                      <div className="lg:col-span-12 xl:col-span-4 mt-4 xl:mt-0">
-                        <div className="sticky top-10 space-y-6">
-                           <h4 className="flex items-center gap-2.5 text-sm font-black text-[#FF6C0F] uppercase tracking-widest">
-                            <span className="h-2 w-2 rounded-full bg-[#FF6C0F]" /> 팀 빌딩 현황
-                          </h4>
-                          <div className="space-y-5 rounded-[32px] bg-white p-8 shadow-lg border-2 border-[#f0efe6]">
-                            {Array.from(new Set(viewingTeams.map(vt => vt.team_name))).map(teamName => (
-                              <div key={teamName} className="group/item">
-                                <p className="text-sm font-black text-[#FF6C0F] mb-3 flex items-center justify-between">
-                                  {teamName}
-                                  <span className="text-[10px] font-bold text-[#a1a196] bg-[#f5f5ee] px-2 py-0.5 rounded-lg">
-                                    {viewingTeams.filter(vt => vt.team_name === teamName).length} 명
-                                  </span>
-                                </p>
-                                <div className="flex flex-wrap gap-2">
-                                  {viewingTeams.filter(vt => vt.team_name === teamName).map(member => (
-                                    <span key={member.user_id} className="inline-flex items-center rounded-xl bg-[#f5f5ee] px-3 py-1.5 text-[11px] font-bold text-[#16140f] border border-transparent transition-all group-hover/item:border-[#FF6C0F] group-hover/item:bg-white">
-                                      {member.profiles?.name}
-                                    </span>
-                                  ))}
-                                </div>
-                                <div className="mt-4 border-b border-[#f0efe6] last:border-0" />
+                        {hw.is_team && viewingTeams.length > 0 && (
+                          <div className="lg:col-span-12 xl:col-span-4 mt-4 xl:mt-0">
+                            <div className="sticky top-10 space-y-6">
+                              <h4 className="flex items-center gap-2.5 text-sm font-black text-[#FF6C0F] uppercase tracking-widest">
+                                <span className="h-2 w-2 rounded-full bg-[#FF6C0F]" /> 팀 빌딩 현황
+                              </h4>
+                              <div className="space-y-5 rounded-[32px] bg-white p-8 shadow-lg border-2 border-[#f0efe6]">
+                                {Array.from(new Set(viewingTeams.map(vt => vt.team_name))).map(teamName => (
+                                  <div key={teamName} className="group/item">
+                                    <p className="text-sm font-black text-[#FF6C0F] mb-3 flex items-center justify-between">
+                                      {teamName}
+                                      <span className="text-[10px] font-bold text-[#a1a196] bg-[#f5f5ee] px-2 py-0.5 rounded-lg">
+                                        {viewingTeams.filter(vt => vt.team_name === teamName).length} 명
+                                      </span>
+                                    </p>
+                                    <div className="flex flex-wrap gap-2">
+                                      {viewingTeams.filter(vt => vt.team_name === teamName).map((member: any) => (
+                                        <span key={member.user_id} className="inline-flex items-center rounded-xl bg-[#f5f5ee] px-3 py-1.5 text-[11px] font-bold text-[#16140f] border border-transparent transition-all group-hover/item:border-[#FF6C0F] group-hover/item:bg-white">
+                                          {member.profiles?.name}
+                                        </span>
+                                      ))}
+                                    </div>
+                                    <div className="mt-4 border-b border-[#f0efe6] last:border-0" />
+                                  </div>
+                                ))}
                               </div>
-                            ))}
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                     )}
+
+                    {/* Tab: 제출 현황 */}
+                    {activeTab[hw.id] === 'status' && (() => {
+                      const pData = padletData[hw.id];
+                      if (!hw.padlet_board_id) {
+                        return (
+                          <div className="flex flex-col items-center justify-center py-16 text-center gap-4">
+                            <span className="text-4xl">🔗</span>
+                            <p className="text-sm font-bold text-[#6b6b5e]">과제에 Padlet Board ID가 설정되어 있지 않습니다.</p>
+                          </div>
+                        );
+                      }
+                      if (!pData || pData.loading) {
+                        return (
+                          <div className="flex items-center justify-center py-16 gap-3">
+                            <div className="h-6 w-6 animate-spin rounded-full border-4 border-[#FF6C0F] border-t-transparent" />
+                            <span className="text-sm font-bold text-[#6b6b5e]">Padlet에서 제출 내역을 불러오는 중...</span>
+                          </div>
+                        );
+                      }
+                      if (pData.error) {
+                        return (
+                          <div className="rounded-2xl bg-red-50 border border-red-100 p-6 text-center">
+                            <p className="text-sm font-bold text-red-500">❌ 오류: {pData.error}</p>
+                            <button onClick={() => fetchPadletSubmissions(hw)} className="mt-3 text-xs font-black text-red-400 underline">다시 시도</button>
+                          </div>
+                        );
+                      }
+
+                      const rows = buildSubmissionRows(hw);
+                      const sectionCols = pData.sections.length > 0 ? pData.sections : [{ id: '__none__', title: '(섹션 없음)' }];
+                      const submittedCount = rows.filter(r => Object.values(r.sectionStatus).some(Boolean)).length;
+
+                      return (
+                        <div className="space-y-6">
+                          {/* Stats */}
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-black text-[#16140f] uppercase tracking-widest">📊 섹션별 제출 현황</h4>
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs font-bold text-[#6b6b5e]">{submittedCount}/{rows.length} 제출 완료</span>
+                              <button
+                                onClick={() => fetchPadletSubmissions(hw)}
+                                className="rounded-xl bg-[#f5f5ee] px-3 py-1.5 text-[11px] font-black text-[#16140f] hover:bg-[#16140f] hover:text-white transition-all"
+                              >
+                                🔄 새로고침
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Table */}
+                          <div className="overflow-x-auto rounded-2xl border-2 border-[#f0efe6] bg-white">
+                            <table className="w-full text-sm">
+                              <thead>
+                                <tr className="border-b-2 border-[#f0efe6] bg-[#f5f5ee]">
+                                  <th className="px-6 py-4 text-left text-[11px] font-black text-[#a1a196] uppercase tracking-widest w-48">이름 / 팀</th>
+                                  {sectionCols.map(s => (
+                                    <th key={s.id} className="px-4 py-4 text-center text-[11px] font-black text-[#a1a196] uppercase tracking-widest">{s.title}</th>
+                                  ))}
+                                  <th className="px-4 py-4 text-center text-[11px] font-black text-[#a1a196] uppercase tracking-widest">전체</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {rows.length === 0 ? (
+                                  <tr><td colSpan={sectionCols.length + 2} className="py-12 text-center text-xs text-[#a1a196] italic">표시할 데이터가 없습니다.</td></tr>
+                                ) : rows.map((row, rIdx) => {
+                                  const allSubmitted = sectionCols.every(s => row.sectionStatus[s.id]);
+                                  const anySubmitted = sectionCols.some(s => row.sectionStatus[s.id]);
+                                  return (
+                                    <tr key={rIdx} className={`border-b border-[#f0efe6] transition-colors ${
+                                      allSubmitted ? 'bg-green-50/40' : anySubmitted ? 'bg-yellow-50/30' : ''
+                                    }`}>
+                                      <td className="px-6 py-4">
+                                        <div>
+                                          <p className="text-sm font-black text-[#16140f] flex items-center gap-2">
+                                            {row.isTeam && <span className="text-[10px] bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full font-black">팀</span>}
+                                            {row.label}
+                                          </p>
+                                          {row.isTeam && (
+                                            <p className="text-[10px] text-[#a1a196] mt-0.5">{row.memberNames.join(', ')}</p>
+                                          )}
+                                        </div>
+                                      </td>
+                                      {sectionCols.map(s => (
+                                        <td key={s.id} className="px-4 py-4 text-center">
+                                          {row.sectionStatus[s.id]
+                                            ? <span className="text-lg" title="제출 완료">✅</span>
+                                            : <span className="text-lg opacity-30" title="미제출">⬜</span>}
+                                        </td>
+                                      ))}
+                                      <td className="px-4 py-4 text-center">
+                                        <span className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-black ${
+                                          allSubmitted ? 'bg-green-100 text-green-700' : anySubmitted ? 'bg-yellow-100 text-yellow-700' : 'bg-red-50 text-red-400'
+                                        }`}>
+                                          {allSubmitted ? '완료' : anySubmitted ? '일부' : '미제출'}
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+
+                          <p className="text-[10px] text-[#a1a196] italic">* 팀 과제: 팀원 중 1명이라도 해당 섹션에 Padlet 게시글을 작성하면 「완료」로 표시됩니다. 이름 매칭 기반입니다.</p>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               )}
