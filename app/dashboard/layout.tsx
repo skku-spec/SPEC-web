@@ -30,10 +30,18 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
             <nav className="flex flex-col gap-1">
               <Link
                 href="/dashboard/applications"
-                className="flex items-center gap-2.5 rounded-lg bg-[#FFF0E5] px-3 py-2.5 text-sm font-medium text-[#FF6C0F] transition-colors"
+                className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-[#16140f] hover:bg-[#f0efe6] transition-colors"
+                // Ideally this would have active state styles
               >
                 <span className="text-base">📋</span>
                 <span>모집 지원서</span>
+              </Link>
+              <Link
+                href="/dashboard/homework"
+                className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-[#16140f] hover:bg-[#f0efe6] transition-colors"
+              >
+                <span className="text-base">📚</span>
+                <span>Homework</span>
               </Link>
             </nav>
           </div>
@@ -48,9 +56,15 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
             <div className="flex items-center gap-2">
               <h1 className="text-sm font-semibold text-[#16140f] [font-family:system-ui,-apple-system,sans-serif]">Dashboard</h1>
               <span className="text-[#d9d9cc]">·</span>
-              <Link href="/dashboard/applications" className="text-sm font-medium text-[#FF6C0F]">
-                모집 지원서
-              </Link>
+              <nav className="flex items-center gap-2">
+                <Link href="/dashboard/applications" className="text-sm font-medium text-[#FF6C0F]">
+                  모집 지원서
+                </Link>
+                <span className="text-[#d9d9cc]">·</span>
+                <Link href="/dashboard/homework" className="text-sm font-medium text-[#FF6C0F]">
+                  Homework
+                </Link>
+              </nav>
             </div>
           </div>
 

@@ -1,36 +1,74 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 type Homework = {
   id: string;
   title: string;
   content: string;
-  createdAt: string;
+  created_at: string;
 };
 
 export function HomeworkClient() {
   const [homeworks, setHomeworks] = useState<Homework[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newContent, setNewContent] = useState("");
   const [viewingId, setViewingId] = useState<string | null>(null);
 
-  const handleAddHomework = (e: React.FormEvent) => {
+  const supabase = createClient();
+
+  useEffect(() => {
+    fetchHomeworks();
+  }, []);
+
+  const fetchHomeworks = async () => {
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from("homeworks")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (!error && data) {
+      setHomeworks(data);
+    }
+    setIsLoading(false);
+  };
+
+  const handleAddHomework = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
 
-    const newHomework: Homework = {
-      id: Math.random().toString(36).substr(2, 9),
-      title: newTitle,
-      content: newContent,
-      createdAt: new Date().toLocaleDateString(),
-    };
+    const { data, error } = await supabase
+      .from("homeworks")
+      .insert([
+        {
+          title: newTitle,
+          content: newContent,
+        },
+      ])
+      .select()
+      .single();
 
-    setHomeworks([newHomework, ...homeworks]);
-    setNewTitle("");
-    setNewContent("");
-    setIsAdding(false);
+    if (!error && data) {
+      setHomeworks([data, ...homeworks]);
+      setNewTitle("");
+      setNewContent("");
+      setIsAdding(false);
+    } else {
+      alert("과제 생성 중 에러가 발생했습니다.");
+    }
+  };
+
+  const handleDeleteHomework = async (id: string) => {
+    if (!confirm("정말 삭제하시겠습니까?")) return;
+
+    const { error } = await supabase.from("homeworks").delete().eq("id", id);
+    if (!error) {
+      setHomeworks(homeworks.filter((hw) => hw.id !== id));
+    }
   };
 
   return (
@@ -100,7 +138,11 @@ export function HomeworkClient() {
 
       {/* List */}
       <div className="space-y-3">
-        {homeworks.length === 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#FF6C0F] border-t-transparent" />
+          </div>
+        ) : homeworks.length === 0 ? (
           <div className="rounded-xl border border-[#d9d9cc] bg-white p-12 text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#f5f5ee]">
               <span className="text-3xl">📖</span>
@@ -117,13 +159,23 @@ export function HomeworkClient() {
                   <h3 className="font-semibold text-[#16140f]">{hw.title}</h3>
                 </div>
                 <div className="flex items-center gap-4">
-                  <span className="text-xs text-[#a1a196]">{hw.createdAt}</span>
-                  <button
-                    onClick={() => setViewingId(viewingId === hw.id ? null : hw.id)}
-                    className="rounded-lg border border-[#d9d9cc] px-3 py-1.5 text-xs font-medium text-[#16140f] transition-colors hover:bg-[#16140f] hover:text-white"
-                  >
-                    {viewingId === hw.id ? "닫기" : "열람하기"}
-                  </button>
+                  <span className="text-xs text-[#a1a196]">
+                    {new Date(hw.created_at).toLocaleDateString()}
+                  </span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setViewingId(viewingId === hw.id ? null : hw.id)}
+                      className="rounded-lg border border-[#d9d9cc] px-3 py-1.5 text-xs font-medium text-[#16140f] transition-colors hover:bg-[#16140f] hover:text-white"
+                    >
+                      {viewingId === hw.id ? "닫기" : "열람하기"}
+                    </button>
+                    <button
+                      onClick={() => handleDeleteHomework(hw.id)}
+                      className="rounded-lg border border-red-100 px-3 py-1.5 text-xs font-medium text-red-500 transition-colors hover:bg-red-50"
+                    >
+                      삭제
+                    </button>
+                  </div>
                 </div>
               </div>
               
@@ -142,3 +194,4 @@ export function HomeworkClient() {
     </div>
   );
 }
+
