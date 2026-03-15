@@ -638,7 +638,63 @@ export type Database = {
         };
         Relationships: [];
       };
-
+      homeworks: {
+        Row: {
+          id: string;
+          title: string;
+          individual_content: Json;
+          team_content: Json;
+          submission_link: string | null;
+          padlet_board_id: string | null;
+          is_individual: boolean;
+          is_team: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          individual_content?: Json;
+          team_content?: Json;
+          submission_link?: string | null;
+          padlet_board_id?: string | null;
+          is_individual?: boolean;
+          is_team?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          individual_content?: Json;
+          team_content?: Json;
+          submission_link?: string | null;
+          padlet_board_id?: string | null;
+          is_individual?: boolean;
+          is_team?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      homework_team_assignments: {
+        Row: {
+          homework_id: string;
+          user_id: string;
+          team_name: string;
+          created_at: string;
+        };
+        Insert: {
+          homework_id: string;
+          user_id: string;
+          team_name: string;
+          created_at?: string;
+        };
+        Update: {
+          homework_id?: string;
+          user_id?: string;
+          team_name?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;

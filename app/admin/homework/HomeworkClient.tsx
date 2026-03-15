@@ -6,8 +6,8 @@ import { createClient } from "@/lib/supabase/client";
 type Homework = {
   id: string;
   title: string;
-  individual_content: any;
-  team_content: any;
+  individual_content: string[];
+  team_content: string[];
   submission_link?: string;
   padlet_board_id?: string;
   is_individual: boolean;
@@ -44,6 +44,8 @@ type TeamAssignment = {
   memberIds: string[];
 };
 
+const supabase = createClient();
+
 export function HomeworkClient() {
   const [homeworks, setHomeworks] = useState<Homework[]>([]);
   const [availableRunners, setAvailableRunners] = useState<Profile[]>([]);
@@ -62,31 +64,25 @@ export function HomeworkClient() {
   const [teamSearchQueries, setTeamSearchQueries] = useState<string[]>([]);
 
   const [viewingId, setViewingId] = useState<string | null>(null);
-  const [viewingTeams, setViewingTeams] = useState<any[]>([]);
+  const [viewingTeams, setViewingTeams] = useState<{
+    team_name: string;
+    user_id: string;
+    profiles: { name: string } | null;
+  }[]>([]);
   const [activeTab, setActiveTab] = useState<Record<string, 'content' | 'status'>>({});
   const [padletData, setPadletData] = useState<Record<string, { sections: PadletSection[]; posts: PadletPost[]; loading: boolean; error: string | null }>>({});
 
-  const supabase = createClient();
-
-  useEffect(() => {
-    fetchHomeworks();
-    fetchRunners();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const fetchHomeworks = useCallback(async () => {
     setIsLoading(true);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase
-      .from("homeworks" as never)
+    const { data, error } = await supabase
+      .from("homeworks")
       .select("*")
-      .order("created_at", { ascending: false }) as any);
+      .order("created_at", { ascending: false });
 
     if (!error && data) {
-      setHomeworks(data);
+      setHomeworks(data as unknown as Homework[]);
     }
     setIsLoading(false);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchRunners = useCallback(async () => {
@@ -97,8 +93,12 @@ export function HomeworkClient() {
     if (!error && data) {
       setAvailableRunners(data as Profile[]);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    fetchHomeworks();
+    fetchRunners();
+  }, [fetchHomeworks, fetchRunners]);
 
   const handleFetchTeams = async (homeworkId: string) => {
     if (viewingId === homeworkId) {
@@ -107,14 +107,19 @@ export function HomeworkClient() {
     }
 
     setViewingId(homeworkId);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase
-      .from("homework_team_assignments" as never)
-      .select("team_name, user_id, profiles(name)")
-      .eq("homework_id", homeworkId) as any);
+    const { data, error } = await supabase
+      .from("homework_team_assignments")
+      .select(`
+        team_name,
+        user_id,
+        profiles (
+          name
+        )
+      `)
+      .eq("homework_id", homeworkId);
 
     if (!error && data) {
-      setViewingTeams(data);
+      setViewingTeams(data as unknown as { team_name: string; user_id: string; profiles: { name: string } | null }[]);
     } else {
       setViewingTeams([]);
     }
@@ -128,9 +133,8 @@ export function HomeworkClient() {
       return;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: hwData, error: hwError } = await (supabase
-      .from("homeworks" as any)
+    const { data: hwData, error: hwError } = await supabase
+      .from("homeworks")
       .insert([
         {
           title: newTitle,
@@ -143,7 +147,7 @@ export function HomeworkClient() {
         },
       ])
       .select()
-      .single() as any);
+      .single();
 
     if (hwError || !hwData) {
       alert("과제 생성 중 에러가 발생했습니다.");
@@ -160,17 +164,16 @@ export function HomeworkClient() {
         }))
       );
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error: teamError } = await (supabase
-        .from("homework_team_assignments" as any)
-        .insert(assignments) as any);
+      const { error: teamError } = await supabase
+        .from("homework_team_assignments")
+        .insert(assignments);
 
       if (teamError) {
         alert("팀 배정 중 일부 에러가 발생했습니다.");
       }
     }
 
-    setHomeworks([hwData, ...homeworks]);
+    setHomeworks([hwData as unknown as Homework, ...homeworks]);
     resetForm();
     setIsAdding(false);
   };
@@ -215,8 +218,7 @@ export function HomeworkClient() {
 
   const handleDeleteHomework = async (id: string) => {
     if (!confirm("정말 삭제하시겠습니까?")) return;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from("homeworks" as never).delete().eq("id", id) as any);
+    const { error } = await supabase.from("homeworks").delete().eq("id", id);
     if (!error) {
       setHomeworks(homeworks.filter((hw) => hw.id !== id));
     }
@@ -237,14 +239,18 @@ export function HomeworkClient() {
         return;
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const included: any[] = json.included || [];
+      const included: {
+        type: string;
+        id: string;
+        attributes?: { title?: string; author?: { name?: string; email?: string } };
+        relationships?: { section?: { data?: { id?: string } } };
+      }[] = json.included || [];
       const sections: PadletSection[] = included
-        .filter((r: any) => r.type === 'section')
-        .map((r: any) => ({ id: r.id, title: r.attributes?.title || '(섹션 없음)' }));
+        .filter((r) => r.type === 'section')
+        .map((r) => ({ id: r.id, title: r.attributes?.title || '(섹션 없음)' }));
       const posts: PadletPost[] = included
-        .filter((r: any) => r.type === 'post')
-        .map((r: any) => ({
+        .filter((r) => r.type === 'post')
+        .map((r) => ({
           id: r.id,
           author: r.attributes?.author,
           section_id: r.relationships?.section?.data?.id,
@@ -273,13 +279,10 @@ export function HomeworkClient() {
 
     if (hw.is_team && viewingTeams.length > 0) {
       // Group by team
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const teamNames = Array.from(new Set(viewingTeams.map((vt: any) => vt.team_name)));
-    teamNames.forEach(teamName => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const members = viewingTeams.filter((vt: any) => vt.team_name === teamName);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const memberNames = members.map((m: any) => m.profiles?.name || '');
+      const teamNames = Array.from(new Set(viewingTeams.map((vt) => vt.team_name)));
+      teamNames.forEach(teamName => {
+        const members = viewingTeams.filter((vt) => vt.team_name === teamName);
+        const memberNames = members.map((m) => m.profiles?.name || '');
         const sectionStatus: Record<string, boolean> = {};
         sections.forEach(s => {
           sectionStatus[s.id] = postedInSection(memberNames, s.id);
@@ -654,7 +657,7 @@ export function HomeworkClient() {
             <p className="mt-2 text-[#6b6b5e] font-medium">관리 중인 과제가 없습니다. 새로운 과제를 생성해보세요.</p>
           </div>
         ) : (
-          homeworks.map((hw: any) => (
+          homeworks.map((hw: Homework) => (
             <div key={hw.id} className="group overflow-hidden rounded-[32px] border-2 border-[#d9d9cc] bg-white transition-all hover:border-[#FF6C0F] hover:shadow-2xl hover:-translate-y-1">
               <div className="flex flex-wrap items-center justify-between px-10 py-7 gap-6">
                 <div className="flex items-center gap-6">
@@ -786,7 +789,7 @@ export function HomeworkClient() {
                                       </span>
                                     </p>
                                     <div className="flex flex-wrap gap-2">
-                                      {viewingTeams.filter(vt => vt.team_name === teamName).map((member: any) => (
+                                      {viewingTeams.filter(vt => vt.team_name === teamName).map((member) => (
                                         <span key={member.user_id} className="inline-flex items-center rounded-xl bg-[#f5f5ee] px-3 py-1.5 text-[11px] font-bold text-[#16140f] border border-transparent transition-all group-hover/item:border-[#FF6C0F] group-hover/item:bg-white">
                                           {member.profiles?.name}
                                         </span>
@@ -807,104 +810,54 @@ export function HomeworkClient() {
                       const pData = padletData[hw.id];
                       if (!hw.padlet_board_id) {
                         return (
-                          <div className="flex flex-col items-center justify-center py-16 text-center gap-4">
-                            <span className="text-4xl">🔗</span>
-                            <p className="text-sm font-bold text-[#6b6b5e]">과제에 Padlet Board ID가 설정되어 있지 않습니다.</p>
+                          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border-2 border-dashed border-[#d9d9cc]">
+                            <span className="text-4xl mb-4">🚫</span>
+                            <p className="text-sm font-bold text-[#a1a196]">Padlet Board ID가 설정되지 않았습니다.</p>
                           </div>
                         );
                       }
-                      if (!pData || pData.loading) {
-                        return (
-                          <div className="flex items-center justify-center py-16 gap-3">
-                            <div className="h-6 w-6 animate-spin rounded-full border-4 border-[#FF6C0F] border-t-transparent" />
-                            <span className="text-sm font-bold text-[#6b6b5e]">Padlet에서 제출 내역을 불러오는 중...</span>
-                          </div>
-                        );
-                      }
-                      if (pData.error) {
-                        return (
-                          <div className="rounded-2xl bg-red-50 border border-red-100 p-6 text-center">
-                            <p className="text-sm font-bold text-red-500">❌ 오류: {pData.error}</p>
-                            <button onClick={() => fetchPadletSubmissions(hw)} className="mt-3 text-xs font-black text-red-400 underline">다시 시도</button>
-                          </div>
-                        );
-                      }
+                      if (pData?.loading) return <div className="text-center py-20 text-xs font-black text-[#a1a196] animate-pulse">PADLET 부르는 중...</div>;
+                      if (pData?.error) return <div className="text-center py-20 text-red-400 text-xs font-bold">{pData.error}</div>;
 
                       const rows = buildSubmissionRows(hw);
-                      const sectionCols = pData.sections.length > 0 ? pData.sections : [{ id: '__none__', title: '(섹션 없음)' }];
-                      const submittedCount = rows.filter(r => Object.values(r.sectionStatus).some(Boolean)).length;
 
                       return (
-                        <div className="space-y-6">
-                          {/* Stats */}
-                          <div className="flex items-center justify-between">
-                            <h4 className="text-sm font-black text-[#16140f] uppercase tracking-widest">📊 섹션별 제출 현황</h4>
-                            <div className="flex items-center gap-3">
-                              <span className="text-xs font-bold text-[#6b6b5e]">{submittedCount}/{rows.length} 제출 완료</span>
-                              <button
-                                onClick={() => fetchPadletSubmissions(hw)}
-                                className="rounded-xl bg-[#f5f5ee] px-3 py-1.5 text-[11px] font-black text-[#16140f] hover:bg-[#16140f] hover:text-white transition-all"
-                              >
-                                🔄 새로고침
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* Table */}
-                          <div className="overflow-x-auto rounded-2xl border-2 border-[#f0efe6] bg-white">
-                            <table className="w-full text-sm">
-                              <thead>
-                                <tr className="border-b-2 border-[#f0efe6] bg-[#f5f5ee]">
-                                  <th className="px-6 py-4 text-left text-[11px] font-black text-[#a1a196] uppercase tracking-widest w-48">이름 / 팀</th>
-                                  {sectionCols.map(s => (
-                                    <th key={s.id} className="px-4 py-4 text-center text-[11px] font-black text-[#a1a196] uppercase tracking-widest">{s.title}</th>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left border-collapse min-w-[600px]">
+                            <thead>
+                              <tr className="border-b-2 border-[#f0efe6]">
+                                <th className="py-4 px-4 text-[10px] font-black uppercase tracking-widest text-[#a1a196] w-1/4">대상 (Type)</th>
+                                {pData.sections.length > 0 ? pData.sections.map(s => (
+                                  <th key={s.id} className="py-4 px-4 text-[10px] font-black uppercase tracking-widest text-[#a1a196] text-center">
+                                    {s.title}
+                                  </th>
+                                )) : (
+                                  <th className="py-4 px-4 text-[10px] font-black uppercase tracking-widest text-[#a1a196] text-center">전체 (No Section)</th>
+                                )}
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[#f0efe6]">
+                              {rows.map((row, rIdx) => (
+                                <tr key={rIdx} className="hover:bg-white transition-colors">
+                                  <td className="py-5 px-4">
+                                    <p className="text-sm font-black text-[#16140f]">{row.label}</p>
+                                    <p className="text-[10px] font-medium text-[#a1a196] mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px]">
+                                      {row.memberNames.join(', ')}
+                                    </p>
+                                  </td>
+                                  {Object.keys(row.sectionStatus).map(sId => (
+                                    <td key={sId} className="py-5 px-4 text-center">
+                                      {row.sectionStatus[sId] ? (
+                                        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-green-50 text-green-600 ring-2 ring-green-100">✅</span>
+                                      ) : (
+                                        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-red-50 text-red-200 ring-1 ring-red-50 opacity-40">❌</span>
+                                      )}
+                                    </td>
                                   ))}
-                                  <th className="px-4 py-4 text-center text-[11px] font-black text-[#a1a196] uppercase tracking-widest">전체</th>
                                 </tr>
-                              </thead>
-                              <tbody>
-                                {rows.length === 0 ? (
-                                  <tr><td colSpan={sectionCols.length + 2} className="py-12 text-center text-xs text-[#a1a196] italic">표시할 데이터가 없습니다.</td></tr>
-                                ) : rows.map((row, rIdx) => {
-                                  const allSubmitted = sectionCols.every(s => row.sectionStatus[s.id]);
-                                  const anySubmitted = sectionCols.some(s => row.sectionStatus[s.id]);
-                                  return (
-                                    <tr key={rIdx} className={`border-b border-[#f0efe6] transition-colors ${
-                                      allSubmitted ? 'bg-green-50/40' : anySubmitted ? 'bg-yellow-50/30' : ''
-                                    }`}>
-                                      <td className="px-6 py-4">
-                                        <div>
-                                          <p className="text-sm font-black text-[#16140f] flex items-center gap-2">
-                                            {row.isTeam && <span className="text-[10px] bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full font-black">팀</span>}
-                                            {row.label}
-                                          </p>
-                                          {row.isTeam && (
-                                            <p className="text-[10px] text-[#a1a196] mt-0.5">{row.memberNames.join(', ')}</p>
-                                          )}
-                                        </div>
-                                      </td>
-                                      {sectionCols.map(s => (
-                                        <td key={s.id} className="px-4 py-4 text-center">
-                                          {row.sectionStatus[s.id]
-                                            ? <span className="text-lg" title="제출 완료">✅</span>
-                                            : <span className="text-lg opacity-30" title="미제출">⬜</span>}
-                                        </td>
-                                      ))}
-                                      <td className="px-4 py-4 text-center">
-                                        <span className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-black ${
-                                          allSubmitted ? 'bg-green-100 text-green-700' : anySubmitted ? 'bg-yellow-100 text-yellow-700' : 'bg-red-50 text-red-400'
-                                        }`}>
-                                          {allSubmitted ? '완료' : anySubmitted ? '일부' : '미제출'}
-                                        </span>
-                                      </td>
-                                    </tr>
-                                  );
-                                })}
-                              </tbody>
-                            </table>
-                          </div>
-
-                          <p className="text-[10px] text-[#a1a196] italic">* 팀 과제: 팀원 중 1명이라도 해당 섹션에 Padlet 게시글을 작성하면 「완료」로 표시됩니다. 이름 매칭 기반입니다.</p>
+                              ))}
+                            </tbody>
+                          </table>
                         </div>
                       );
                     })()}

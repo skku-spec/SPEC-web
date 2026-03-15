@@ -13,8 +13,7 @@ type Homework = {
   is_team: boolean;
   created_at: string;
 };
-
-
+const supabase = createClient();
 
 export function RunnerHomeworkClient() {
   const [homeworks, setHomeworks] = useState<Homework[]>([]);
@@ -22,61 +21,56 @@ export function RunnerHomeworkClient() {
   const [isLoading, setIsLoading] = useState(true);
   const [viewingId, setViewingId] = useState<string | null>(null);
 
-  const supabase = createClient();
-
   const fetchData = useCallback(async () => {
-    setIsLoading(true);
 
     // 1. Get current user
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setIsLoading(false); return; }
 
     // 2. Fetch all homeworks
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: hwData } = await (supabase
-      .from("homeworks" as never)
+    const { data: hwData } = await supabase
+      .from("homeworks")
       .select("*")
-      .order("created_at", { ascending: false }) as any);
+      .order("created_at", { ascending: false });
 
     // 3. Fetch my team assignments
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: assignData } = await (supabase
-      .from("homework_team_assignments" as never)
+    const { data: assignData } = await supabase
+      .from("homework_team_assignments")
       .select("homework_id, team_name")
-      .eq("user_id", user.id) as any);
+      .eq("user_id", user.id);
 
     // 4. If I have team assignments, fetch teammates for those teams
     const assignmentsMap: Record<string, { teamName: string; teammates: string[] }> = {};
 
     if (assignData && assignData.length > 0) {
       for (const assignment of assignData) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: teammatesData } = await (supabase
-          .from("homework_team_assignments" as never)
+        const { data: teammatesData } = await supabase
+          .from("homework_team_assignments")
           .select("user_id, profiles(name)")
           .eq("homework_id", assignment.homework_id)
-          .eq("team_name", assignment.team_name) as any);
+          .eq("team_name", assignment.team_name);
 
         if (teammatesData) {
           assignmentsMap[assignment.homework_id] = {
             teamName: assignment.team_name,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            teammates: (teammatesData as any[])
-              .filter((t: any) => t.user_id !== user.id)
-              .map((t: any) => (t.profiles as any)?.name),
+            teammates: (teammatesData as unknown as { user_id: string; profiles: { name: string } | null }[])
+              .filter((t) => t.user_id !== user.id)
+              .map((t) => t.profiles?.name || "Unknown"),
           };
         }
       }
     }
 
-    if (hwData) setHomeworks(hwData as Homework[]);
+    setHomeworks(hwData as unknown as Homework[]);
     setMyAssignments(assignmentsMap);
     setIsLoading(false);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    fetchData();
+    const load = async () => {
+      await fetchData();
+    };
+    void load();
   }, [fetchData]);
 
 
