@@ -6,6 +6,20 @@ import Footer from "@/components/Footer";
 export const metadata: Metadata = {
   title: "SPEC | 성균관대학교 창업 학회",
   description: "SPEC - 성균관대학교 창업 학회. 만드는 사람이 세상을 바꾼다.",
+  openGraph: {
+    title: "SKKU SPEC | 성균관대학교 창업 학회",
+    description:
+      "Execution over everything. SPEC은 30주 안에 진짜 매출을 만드는 성균관대학교 창업 프로그램입니다.",
+    siteName: "SKKU SPEC",
+    locale: "ko_KR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SKKU SPEC | 성균관대학교 창업 학회",
+    description:
+      "Execution over everything. SPEC은 30주 안에 진짜 매출을 만드는 성균관대학교 창업 프로그램입니다.",
+  },
 };
 
 export default function RootLayout({
