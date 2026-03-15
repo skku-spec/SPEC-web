@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
+type JsonApiResource = {
+  type: string;
+  id: string;
+  attributes?: Record<string, unknown>;
+  relationships?: Record<string, { data?: { type: string; id: string } | null }>;
+};
+
 export async function GET(req: NextRequest) {
   const boardId = req.nextUrl.searchParams.get("board_id");
   if (!boardId) {
@@ -17,9 +24,9 @@ export async function GET(req: NextRequest) {
       {
         headers: {
           "x-api-key": apiKey,
-          "Accept": "application/json",
+          // Padlet API v1 uses JSON:API spec — must use vnd.api+json, NOT application/json
+          "Accept": "application/vnd.api+json",
         },
-        // Cache for 60 seconds to reduce API calls
         next: { revalidate: 60 },
       }
     );
@@ -32,8 +39,64 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const data = await res.json();
-    return NextResponse.json(data);
+    // JSON:API response shape:
+    // { data: {...}, included: [ {type, id, attributes, relationships}, ... ] }
+    const json = await res.json() as { data: JsonApiResource; included?: JsonApiResource[] };
+    const included: JsonApiResource[] = json.included || [];
+
+    // Build a lookup map: "type:id" -> resource
+    const resourceMap = new Map<string, JsonApiResource>();
+    for (const r of included) {
+      resourceMap.set(`${r.type}:${r.id}`, r);
+    }
+
+    // Normalize sections
+    const sections = included
+      .filter((r) => r.type === "section")
+      .map((r) => ({
+        id: r.id,
+        title: (r.attributes?.title as string) || "(섹션 없음)",
+      }));
+
+    // Normalize posts — author can be in attributes OR via relationships -> user in included
+    const posts = included
+      .filter((r) => r.type === "post")
+      .map((r) => {
+        // Try attributes.author first (if Padlet embeds it directly)
+        let authorName: string | undefined;
+        let authorEmail: string | undefined;
+
+        const attrAuthor = r.attributes?.author as Record<string, string> | undefined;
+        if (attrAuthor) {
+          authorName = attrAuthor.name;
+          authorEmail = attrAuthor.email;
+        } else {
+          // Fallback: look up the author via relationships -> user resource in included
+          const authorRel = r.relationships?.author?.data;
+          if (authorRel) {
+            const authorResource = resourceMap.get(`${authorRel.type}:${authorRel.id}`);
+            if (authorResource) {
+              authorName = (authorResource.attributes?.name as string) ||
+                           (authorResource.attributes?.display_name as string);
+              authorEmail = authorResource.attributes?.email as string | undefined;
+            }
+          }
+        }
+
+        // Section relationship
+        const sectionRel = r.relationships?.section?.data;
+        const sectionId = sectionRel?.id;
+
+        return {
+          id: r.id,
+          author: authorName || authorEmail
+            ? { name: authorName, email: authorEmail }
+            : undefined,
+          section_id: sectionId,
+        };
+      });
+
+    return NextResponse.json({ sections, posts });
   } catch (err: unknown) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });
   }

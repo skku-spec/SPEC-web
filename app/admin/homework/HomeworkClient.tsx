@@ -27,10 +27,11 @@ type PadletPost = {
 };
 
 type SubmissionRow = {
-  label: string;         // runner name or team name
+  label: string;         // runner name
   isTeam: boolean;
   memberNames: string[];
   sectionStatus: Record<string, boolean>; // sectionId -> submitted
+  teamLabel?: string;    // e.g. "(Team A)" if in a team
 };
 
 type Profile = {
@@ -89,7 +90,7 @@ export function HomeworkClient() {
     const { data, error } = await supabase
       .from("profiles")
       .select("id, name, role")
-      .in("role", ["runner", "preneur"]);
+      .eq("role", "runner");
     if (!error && data) {
       setAvailableRunners(data as Profile[]);
     }
@@ -122,6 +123,24 @@ export function HomeworkClient() {
       setViewingTeams(data as unknown as { team_name: string; user_id: string; profiles: { name: string } | null }[]);
     } else {
       setViewingTeams([]);
+    }
+  };
+
+  // Silently fetch team data for a homework without toggling viewingId (used by status tab)
+  const fetchTeamData = async (homeworkId: string) => {
+    const { data, error } = await supabase
+      .from("homework_team_assignments")
+      .select(`
+        team_name,
+        user_id,
+        profiles (
+          name
+        )
+      `)
+      .eq("homework_id", homeworkId);
+
+    if (!error && data) {
+      setViewingTeams(data as unknown as { team_name: string; user_id: string; profiles: { name: string } | null }[]);
     }
   };
 
@@ -239,22 +258,9 @@ export function HomeworkClient() {
         return;
       }
 
-      const included: {
-        type: string;
-        id: string;
-        attributes?: { title?: string; author?: { name?: string; email?: string } };
-        relationships?: { section?: { data?: { id?: string } } };
-      }[] = json.included || [];
-      const sections: PadletSection[] = included
-        .filter((r) => r.type === 'section')
-        .map((r) => ({ id: r.id, title: r.attributes?.title || '(섹션 없음)' }));
-      const posts: PadletPost[] = included
-        .filter((r) => r.type === 'post')
-        .map((r) => ({
-          id: r.id,
-          author: r.attributes?.author,
-          section_id: r.relationships?.section?.data?.id,
-        }));
+      // API now returns pre-normalized { sections, posts } shape
+      const sections: PadletSection[] = json.sections || [];
+      const posts: PadletPost[] = json.posts || [];
 
       setPadletData(prev => ({ ...prev, [hwId]: { sections, posts, loading: false, error: null } }));
     } catch (e: unknown) {
@@ -267,44 +273,61 @@ export function HomeworkClient() {
     if (!pData) return [];
     const { sections, posts } = pData;
 
-    // Helper: check if a runner name matches any padlet post author in a section
-    const postedInSection = (names: string[], sectionId: string | undefined) =>
+    // Build a map: runnerId -> { teamName, allTeamMemberNames }
+    // so we can check if any team member submitted for team sections
+    const runnerTeamMap = new Map<string, { teamName: string; memberNames: string[] }>();
+    if (hw.is_team && viewingTeams.length > 0) {
+      viewingTeams.forEach(vt => {
+        const teamMembers = viewingTeams
+          .filter(m => m.team_name === vt.team_name)
+          .map(m => m.profiles?.name || '');
+        runnerTeamMap.set(vt.user_id, { teamName: vt.team_name, memberNames: teamMembers });
+      });
+    }
+
+    // Helper: did any of 'names' post in this section?
+    const anyPostedInSection = (names: string[], sectionId: string | undefined) =>
       posts.some(p => {
         const sMatch = sectionId ? p.section_id === sectionId : !p.section_id;
-        const authorName = p.author?.name?.toLowerCase() || '';
-        return sMatch && names.some(n => authorName.includes(n.toLowerCase()) || n.toLowerCase().includes(authorName));
+        if (!sMatch) return false;
+        const authorName = (p.author?.name || '').toLowerCase();
+        if (!authorName) return false;
+        return names.some(n => {
+          const nl = n.toLowerCase();
+          return nl && (authorName.includes(nl) || nl.includes(authorName));
+        });
       });
 
     const rows: SubmissionRow[] = [];
 
-    if (hw.is_team && viewingTeams.length > 0) {
-      // Group by team
-      const teamNames = Array.from(new Set(viewingTeams.map((vt) => vt.team_name)));
-      teamNames.forEach(teamName => {
-        const members = viewingTeams.filter((vt) => vt.team_name === teamName);
-        const memberNames = members.map((m) => m.profiles?.name || '');
-        const sectionStatus: Record<string, boolean> = {};
-        sections.forEach(s => {
-          sectionStatus[s.id] = postedInSection(memberNames, s.id);
-        });
-        // No section case
-        if (sections.length === 0) {
-          sectionStatus['__none__'] = postedInSection(memberNames, undefined);
-        }
-        rows.push({ label: teamName, isTeam: true, memberNames, sectionStatus });
+    // Show every available runner as a row
+    availableRunners.forEach(runner => {
+      const sectionStatus: Record<string, boolean> = {};
+      const teamInfo = runnerTeamMap.get(runner.id);
+
+      sections.forEach(s => {
+        // For this section, check the runner's own name (individual) AND
+        // all team members' names (team — any member submitting counts)
+        const individualNames = [runner.name];
+        const teamNames = teamInfo?.memberNames ?? [];
+        const allNames = teamNames.length > 0 ? [...new Set([...individualNames, ...teamNames])] : individualNames;
+        sectionStatus[s.id] = anyPostedInSection(allNames, s.id);
       });
-    } else if (hw.is_individual) {
-      availableRunners.forEach(runner => {
-        const sectionStatus: Record<string, boolean> = {};
-        sections.forEach(s => {
-          sectionStatus[s.id] = postedInSection([runner.name], s.id);
-        });
-        if (sections.length === 0) {
-          sectionStatus['__none__'] = postedInSection([runner.name], undefined);
-        }
-        rows.push({ label: runner.name, isTeam: false, memberNames: [runner.name], sectionStatus });
+
+      if (sections.length === 0) {
+        sectionStatus['__none__'] = anyPostedInSection([runner.name], undefined);
+      }
+
+      const teamLabel = teamInfo ? `(${teamInfo.teamName})` : '';
+      rows.push({
+        label: runner.name,
+        isTeam: !!teamInfo,
+        memberNames: teamInfo?.memberNames ?? [runner.name],
+        sectionStatus,
+        teamLabel,
       });
-    }
+    });
+
     return rows;
   };
 
@@ -727,6 +750,10 @@ export function HomeworkClient() {
                       onClick={() => {
                         setActiveTab(prev => ({ ...prev, [hw.id]: 'status' }));
                         if (!padletData[hw.id]) fetchPadletSubmissions(hw);
+                        // Auto-load team assignments if not loaded yet (without toggling the details panel)
+                        if (hw.is_team && viewingTeams.length === 0) {
+                          fetchTeamData(hw.id);
+                        }
                       }}
                       className={`px-5 py-2.5 text-xs font-black rounded-t-xl transition-all ${
                         activeTab[hw.id] === 'status'
@@ -821,6 +848,17 @@ export function HomeworkClient() {
 
                       const rows = buildSubmissionRows(hw);
 
+                      // Team homework but no team data loaded
+                      if (hw.is_team && viewingTeams.length === 0 && rows.length === 0) {
+                        return (
+                          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border-2 border-dashed border-[#d9d9cc]">
+                            <span className="text-4xl mb-4">👥</span>
+                            <p className="text-sm font-bold text-[#6b6b5e]">팀 배정 정보가 없습니다.</p>
+                            <p className="text-xs text-[#a1a196] mt-1">과제를 생성할 때 팀을 배정했는지 확인하세요.</p>
+                          </div>
+                        );
+                      }
+
                       return (
                         <div className="overflow-x-auto">
                           <table className="w-full text-left border-collapse min-w-[600px]">
@@ -841,9 +879,11 @@ export function HomeworkClient() {
                                 <tr key={rIdx} className="hover:bg-white transition-colors">
                                   <td className="py-5 px-4">
                                     <p className="text-sm font-black text-[#16140f]">{row.label}</p>
-                                    <p className="text-[10px] font-medium text-[#a1a196] mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px]">
-                                      {row.memberNames.join(', ')}
-                                    </p>
+                                    {row.teamLabel && (
+                                      <span className="inline-block mt-0.5 text-[10px] font-bold text-[#FF6C0F] bg-orange-50 px-2 py-0.5 rounded-lg">
+                                        {row.teamLabel}
+                                      </span>
+                                    )}
                                   </td>
                                   {Object.keys(row.sectionStatus).map(sId => (
                                     <td key={sId} className="py-5 px-4 text-center">
