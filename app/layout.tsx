@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://skku-spec.com"),
   title: "SPEC | 성균관대학교 창업 학회",
   description: "SPEC - 성균관대학교 창업 학회. 만드는 사람이 세상을 바꾼다.",
   openGraph: {
