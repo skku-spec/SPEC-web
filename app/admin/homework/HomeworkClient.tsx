@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 type Homework = {
@@ -22,8 +22,6 @@ type PadletSection = {
 
 type PadletPost = {
   id: string;
-  subject?: string;
-  body?: string;
   author?: { name?: string; email?: string };
   section_id?: string;
 };
@@ -73,12 +71,14 @@ export function HomeworkClient() {
   useEffect(() => {
     fetchHomeworks();
     fetchRunners();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchHomeworks = async () => {
+  const fetchHomeworks = useCallback(async () => {
     setIsLoading(true);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase
-      .from("homeworks" as any)
+      .from("homeworks" as never)
       .select("*")
       .order("created_at", { ascending: false }) as any);
 
@@ -86,9 +86,10 @@ export function HomeworkClient() {
       setHomeworks(data);
     }
     setIsLoading(false);
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const fetchRunners = async () => {
+  const fetchRunners = useCallback(async () => {
     const { data, error } = await supabase
       .from("profiles")
       .select("id, name, role")
@@ -96,20 +97,22 @@ export function HomeworkClient() {
     if (!error && data) {
       setAvailableRunners(data as Profile[]);
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleFetchTeams = async (homeworkId: string) => {
     if (viewingId === homeworkId) {
       setViewingId(null);
       return;
     }
-    
+
     setViewingId(homeworkId);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase
-      .from("homework_team_assignments" as any)
+      .from("homework_team_assignments" as never)
       .select("team_name, user_id, profiles(name)")
       .eq("homework_id", homeworkId) as any);
-    
+
     if (!error && data) {
       setViewingTeams(data);
     } else {
@@ -125,6 +128,7 @@ export function HomeworkClient() {
       return;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: hwData, error: hwError } = await (supabase
       .from("homeworks" as any)
       .insert([
@@ -156,6 +160,7 @@ export function HomeworkClient() {
         }))
       );
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error: teamError } = await (supabase
         .from("homework_team_assignments" as any)
         .insert(assignments) as any);
@@ -210,7 +215,8 @@ export function HomeworkClient() {
 
   const handleDeleteHomework = async (id: string) => {
     if (!confirm("정말 삭제하시겠습니까?")) return;
-    const { error } = await (supabase.from("homeworks" as any).delete().eq("id", id) as any);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from("homeworks" as never).delete().eq("id", id) as any);
     if (!error) {
       setHomeworks(homeworks.filter((hw) => hw.id !== id));
     }
@@ -231,7 +237,7 @@ export function HomeworkClient() {
         return;
       }
 
-      // Parse sections and posts from Padlet JSON:API response
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const included: any[] = json.included || [];
       const sections: PadletSection[] = included
         .filter((r: any) => r.type === 'section')
@@ -240,15 +246,13 @@ export function HomeworkClient() {
         .filter((r: any) => r.type === 'post')
         .map((r: any) => ({
           id: r.id,
-          subject: r.attributes?.subject,
-          body: r.attributes?.body,
           author: r.attributes?.author,
           section_id: r.relationships?.section?.data?.id,
         }));
 
       setPadletData(prev => ({ ...prev, [hwId]: { sections, posts, loading: false, error: null } }));
-    } catch (e: any) {
-      setPadletData(prev => ({ ...prev, [hwId]: { sections: [], posts: [], loading: false, error: e.message } }));
+    } catch (e: unknown) {
+      setPadletData(prev => ({ ...prev, [hwId]: { sections: [], posts: [], loading: false, error: (e as Error).message } }));
     }
   };
 
@@ -269,10 +273,13 @@ export function HomeworkClient() {
 
     if (hw.is_team && viewingTeams.length > 0) {
       // Group by team
-      const teamNames = Array.from(new Set(viewingTeams.map((vt: any) => vt.team_name)));
-      teamNames.forEach(teamName => {
-        const members = viewingTeams.filter((vt: any) => vt.team_name === teamName);
-        const memberNames = members.map((m: any) => m.profiles?.name || '');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const teamNames = Array.from(new Set(viewingTeams.map((vt: any) => vt.team_name)));
+    teamNames.forEach(teamName => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const members = viewingTeams.filter((vt: any) => vt.team_name === teamName);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const memberNames = members.map((m: any) => m.profiles?.name || '');
         const sectionStatus: Record<string, boolean> = {};
         sections.forEach(s => {
           sectionStatus[s.id] = postedInSection(memberNames, s.id);

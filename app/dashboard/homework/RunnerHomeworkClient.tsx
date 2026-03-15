@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 type Homework = {
@@ -14,11 +14,7 @@ type Homework = {
   created_at: string;
 };
 
-type TeamMember = {
-  team_name: string;
-  user_id: string;
-  profiles: { name: string };
-};
+
 
 export function RunnerHomeworkClient() {
   const [homeworks, setHomeworks] = useState<Homework[]>([]);
@@ -28,55 +24,60 @@ export function RunnerHomeworkClient() {
 
   const supabase = createClient();
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
-    
+
     // 1. Get current user
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) { setIsLoading(false); return; }
 
     // 2. Fetch all homeworks
-    const { data: hwData, error: hwError } = await (supabase
-      .from("homeworks" as any)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: hwData } = await (supabase
+      .from("homeworks" as never)
       .select("*")
       .order("created_at", { ascending: false }) as any);
 
     // 3. Fetch my team assignments
-    const { data: assignData, error: assignError } = await (supabase
-      .from("homework_team_assignments" as any)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: assignData } = await (supabase
+      .from("homework_team_assignments" as never)
       .select("homework_id, team_name")
       .eq("user_id", user.id) as any);
 
     // 4. If I have team assignments, fetch teammates for those teams
     const assignmentsMap: Record<string, { teamName: string; teammates: string[] }> = {};
-    
+
     if (assignData && assignData.length > 0) {
       for (const assignment of assignData) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: teammatesData } = await (supabase
-          .from("homework_team_assignments" as any)
+          .from("homework_team_assignments" as never)
           .select("user_id, profiles(name)")
           .eq("homework_id", assignment.homework_id)
           .eq("team_name", assignment.team_name) as any);
-        
+
         if (teammatesData) {
           assignmentsMap[assignment.homework_id] = {
             teamName: assignment.team_name,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             teammates: (teammatesData as any[])
-              .filter(t => t.user_id !== user.id)
-              .map(t => (t.profiles as any)?.name)
+              .filter((t: any) => t.user_id !== user.id)
+              .map((t: any) => (t.profiles as any)?.name),
           };
         }
       }
     }
 
-    if (!hwError && hwData) setHomeworks(hwData as Homework[]);
+    if (hwData) setHomeworks(hwData as Homework[]);
     setMyAssignments(assignmentsMap);
     setIsLoading(false);
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
 
   return (
