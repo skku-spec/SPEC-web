@@ -134,7 +134,13 @@ export default async function ProfilePage() {
             </div>
           </div>
 
-          <div className="mt-8">
+          <div className="mt-8 space-y-3">
+            <Link
+              href="/profile/edit"
+              className="block w-full rounded-xl bg-[#FF6C0F] px-4 py-3 text-center font-['Pretendard',sans-serif] text-[15px] font-semibold text-white transition-colors hover:opacity-85"
+            >
+              프로필 수정
+            </Link>
             <LogoutButton />
           </div>
         </section>
