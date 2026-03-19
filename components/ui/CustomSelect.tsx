@@ -31,7 +31,6 @@ export default function CustomSelect({
   onChange,
   placeholder,
   name,
-  required,
   disabled,
   className = "",
 }: CustomSelectProps) {

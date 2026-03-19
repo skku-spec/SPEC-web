@@ -345,7 +345,7 @@ export async function getApplicationByCredentials(
 
     data = result.data;
     error = result.error;
-  } catch (unexpectedError) {
+  } catch {
     return { error: "환경 변수 설정 오류가 발생했습니다. (Service Role Key 확인 필요)" };
   }
 
@@ -387,7 +387,7 @@ export async function getMyApplication(): Promise<ApplicationStatusResult> {
     let adminClient: ReturnType<typeof createAdminClient>;
     try {
       adminClient = createAdminClient();
-    } catch (unexpectedError) {
+    } catch {
       return { error: "환경 변수 설정 오류가 발생했습니다. (Service Role Key 확인 필요)" };
     }
 
@@ -455,9 +455,9 @@ export async function getMyApplication(): Promise<ApplicationStatusResult> {
         created_at: emailMatched.created_at,
       },
     };
-  } catch (unexpectedError) {
+  } catch (_unexpectedError) {
     if (process.env.NODE_ENV === "development") {
-      console.error("Unexpected error in getMyApplication:", unexpectedError);
+      console.error("Unexpected error in getMyApplication:", _unexpectedError);
     }
     return { success: true };
   }

@@ -13,7 +13,7 @@ type ActionResult = {
 
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
 
-const WRITER_ROLES: UserRole[] = ["member", "admin"];
+const WRITER_ROLES: UserRole[] = ["runner", "preneur", "admin"];
 
 export type CommentWithAuthor = {
   id: string;

@@ -14,7 +14,8 @@ type RoleMeta = {
 
 const ROLE_META: Record<UserRole, RoleMeta> = {
   outsider: { label: "외부인", className: "bg-slate-100 text-slate-700" },
-  member: { label: "부원", className: "bg-blue-100 text-blue-700" },
+  runner: { label: "러너", className: "bg-blue-100 text-blue-700" },
+  preneur: { label: "프러너", className: "bg-amber-100 text-amber-700" },
   admin: { label: "관리자", className: "bg-red-100 text-red-700" },
 };
 

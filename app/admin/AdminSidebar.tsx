@@ -14,9 +14,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Users", href: "/admin/users", icon: "👥" },
   { label: "Applications", href: "/admin/applications", icon: "📋" },
   { label: "Posts", href: "/admin/posts", icon: "📝" },
-  { label: "Jobs", href: "/admin/jobs", icon: "💼" },
-  { label: "Library", href: "/admin/library", icon: "📚" },
-  { label: "Launches", href: "/admin/launches", icon: "🚀" },
+  { label: "Homework", href: "/admin/homework", icon: "📖" },
 ];
 
 function isActivePath(pathname: string, href: string): boolean {
@@ -67,13 +65,6 @@ export function AdminSidebar() {
           );
         })}
       </nav>
-
-      <Link
-        href="/"
-        className="mt-5 rounded-lg px-3 py-2 text-sm text-[#6b6b5e] transition-colors hover:bg-[#f0efe6] hover:text-[#16140f]"
-      >
-        Back to Site
-      </Link>
     </div>
   );
 }
