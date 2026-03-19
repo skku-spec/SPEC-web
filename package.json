@@ -27,7 +27,7 @@
     "@tiptap/extension-table-row": "^3.20.0",
     "@tiptap/pm": "^3.19.0",
     "isomorphic-dompurify": "^3.0.0",
-    "next": "16.1.6",
+    "next": "^16.2.0",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
