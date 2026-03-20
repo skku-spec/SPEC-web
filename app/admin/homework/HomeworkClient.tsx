@@ -22,8 +22,10 @@ type PadletSection = {
 
 type PadletPost = {
   id: string;
-  author?: { name?: string; email?: string };
+  author?: { name?: string; email?: string; username?: string };
   section_id?: string;
+  title?: string;
+  body?: string;
 };
 
 type SubmissionRow = {
@@ -37,6 +39,8 @@ type SubmissionRow = {
 type Profile = {
   id: string;
   name: string;
+  username: string;
+  slug: string;
   role: string;
 };
 
@@ -68,7 +72,6 @@ export function HomeworkClient() {
   const [viewingTeams, setViewingTeams] = useState<{
     team_name: string;
     user_id: string;
-    profiles: { name: string } | null;
   }[]>([]);
   const [activeTab, setActiveTab] = useState<Record<string, 'content' | 'status'>>({});
   const [padletData, setPadletData] = useState<Record<string, { sections: PadletSection[]; posts: PadletPost[]; loading: boolean; error: string | null }>>({});
@@ -89,7 +92,7 @@ export function HomeworkClient() {
   const fetchRunners = useCallback(async () => {
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, name, role")
+      .select("id,name,username,slug,role") // Added slug
       .eq("role", "runner");
     if (!error && data) {
       setAvailableRunners(data as Profile[]);
@@ -110,17 +113,11 @@ export function HomeworkClient() {
     setViewingId(homeworkId);
     const { data, error } = await supabase
       .from("homework_team_assignments")
-      .select(`
-        team_name,
-        user_id,
-        profiles (
-          name
-        )
-      `)
+      .select("team_name,user_id")
       .eq("homework_id", homeworkId);
 
     if (!error && data) {
-      setViewingTeams(data as unknown as { team_name: string; user_id: string; profiles: { name: string } | null }[]);
+      setViewingTeams(data as { team_name: string; user_id: string }[]);
     } else {
       setViewingTeams([]);
     }
@@ -130,17 +127,11 @@ export function HomeworkClient() {
   const fetchTeamData = async (homeworkId: string) => {
     const { data, error } = await supabase
       .from("homework_team_assignments")
-      .select(`
-        team_name,
-        user_id,
-        profiles (
-          name
-        )
-      `)
+      .select("team_name,user_id")
       .eq("homework_id", homeworkId);
 
     if (!error && data) {
-      setViewingTeams(data as unknown as { team_name: string; user_id: string; profiles: { name: string } | null }[]);
+      setViewingTeams(data as { team_name: string; user_id: string }[]);
     }
   };
 
@@ -275,27 +266,42 @@ export function HomeworkClient() {
 
     // Build a map: runnerId -> { teamName, allTeamMemberNames }
     // so we can check if any team member submitted for team sections
-    const runnerTeamMap = new Map<string, { teamName: string; memberNames: string[] }>();
+    const runnerTeamMap = new Map<string, { teamName: string; memberNames: string[]; memberUsernames: string[] }>();
     if (hw.is_team && viewingTeams.length > 0) {
+      // Create a map of user_id to profile for quick lookup
+      const runnerLookup = new Map(availableRunners.map(r => [r.id, r]));
+
       viewingTeams.forEach(vt => {
         const teamMembers = viewingTeams
-          .filter(m => m.team_name === vt.team_name)
-          .map(m => m.profiles?.name || '');
-        runnerTeamMap.set(vt.user_id, { teamName: vt.team_name, memberNames: teamMembers });
+          .filter(m => m.team_name === vt.team_name);
+        
+        const memberNames = teamMembers.map(m => runnerLookup.get(m.user_id)?.name || 'Unknown');
+        const memberUsernames = teamMembers.map(m => runnerLookup.get(m.user_id)?.username || '');
+        
+        runnerTeamMap.set(vt.user_id, { teamName: vt.team_name, memberNames, memberUsernames });
       });
     }
 
     // Helper: did any of 'names' post in this section?
-    const anyPostedInSection = (names: string[], sectionId: string | undefined) =>
+    const anyPostedInSection = (targetNames: string[], targetUsernames: string[], sectionId: string | undefined) =>
       posts.some(p => {
         const sMatch = sectionId ? p.section_id === sectionId : !p.section_id;
         if (!sMatch) return false;
+
         const authorName = (p.author?.name || '').toLowerCase();
-        if (!authorName) return false;
-        return names.some(n => {
+        const authorUsername = (p.author?.username || '').toLowerCase().replace(/^@/, ''); // Remove leading @ if present
+        
+        const matchesName = targetNames.some(n => {
           const nl = n.toLowerCase();
           return nl && (authorName.includes(nl) || nl.includes(authorName));
         });
+
+        const matchesUsername = targetUsernames.some(u => {
+          const ul = u.toLowerCase().replace(/^@/, '');
+          return ul && (authorUsername === ul); // Exact match for username is safer
+        });
+
+        return matchesName || matchesUsername;
       });
 
     const rows: SubmissionRow[] = [];
@@ -305,17 +311,25 @@ export function HomeworkClient() {
       const sectionStatus: Record<string, boolean> = {};
       const teamInfo = runnerTeamMap.get(runner.id);
 
+      // Collect all names and usernames to search for (including team members)
+      const targetNames = [runner.name];
+      const targetUsernames = [runner.username];
+
+      if (teamInfo) {
+        teamInfo.memberNames.forEach(name => {
+          if (!targetNames.includes(name)) targetNames.push(name);
+        });
+        teamInfo.memberUsernames.forEach(username => {
+          if (!targetUsernames.includes(username)) targetUsernames.push(username);
+        });
+      }
+
       sections.forEach(s => {
-        // For this section, check the runner's own name (individual) AND
-        // all team members' names (team — any member submitting counts)
-        const individualNames = [runner.name];
-        const teamNames = teamInfo?.memberNames ?? [];
-        const allNames = teamNames.length > 0 ? [...new Set([...individualNames, ...teamNames])] : individualNames;
-        sectionStatus[s.id] = anyPostedInSection(allNames, s.id);
+        sectionStatus[s.id] = anyPostedInSection(targetNames, targetUsernames, s.id);
       });
 
       if (sections.length === 0) {
-        sectionStatus['__none__'] = anyPostedInSection([runner.name], undefined);
+        sectionStatus['__none__'] = anyPostedInSection(targetNames, targetUsernames, undefined);
       }
 
       const teamLabel = teamInfo ? `(${teamInfo.teamName})` : '';
@@ -749,7 +763,7 @@ export function HomeworkClient() {
                     <button
                       onClick={() => {
                         setActiveTab(prev => ({ ...prev, [hw.id]: 'status' }));
-                        if (!padletData[hw.id]) fetchPadletSubmissions(hw);
+                        fetchPadletSubmissions(hw);
                         // Auto-load team assignments if not loaded yet (without toggling the details panel)
                         if (hw.is_team && viewingTeams.length === 0) {
                           fetchTeamData(hw.id);
@@ -816,11 +830,14 @@ export function HomeworkClient() {
                                       </span>
                                     </p>
                                     <div className="flex flex-wrap gap-2">
-                                      {viewingTeams.filter(vt => vt.team_name === teamName).map((member) => (
-                                        <span key={member.user_id} className="inline-flex items-center rounded-xl bg-[#f5f5ee] px-3 py-1.5 text-[11px] font-bold text-[#16140f] border border-transparent transition-all group-hover/item:border-[#FF6C0F] group-hover/item:bg-white">
-                                          {member.profiles?.name}
-                                        </span>
-                                      ))}
+                                      {viewingTeams.filter(vt => vt.team_name === teamName).map((member) => {
+                                        const runner = availableRunners.find(r => r.id === member.user_id);
+                                        return (
+                                          <span key={member.user_id} className="inline-flex items-center rounded-xl bg-[#f5f5ee] px-3 py-1.5 text-[11px] font-bold text-[#16140f] border border-transparent transition-all group-hover/item:border-[#FF6C0F] group-hover/item:bg-white">
+                                            {runner?.name || 'Unknown'}
+                                          </span>
+                                        );
+                                      })}
                                     </div>
                                     <div className="mt-4 border-b border-[#f0efe6] last:border-0" />
                                   </div>
