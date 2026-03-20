@@ -7,7 +7,7 @@ type DashboardLayoutProps = {
 };
 
 export default async function DashboardLayout({ children }: DashboardLayoutProps) {
-  await requireRole("member");
+  await requireRole("runner");
 
   return (
     <div className="min-h-screen bg-[#f5f5ee] text-[#16140f] [font-family:Pretendard,system-ui,sans-serif]">
@@ -28,31 +28,45 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
   <div className="mt-4 border-b border-[#f0efe6]" />
 </div>
             <nav className="flex flex-col gap-1">
-<Link
-  href="/dashboard/applications"
-  className="flex items-center gap-2.5 rounded-lg bg-[#FFF0E5] px-3 py-2.5 text-sm font-medium text-[#FF6C0F] transition-colors"
->
-  <span className="text-base">📋</span>
-  <span>모집 지원서</span>
-</Link>
+              <Link
+                href="/dashboard/applications"
+                className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-[#16140f] hover:bg-[#f0efe6] transition-colors"
+                // Ideally this would have active state styles
+              >
+                <span className="text-base">📋</span>
+                <span>모집 지원서</span>
+              </Link>
+              <Link
+                href="/dashboard/homework"
+                className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-[#16140f] hover:bg-[#f0efe6] transition-colors"
+              >
+                <span className="text-base">📚</span>
+                <span>Homework</span>
+              </Link>
             </nav>
           </div>
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
           {/* Mobile header */}
-<div className="flex items-center gap-3 border-b border-[#d9d9cc] bg-white px-5 py-3 lg:hidden">
-  <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[#16140f]">
-    <span className="text-[10px] font-bold text-white">S</span>
-  </div>
-  <div className="flex items-center gap-2">
-    <h1 className="text-sm font-semibold text-[#16140f] [font-family:system-ui,-apple-system,sans-serif]">Dashboard</h1>
-    <span className="text-[#d9d9cc]">·</span>
-    <Link href="/dashboard/applications" className="text-sm font-medium text-[#FF6C0F]">
-      모집 지원서
-    </Link>
-  </div>
-</div>
+          <div className="flex items-center gap-3 border-b border-[#d9d9cc] bg-white px-5 py-3 lg:hidden">
+            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[#16140f]">
+              <span className="text-[10px] font-bold text-white">S</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-sm font-semibold text-[#16140f] [font-family:system-ui,-apple-system,sans-serif]">Dashboard</h1>
+              <span className="text-[#d9d9cc]">·</span>
+              <nav className="flex items-center gap-2">
+                <Link href="/dashboard/applications" className="text-sm font-medium text-[#FF6C0F]">
+                  모집 지원서
+                </Link>
+                <span className="text-[#d9d9cc]">·</span>
+                <Link href="/dashboard/homework" className="text-sm font-medium text-[#FF6C0F]">
+                  Homework
+                </Link>
+              </nav>
+            </div>
+          </div>
 
           <main className="flex-1 px-5 py-6 sm:px-8 sm:py-10 lg:px-10">{children}</main>
         </div>

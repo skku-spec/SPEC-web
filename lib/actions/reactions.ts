@@ -21,7 +21,7 @@ export type ReactionSummary = {
 // Shared constant also in components/blog/ReactionBar.tsx
 const ALLOWED_EMOJIS = ["👍", "🔥", "❤️", "🎉", "🤔", "👀"] as const;
 
-const WRITER_ROLES = new Set<UserRole>(["member", "admin"]);
+const WRITER_ROLES = new Set<UserRole>(["runner", "preneur", "admin"]);
 
 export async function toggleReaction(postId: string, emoji: string): Promise<ActionResult> {
   try {

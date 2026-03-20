@@ -38,9 +38,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
               <Link href="/admin/users" className="shrink-0 rounded-md px-2.5 py-1 text-xs font-medium text-[#4a4a40] hover:bg-[#f0efe6]">👥 Users</Link>
               <Link href="/admin/applications" className="shrink-0 rounded-md px-2.5 py-1 text-xs font-medium text-[#4a4a40] hover:bg-[#f0efe6]">📋 Applications</Link>
               <Link href="/admin/posts" className="shrink-0 rounded-md px-2.5 py-1 text-xs font-medium text-[#4a4a40] hover:bg-[#f0efe6]">📝 Posts</Link>
-              <Link href="/admin/jobs" className="shrink-0 rounded-md px-2.5 py-1 text-xs font-medium text-[#4a4a40] hover:bg-[#f0efe6]">💼 Jobs</Link>
-              <Link href="/admin/library" className="shrink-0 rounded-md px-2.5 py-1 text-xs font-medium text-[#4a4a40] hover:bg-[#f0efe6]">📚 Library</Link>
-              <Link href="/admin/launches" className="shrink-0 rounded-md px-2.5 py-1 text-xs font-medium text-[#4a4a40] hover:bg-[#f0efe6]">🚀 Launches</Link>
+              <Link href="/admin/homework" className="shrink-0 rounded-md px-2.5 py-1 text-xs font-medium text-[#4a4a40] hover:bg-[#f0efe6]">📖 Homework</Link>
             </nav>
           </div>
 

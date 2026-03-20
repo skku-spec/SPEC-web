@@ -17,7 +17,7 @@ type ThreadNode = CommentWithAuthor & {
   replies: CommentWithAuthor[];
 };
 
-const WRITER_ROLES = new Set<UserRole>(["member", "admin"]);
+const WRITER_ROLES = new Set<UserRole>(["runner", "preneur", "admin"]);
 
 function formatDate(value: string): string {
   return new Date(value).toLocaleDateString("ko-KR", {

@@ -7,7 +7,7 @@ import { useUser } from "@/hooks/useUser";
 import type { BlogPost, TagInfo } from "@/lib/api";
 import type { UserRole } from "@/lib/auth";
 
-const WRITER_ROLES: UserRole[] = ["member", "admin"];
+const WRITER_ROLES: UserRole[] = ["runner", "preneur", "admin"];
 
 type BlogPageClientProps = {
   posts: BlogPost[];

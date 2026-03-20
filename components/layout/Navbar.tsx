@@ -10,7 +10,8 @@ import { createClient } from "@/lib/supabase/client";
 import ApplyButton from "@/components/ui/ApplyButton";
 const ROLE_LABEL: Record<string, string> = {
   outsider: "외부인",
-  member: "부원",
+  runner: "러너",
+  preneur: "프러너",
   admin: "관리자",
 };
 

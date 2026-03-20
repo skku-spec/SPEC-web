@@ -7,8 +7,8 @@ import type { Database } from "@/lib/supabase/types";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
-const WRITER_ROLES = ["member", "admin"];
-type UserRole = "outsider" | "member" | "admin";
+const WRITER_ROLES = ["runner", "preneur", "admin"];
+type UserRole = "outsider" | "runner" | "preneur" | "admin";
 
 function isAdminRoute(pathname: string) {
   return pathname === "/admin" || pathname.startsWith("/admin/");
