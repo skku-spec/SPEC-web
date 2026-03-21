@@ -20,6 +20,7 @@ export const RECRUITMENT_BATCH = {
   shortLabel: "SPEC 4기 추가 모집",
   bannerLabel: "SPEC 4기 러너 추가 모집 중",
   heroBadgeLabel: "2026 Spring · 4기 추가 모집",
+  showBanner: false,
 } as const;
 
 export type RecruitmentTimelineStep = {

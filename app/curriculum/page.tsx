@@ -537,11 +537,11 @@ function VccTrack() {
       </div>
 
       <div className="mb-10 flex flex-wrap items-center gap-4">
-        <Image src="/logos/rise.png" alt="RISE 사업단" width={240} height={84} className="h-20 w-auto object-contain" />
+        <Image src="/images/logos/rise.png" alt="RISE 사업단" width={240} height={84} className="h-20 w-auto object-contain" />
         <span className="font-['Pretendard',sans-serif] text-[13px] text-[#16140f]/30">×</span>
-        <Image src="/logos/kakao.svg" alt="Kakao Mobility" width={100} height={28} className="h-7 w-auto object-contain" />
+        <Image src="/images/logos/kakao.svg" alt="Kakao Mobility" width={100} height={28} className="h-7 w-auto object-contain" />
         <span className="font-['Pretendard',sans-serif] text-[13px] text-[#16140f]/30">×</span>
-        <Image src="/logos/spec.svg" alt="SPEC" width={120} height={42} className="h-10 w-auto object-contain" />
+        <Image src="/images/logos/spec.svg" alt="SPEC" width={120} height={42} className="h-10 w-auto object-contain" />
       </div>
 
       <div className="mb-6 rounded-lg border border-[#FF6C0F]/15 bg-[#FF6C0F]/[0.03] p-5">
@@ -575,7 +575,7 @@ function VccTrack() {
 
       <div className="flex justify-center">
         <Image
-          src="/vcc-poster.jpeg"
+          src="/images/common/vcc-poster.jpeg"
           alt="Venture Creation Course 포스터"
           width={800}
           height={1131}

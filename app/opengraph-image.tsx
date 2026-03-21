@@ -10,7 +10,7 @@ export const contentType = "image/png";
 
 export default async function Image() {
   const bgData = readFileSync(
-    join(process.cwd(), "public/member/spec1.jpg"),
+    join(process.cwd(), "public/images/member/spec1.jpg"),
   );
   const bgBase64 = `data:image/jpeg;base64,${bgData.toString("base64")}`;
 

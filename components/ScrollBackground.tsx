@@ -4,21 +4,22 @@ import NextImage from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 
 const entrepreneurImages = [
-  '/member/spec1.jpg',
-  '/member/spec2.jpg',
-  '/member/spec3.jpg',
-  '/member/spec4.png',
-  '/member/spec5.jpg',
-  '/member/spec6.jpg',
-  '/member/spec7.png',
+  '/images/marketing/preneur_4.jpg',
+  '/images/member/spec1.jpg',
+  '/images/member/spec2.jpg',
+  '/images/member/spec3.jpg',
+  '/images/member/spec4.png',
+  '/images/member/spec5.jpg',
+  '/images/member/spec6.jpg',
+  '/images/member/spec7.png',
 ];
 
 const specImages = [
-  '/heroes/1.jpg',
-  '/heroes/2.jpg',
-  '/heroes/3.jpg',
-  '/heroes/4.jpg',
-  '/heroes/5.jpg',
+  '/images/heroes/1.jpg',
+  '/images/heroes/2.jpg',
+  '/images/heroes/3.jpg',
+  '/images/heroes/4.jpg',
+  '/images/heroes/5.jpg',
 ];
 
 const allBackgroundImages = [...entrepreneurImages, ...specImages];
