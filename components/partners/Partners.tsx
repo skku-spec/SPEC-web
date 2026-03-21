@@ -4,9 +4,9 @@ import { startTransition, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 
 const mainPartners = [
-  { name: '성균관대학교 RISE 사업단', logo: '/logos/rise.png', mobileHeight: 'h-14', desktopHeight: 'md:h-[120px]' },
-  { name: '카카오모빌리티', logo: '/logos/kakao.svg', mobileHeight: 'h-5', desktopHeight: 'md:h-10' },
-  { name: 'SL IT', logo: '/logos/SL_IT.svg', mobileHeight: 'h-3', desktopHeight: 'md:h-10' },
+  { name: '성균관대학교 RISE 사업단', logo: '/images/logos/rise.png', mobileHeight: 'h-14', desktopHeight: 'md:h-[120px]' },
+  { name: '카카오모빌리티', logo: '/images/logos/kakao.svg', mobileHeight: 'h-5', desktopHeight: 'md:h-10' },
+  { name: 'SL IT', logo: '/images/logos/SL_IT.svg', mobileHeight: 'h-3', desktopHeight: 'md:h-10' },
 ];
 
 export default function Partners() {

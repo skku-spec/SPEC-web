@@ -3,21 +3,22 @@
 import { useEffect, useRef } from 'react';
 
 const entrepreneurImages = [
-  '/heroes/jobs1.jpg',
-  '/heroes/elon1.jpg',
-  '/heroes/jensen2.jpg',
-  '/heroes/elon3.jpg',
-  '/heroes/jobs3.jpg',
-  '/heroes/elon2.jpg',
-  '/heroes/jensen1.jpeg',
+  '/images/marketing/preneur_4.jpg',
+  '/images/heroes/jobs1.jpg',
+  '/images/heroes/elon1.jpg',
+  '/images/heroes/jensen2.jpg',
+  '/images/heroes/elon3.jpg',
+  '/images/heroes/jobs3.jpg',
+  '/images/heroes/elon2.jpg',
+  '/images/heroes/jensen1.jpeg',
 ];
 
 const specImages = [
-  '/heroes/1.jpg',
-  '/heroes/2.jpg',
-  '/heroes/3.jpg',
-  '/heroes/4.jpg',
-  '/heroes/5.jpg',
+  '/images/heroes/1.jpg',
+  '/images/heroes/2.jpg',
+  '/images/heroes/3.jpg',
+  '/images/heroes/4.jpg',
+  '/images/heroes/5.jpg',
 ];
 
 export default function ScrollBackground() {
