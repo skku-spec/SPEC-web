@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
+import { getProfilesForDirectory, getPublicAuthorHref, resolveDirectoryProfileLink } from "@/lib/public-profile";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 
@@ -10,6 +11,7 @@ type MemberRow = Database["public"]["Tables"]["members"]["Row"];
 interface Person {
   name: string;
   slug: string;
+  href: string;
   title: string;
   bio: string;
   photo: string;
@@ -25,6 +27,11 @@ interface Person {
 
 const DEFAULT_PHOTO =
   "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=face";
+
+type MemberWithProfileLink = Pick<
+  MemberRow,
+  "name" | "slug" | "role" | "bio" | "photo_url" | "batch_tags" | "linkedin_url" | "public_profile_id"
+>;
 
 function isManagingLead(member: Pick<MemberRow, "name" | "batch_tags">): boolean {
   if (member.name === "전도현" || member.name === "한지상") {
@@ -47,14 +54,19 @@ function getMemberTitle(member: Pick<MemberRow, "role" | "name" | "batch_tags">)
 }
 
 function mapMemberToPerson(
-  member: Pick<
-    MemberRow,
-    "name" | "slug" | "role" | "bio" | "photo_url" | "batch_tags" | "linkedin_url"
-  >,
+  member: MemberWithProfileLink,
+  profileLink: {
+    slug: string | null;
+    role: string | null;
+    profile_visibility: string | null;
+  } | null,
 ): Person {
+  const publicHref = getPublicAuthorHref(profileLink);
+
   return {
     name: member.name,
     slug: member.slug,
+    href: publicHref ?? `/people/${member.slug}`,
     title: getMemberTitle(member),
     bio: member.bio ?? "",
     photo: member.photo_url ?? DEFAULT_PHOTO,
@@ -65,13 +77,14 @@ function mapMemberToPerson(
 
 async function getPersonPageData(
   slug: string,
-): Promise<{ person: Person; otherPartners: Person[] } | null> {
+): Promise<{ person: Person; otherPartners: Person[]; personHref: string } | null> {
   const supabase = await createClient();
 
   const { data: member } = await supabase
     .from("members")
-    .select("name, slug, role, bio, photo_url, batch_tags, linkedin_url")
+    .select("name, slug, role, bio, photo_url, batch_tags, linkedin_url, public_profile_id")
     .eq("slug", slug)
+    .eq("preneur_batch", "4기")
     .maybeSingle();
 
   if (!member) {
@@ -80,15 +93,29 @@ async function getPersonPageData(
 
   const { data: relatedMemberRows } = await supabase
     .from("members")
-    .select("name, slug, role, bio, photo_url, batch_tags, linkedin_url")
+    .select("name, slug, role, bio, photo_url, batch_tags, linkedin_url, public_profile_id")
     .eq("preneur_batch", "4기")
     .neq("slug", slug)
     .order("name", { ascending: true })
     .limit(4);
 
+  const relatedMembers = (relatedMemberRows ?? []) as MemberWithProfileLink[];
+  const linkedProfileIds = [member.public_profile_id, ...relatedMembers.map((relatedMember) => relatedMember.public_profile_id)].filter(
+    (value): value is string => Boolean(value)
+  );
+  const profileLookup = await getProfilesForDirectory(
+    linkedProfileIds,
+    [member.slug, ...relatedMembers.map((relatedMember) => relatedMember.slug)]
+  );
+  const memberProfile = resolveDirectoryProfileLink(member.public_profile_id, member.slug, profileLookup);
+  const person = mapMemberToPerson(member as MemberWithProfileLink, memberProfile);
+
   return {
-    person: mapMemberToPerson(member),
-    otherPartners: (relatedMemberRows ?? []).map(mapMemberToPerson),
+    person,
+    personHref: person.href,
+    otherPartners: relatedMembers.map((relatedMember) =>
+      mapMemberToPerson(relatedMember, resolveDirectoryProfileLink(relatedMember.public_profile_id, relatedMember.slug, profileLookup))
+    ),
   };
 }
 
@@ -118,6 +145,10 @@ export default async function PersonPage({ params }: PageProps) {
 
   if (!pageData) {
     notFound();
+  }
+
+  if (pageData.personHref !== `/people/${slug}`) {
+    redirect(pageData.personHref);
   }
 
   const { person, otherPartners } = pageData;
@@ -246,8 +277,8 @@ export default async function PersonPage({ params }: PageProps) {
             {otherPartners.map((partner) => (
               <Link
                 key={partner.slug}
-                href={`/people/${partner.slug}`}
-                className="group block rounded-lg p-3 transition-colors hover:bg-[#eceadf]"
+                href={partner.href}
+                className="group block cursor-pointer rounded-lg p-3 transition-colors hover:bg-[#eceadf]"
               >
                 <figure className="mb-2 aspect-square w-full overflow-hidden rounded-lg bg-[#e8e8df]">
                   <img
@@ -259,7 +290,7 @@ export default async function PersonPage({ params }: PageProps) {
                     loading="lazy"
                   />
                 </figure>
-                <div className="font-['MaruBuri',serif] text-[0.875rem] font-semibold leading-tight text-[#16140f]">
+                <div className="font-['MaruBuri',serif] text-[0.875rem] font-semibold leading-tight text-[#16140f] transition-colors group-hover:text-[#FF6C0F]">
                   {partner.name}
                 </div>
                 <div className="font-['Pretendard',sans-serif] text-[0.75rem] font-normal text-[#16140f]/50">

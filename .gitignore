@@ -52,6 +52,8 @@ e2e/.auth/
 
 # Agent work notes
 .sisyphus/
+.codex/
+.omx/
 notes.md
 task_plan.md
 *_REFERENCE.md
@@ -64,3 +66,7 @@ task_plan.md
 SITE_ARCHITECTURE.md
 nextjs_branch_cicd_guide.md
 BLOG_MIGRATION_MAP.md
+
+# Local exports / generated docs
+applications-export.csv
+docs/DATABASE_SCHEMA.md

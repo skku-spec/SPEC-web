@@ -2,10 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import PageHeader from "@/components/PageHeader";
-import { requireAuth, normalizeRole } from "@/lib/auth";
+import { requireAuth, normalizeRole, canWrite } from "@/lib/auth";
 import type { UserRole } from "@/lib/auth";
 import LogoutButton from "@/app/profile/LogoutButton";
+import OwnedPostsSection from "@/components/profile/OwnedPostsSection";
 import ProfileAvatarEditor from "@/components/profile/ProfileAvatarEditor";
+import PublicProfileEditor from "@/components/profile/PublicProfileEditor";
+import { getProfileExperiencesForOwner } from "@/lib/public-profile";
+import { getBlogPostsByAuthorIdForOwner } from "@/lib/api";
 
 type RoleMeta = {
   label: string;
@@ -14,8 +18,9 @@ type RoleMeta = {
 
 const ROLE_META: Record<UserRole, RoleMeta> = {
   outsider: { label: "외부인", className: "bg-slate-100 text-slate-700" },
-  runner: { label: "러너", className: "bg-blue-100 text-blue-700" },
-  preneur: { label: "프러너", className: "bg-amber-100 text-amber-700" },
+  runner: { label: "러너", className: "bg-teal-100 text-teal-700" },
+  preneur: { label: "프러너", className: "bg-violet-100 text-violet-700" },
+  member: { label: "부원", className: "bg-blue-100 text-blue-700" },
   admin: { label: "관리자", className: "bg-red-100 text-red-700" },
 };
 
@@ -51,6 +56,21 @@ export default async function ProfilePage() {
   const firstName = profile?.first_name?.trim() || "-";
   const lastName = profile?.last_name?.trim() || "-";
   const linkedinUrl = profile?.linkedin_url?.trim() || "";
+  const canEditPublicProfile = canWrite(role);
+
+  let experiences: Awaited<ReturnType<typeof getProfileExperiencesForOwner>> = [];
+  let ownedPosts: Awaited<ReturnType<typeof getBlogPostsByAuthorIdForOwner>> = [];
+  if (canEditPublicProfile) {
+    try {
+      [experiences, ownedPosts] = await Promise.all([
+        getProfileExperiencesForOwner(user.id),
+        getBlogPostsByAuthorIdForOwner(user.id),
+      ]);
+    } catch {
+      experiences = [];
+      ownedPosts = [];
+    }
+  }
 
   return (
     <div className="min-h-screen px-4 pb-24 pt-14 md:px-8 md:pt-20">
@@ -145,6 +165,28 @@ export default async function ProfilePage() {
             <LogoutButton />
           </div>
         </section>
+
+        {profile && (
+          <PublicProfileEditor
+            initial={{
+              name: profile.name ?? "",
+              slug: profile.slug ?? "",
+              headline: profile.headline ?? "",
+              currentRole: profile.current_role ?? "",
+              company: profile.company ?? "",
+              bio: profile.bio ?? "",
+              linkedinUrl: profile.linkedin_url ?? "",
+              websiteUrl: profile.website_url ?? "",
+              brunchUrl: profile.brunch_url ?? "",
+              githubUrl: profile.github_url ?? "",
+              profileVisibility: profile.profile_visibility === "public" ? "public" : "private",
+            }}
+            initialExperiences={experiences}
+            isEditable={canEditPublicProfile}
+          />
+        )}
+
+        {canEditPublicProfile && <OwnedPostsSection posts={ownedPosts} />}
       </div>
     </div>
   );
