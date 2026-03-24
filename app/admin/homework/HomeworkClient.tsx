@@ -43,7 +43,9 @@ type Profile = {
   username: string;
   slug: string;
   role: string;
+  photo?: string | null;
 };
+type Status = "pending" | "completed" | "reviewed";
 
 type TeamAssignment = {
   teamName: string;
