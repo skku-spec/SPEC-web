@@ -64,8 +64,8 @@ export default function ProfileEditForm({
 
     const formData = new FormData();
     formData.set("username", username);
-    formData.set("first_name", firstName);
-    formData.set("last_name", lastName);
+    formData.set("first_name", firstName.replace(/\s+/g, ""));
+    formData.set("last_name", lastName.replace(/\s+/g, ""));
     formData.set("linkedin_url", linkedinUrl);
 
     startProfileTransition(async () => {
@@ -124,7 +124,7 @@ export default function ProfileEditForm({
       <section className="rounded-2xl border border-[#d7d5ca] bg-[#fcfcf7] p-6 shadow-[0_14px_35px_rgba(22,20,15,0.05)] md:p-8">
         <SectionTitle>기본 정보</SectionTitle>
 
-        <form action={handleProfileSubmit} className="mt-5 space-y-5">
+        <form onSubmit={(e) => { e.preventDefault(); handleProfileSubmit(); }} className="mt-5 space-y-5">
           {profileError ? <ErrorMessage message={profileError} /> : null}
           {profileSuccess ? <SuccessMessage message={profileSuccess} /> : null}
 
@@ -203,7 +203,7 @@ export default function ProfileEditForm({
       <section className="rounded-2xl border border-[#d7d5ca] bg-[#fcfcf7] p-6 shadow-[0_14px_35px_rgba(22,20,15,0.05)] md:p-8">
         <SectionTitle>이메일 변경</SectionTitle>
 
-        <form action={handleEmailSubmit} className="mt-5 space-y-5">
+        <form onSubmit={(e) => { e.preventDefault(); handleEmailSubmit(); }} className="mt-5 space-y-5">
           {emailError ? <ErrorMessage message={emailError} /> : null}
           {emailSuccess ? <SuccessMessage message={emailSuccess} /> : null}
 
@@ -235,7 +235,7 @@ export default function ProfileEditForm({
       <section className="rounded-2xl border border-[#d7d5ca] bg-[#fcfcf7] p-6 shadow-[0_14px_35px_rgba(22,20,15,0.05)] md:p-8">
         <SectionTitle>비밀번호 변경</SectionTitle>
 
-        <form action={handlePasswordSubmit} className="mt-5 space-y-5">
+        <form onSubmit={(e) => { e.preventDefault(); handlePasswordSubmit(); }} className="mt-5 space-y-5">
           {passwordError ? <ErrorMessage message={passwordError} /> : null}
           {passwordSuccess ? <SuccessMessage message={passwordSuccess} /> : null}
 

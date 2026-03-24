@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, startTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 type Homework = {
@@ -13,6 +13,7 @@ type Homework = {
   is_team: boolean;
   created_at: string;
 };
+
 const supabase = createClient();
 
 export function RunnerHomeworkClient() {
@@ -22,7 +23,7 @@ export function RunnerHomeworkClient() {
   const [viewingId, setViewingId] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
-
+    setIsLoading(true);
     // 1. Get current user
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setIsLoading(false); return; }
@@ -61,16 +62,15 @@ export function RunnerHomeworkClient() {
       }
     }
 
-    setHomeworks(hwData as unknown as Homework[]);
+    setHomeworks((hwData || []) as unknown as Homework[]);
     setMyAssignments(assignmentsMap);
     setIsLoading(false);
   }, []);
 
   useEffect(() => {
-    const load = async () => {
-      await fetchData();
-    };
-    void load();
+    startTransition(() => {
+      fetchData();
+    });
   }, [fetchData]);
 
 
@@ -91,7 +91,7 @@ export function RunnerHomeworkClient() {
         ) : homeworks.length === 0 ? (
           <div className="rounded-[32px] border-2 border-dashed border-[#d9d9cc] bg-white p-20 text-center">
             <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-[#f5f5ee]">
-              <span className="text-4xl">📚</span>
+              <span role="img" aria-label="책" className="text-4xl">📚</span>
             </div>
             <h3 className="text-xl font-bold text-[#16140f]">등록된 과제가 없습니다</h3>
             <p className="mt-2 text-sm text-[#6b6b5e]">새로운 과제가 등록되면 여기에 표시됩니다.</p>
@@ -104,7 +104,7 @@ export function RunnerHomeworkClient() {
               <div key={hw.id} className="group overflow-hidden rounded-[24px] border border-[#d9d9cc] bg-white transition-all hover:border-[#FF6C0F] hover:shadow-lg">
                 <div className="flex flex-wrap items-center justify-between px-8 py-5 gap-4">
                   <div className="flex items-center gap-5">
-                    <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f5f5ee] text-2xl transition-transform group-hover:scale-110">📖</span>
+                    <span role="img" aria-label="책" className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f5f5ee] text-2xl transition-transform group-hover:scale-110">📖</span>
                     <div>
                       <h3 className="text-lg font-black text-[#16140f]">{hw.title}</h3>
                       <div className="flex gap-2 mt-1">
@@ -146,12 +146,12 @@ export function RunnerHomeworkClient() {
                         {hw.is_individual && (
                           <div className="space-y-4">
                             <h4 className="flex items-center gap-2 text-xs font-black text-blue-600 uppercase tracking-widest italic">
-                              👤 개인 과제 목록 (Individual Tasks)
+                              <span role="img" aria-label="개인">👤</span> 개인 과제 목록 (Individual Tasks)
                             </h4>
                             <div className="space-y-3">
                               {hw.individual_content && hw.individual_content.length > 0 ? (
                                 hw.individual_content.map((task, idx) => (
-                                  <div key={idx} className="rounded-2xl bg-white p-5 border border-blue-50 shadow-sm text-sm text-[#4a4a40] leading-relaxed relative overflow-hidden group/task">
+                                  <div key={`indiv-task-${hw.id}-${idx}`} className="rounded-2xl bg-white p-5 border border-blue-50 shadow-sm text-sm text-[#4a4a40] leading-relaxed relative overflow-hidden group/task">
                                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-100 group-hover/task:bg-blue-400 transition-colors" />
                                     <span className="font-black text-blue-400 mr-2 italic">#{idx + 1}</span> {task}
                                   </div>
@@ -167,12 +167,12 @@ export function RunnerHomeworkClient() {
                         {hw.is_team && (
                           <div className="space-y-4">
                             <h4 className="flex items-center gap-2 text-xs font-black text-purple-600 uppercase tracking-widest italic">
-                              👥 팀 협동 과제 목록 (Team Tasks)
+                              <span role="img" aria-label="팀">👥</span> 팀 협동 과제 목록 (Team Tasks)
                             </h4>
                             <div className="space-y-3">
                               {hw.team_content && hw.team_content.length > 0 ? (
                                 hw.team_content.map((task, idx) => (
-                                  <div key={idx} className="rounded-2xl bg-white p-5 border border-purple-50 shadow-sm text-sm text-[#4a4a40] leading-relaxed relative overflow-hidden group/task">
+                                  <div key={`team-task-${hw.id}-${idx}`} className="rounded-2xl bg-white p-5 border border-purple-50 shadow-sm text-sm text-[#4a4a40] leading-relaxed relative overflow-hidden group/task">
                                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-purple-100 group-hover/task:bg-purple-400 transition-colors" />
                                     <span className="font-black text-purple-400 mr-2 italic">#{idx + 1}</span> {task}
                                   </div>
@@ -201,8 +201,8 @@ export function RunnerHomeworkClient() {
                                   <label className="text-[9px] font-black text-[#a1a196] uppercase italic">Teammates</label>
                                   <div className="flex flex-wrap gap-1.5 mt-2">
                                     {myTeam.teammates.length > 0 ? (
-                                      myTeam.teammates.map(name => (
-                                        <span key={name} className="text-[10px] font-bold bg-[#f5f5ee] text-[#16140f] px-3 py-1 rounded-lg border border-[#d9d9cc]">
+                                      myTeam.teammates.map((name, mIdx) => (
+                                        <span key={`teammate-${hw.id}-${mIdx}`} className="text-[10px] font-bold bg-[#f5f5ee] text-[#16140f] px-3 py-1 rounded-lg border border-[#d9d9cc]">
                                           {name}
                                         </span>
                                       ))
@@ -214,7 +214,7 @@ export function RunnerHomeworkClient() {
                               </div>
                             ) : (
                               <div className="flex flex-col items-center justify-center py-6 text-center">
-                                <span className="text-2xl mb-2 grayscale opacity-30">🤝</span>
+                                <span role="img" aria-label="악수" className="text-2xl mb-2 grayscale opacity-30">🤝</span>
                                 <p className="text-[11px] font-bold text-[#a1a196] italic">배정된 팀 정보가<br/>존재하지 않습니다.</p>
                               </div>
                             )}
@@ -223,7 +223,7 @@ export function RunnerHomeworkClient() {
 
                         <div className="rounded-[24px] border-2 border-dashed border-[#d9d9cc] p-6 flex flex-col items-center justify-center gap-4 text-center">
                           <div className="h-12 w-12 rounded-full bg-[#FF6C0F]/10 flex items-center justify-center">
-                            <span className="text-xl">🚀</span>
+                            <span role="img" aria-label="로켓" className="text-xl">🚀</span>
                           </div>
                           <div>
                             <p className="text-sm font-black text-[#16140f]">과제를 완료하셨나요?</p>
@@ -254,4 +254,3 @@ export function RunnerHomeworkClient() {
     </div>
   );
 }
-

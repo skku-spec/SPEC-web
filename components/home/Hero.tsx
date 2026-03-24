@@ -61,12 +61,12 @@ export default function Hero() {
 
              {/* CTA */}
               <div className="mt-8 md:mt-10 flex flex-col items-center gap-3">
-              <ApplyButton href="/apply" size="md">
-                4기 지원하기
-              </ApplyButton>
-               <span className="font-['Pretendard',sans-serif] text-sm text-white/40">
-                 마감: 2026년 3월
-               </span>
+              {/* <ApplyButton href="/apply" size="lg" className="mt-16">
+            4기 지원하기
+          </ApplyButton>
+          <p className="mt-4 font-['Pretendard',sans-serif] text-sm text-white/40">
+            마감: 2026년 3월 | 성균관대 재학생 대상
+          </p> */}
              </div>
         </div>
 

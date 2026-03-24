@@ -39,13 +39,12 @@ type SubmissionRow = {
 
 type Profile = {
   id: string;
-  name: string;
-  username: string;
-  slug: string;
-  role: string;
+  name: string | null;
+  username: string | null;
+  slug: string | null;
+  role: string | null;
   photo?: string | null;
 };
-type Status = "pending" | "completed" | "reviewed";
 
 type TeamAssignment = {
   teamName: string;
@@ -109,196 +108,7 @@ export function HomeworkClient() {
 
   const [isSyncing, setIsSyncing] = useState(false);
 
-  // Sync Padlet data with Database when loaded
-  useEffect(() => {
-    const syncAll = async () => {
-      setIsSyncing(true);
-      try {
-        for (const hwId of Object.keys(padletData)) {
-          const pData = padletData[hwId];
-          if (pData && !pData.loading && !pData.error && availableRunners.length > 0) {
-            const hw = homeworks.find(h => h.id === hwId);
-            if (hw) {
-              const rows = buildSubmissionRows(hw);
-              const syncData = availableRunners.map(runner => {
-                const row = rows.find(r => r.label === runner.name);
-                const isCompleted = row ? Object.values(row.sectionStatus).some(v => v === true) : false;
-                return {
-                  user_id: runner.id,
-                  status: isCompleted ? "completed" : "pending"
-                };
-              });
-              await syncHomeworkSubmissions(hwId, syncData);
-            }
-          }
-        }
-      } finally {
-        setIsSyncing(false);
-      }
-    };
-
-    if (Object.keys(padletData).length > 0) {
-      syncAll();
-    }
-  }, [padletData, availableRunners, homeworks]);
-
-  const handleFetchTeams = async (homeworkId: string) => {
-    if (viewingId === homeworkId) {
-      setViewingId(null);
-      return;
-    }
-
-    setViewingId(homeworkId);
-    const { data, error } = await supabase
-      .from("homework_team_assignments")
-      .select("team_name,user_id")
-      .eq("homework_id", homeworkId);
-
-    if (!error && data) {
-      setViewingTeams(data as { team_name: string; user_id: string }[]);
-    } else {
-      setViewingTeams([]);
-    }
-  };
-
-  // Silently fetch team data for a homework without toggling viewingId (used by status tab)
-  const fetchTeamData = async (homeworkId: string) => {
-    const { data, error } = await supabase
-      .from("homework_team_assignments")
-      .select("team_name,user_id")
-      .eq("homework_id", homeworkId);
-
-    if (!error && data) {
-      setViewingTeams(data as { team_name: string; user_id: string }[]);
-    }
-  };
-
-  const handleAddHomework = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTitle.trim()) return;
-    if (!isIndividual && !isTeam) {
-      alert("개인 또는 팀 중 적어도 하나는 선택해야 합니다.");
-      return;
-    }
-
-    const { data: hwData, error: hwError } = await supabase
-      .from("homeworks")
-      .insert([
-        {
-          title: newTitle,
-          submission_link: submissionLink.trim() || null,
-          padlet_board_id: padletBoardId.trim() || null,
-          individual_content: isIndividual ? individualTasks.filter(t => t.trim() !== "") : [],
-          team_content: isTeam ? teamTasks.filter(t => t.trim() !== "") : [],
-          is_individual: isIndividual,
-          is_team: isTeam,
-        },
-      ])
-      .select()
-      .single();
-
-    if (hwError || !hwData) {
-      alert("과제 생성 중 에러가 발생했습니다.");
-      return;
-    }
-
-    // Handle Team Assignments if Team is selected
-    if (isTeam && teams.length > 0) {
-      const assignments = teams.flatMap(t => 
-        t.memberIds.map(mId => ({
-          homework_id: hwData.id,
-          user_id: mId,
-          team_name: t.teamName
-        }))
-      );
-
-      const { error: teamError } = await supabase
-        .from("homework_team_assignments")
-        .insert(assignments);
-
-      if (teamError) {
-        alert("팀 배정 중 일부 에러가 발생했습니다.");
-      }
-    }
-
-    setHomeworks([hwData as unknown as Homework, ...homeworks]);
-    resetForm();
-    setIsAdding(false);
-  };
-
-  const resetForm = () => {
-    setNewTitle("");
-    setSubmissionLink("");
-    setPadletBoardId("");
-    setIndividualTasks([""]);
-    setTeamTasks([""]);
-    setIsIndividual(true);
-    setIsTeam(false);
-    setTeams([]);
-    setTeamSearchQueries([]);
-  };
-
-  const addTeam = () => {
-    setTeams([...teams, { teamName: `Team ${teams.length + 1}`, memberIds: [] }]);
-    setTeamSearchQueries([...teamSearchQueries, ""]);
-  };
-
-  const removeTeam = (index: number) => {
-    setTeams(teams.filter((_, i) => i !== index));
-    setTeamSearchQueries(teamSearchQueries.filter((_, i) => i !== index));
-  };
-
-  const toggleMemberInTeam = (teamIndex: number, userId: string) => {
-    const newTeams = [...teams];
-    const memberIds = newTeams[teamIndex].memberIds;
-    if (memberIds.includes(userId)) {
-      newTeams[teamIndex].memberIds = memberIds.filter(id => id !== userId);
-    } else {
-      newTeams[teamIndex].memberIds = [...memberIds, userId];
-    }
-    setTeams(newTeams);
-    
-    // Clear search after adding
-    const newQueries = [...teamSearchQueries];
-    newQueries[teamIndex] = "";
-    setTeamSearchQueries(newQueries);
-  };
-
-  const handleDeleteHomework = async (id: string) => {
-    if (!confirm("정말 삭제하시겠습니까?")) return;
-    const { error } = await supabase.from("homeworks").delete().eq("id", id);
-    if (!error) {
-      setHomeworks(homeworks.filter((hw) => hw.id !== id));
-    }
-  };
-
-  const fetchPadletSubmissions = async (hw: Homework) => {
-    if (!hw.padlet_board_id) return;
-    const hwId = hw.id;
-
-    setPadletData(prev => ({ ...prev, [hwId]: { sections: [], posts: [], loading: true, error: null } }));
-
-    try {
-      const res = await fetch(`/api/padlet/board?board_id=${hw.padlet_board_id}`);
-      const json = await res.json();
-
-      if (!res.ok) {
-        setPadletData(prev => ({ ...prev, [hwId]: { sections: [], posts: [], loading: false, error: json.error || '불러오기 실패' } }));
-        return;
-      }
-
-      // API now returns pre-normalized { sections, posts } shape
-      const sections: PadletSection[] = json.sections || [];
-      const posts: PadletPost[] = json.posts || [];
-
-      setPadletData(prev => ({ ...prev, [hwId]: { sections, posts, loading: false, error: null } }));
-    } catch (e: unknown) {
-      setPadletData(prev => ({ ...prev, [hwId]: { sections: [], posts: [], loading: false, error: (e as Error).message } }));
-    }
-  };
-
-
-  const buildSubmissionRows = (hw: Homework): SubmissionRow[] => {
+  const buildSubmissionRows = useCallback((hw: Homework): SubmissionRow[] => {
     const pData = padletData[hw.id];
     if (!pData) return [];
     const { sections, posts } = pData;
@@ -351,8 +161,8 @@ export function HomeworkClient() {
       const teamInfo = runnerTeamMap.get(runner.id);
 
       // Collect all names and usernames to search for (including team members)
-      const targetNames = [runner.name];
-      const targetUsernames = [runner.username];
+      const targetNames: string[] = runner.name ? [runner.name] : [];
+      const targetUsernames: string[] = runner.username ? [runner.username] : [];
 
       if (teamInfo) {
         teamInfo.memberNames.forEach(name => {
@@ -373,16 +183,219 @@ export function HomeworkClient() {
 
       const teamLabel = teamInfo ? `(${teamInfo.teamName})` : '';
       rows.push({
-        label: runner.name,
+        label: runner.name || 'Unknown',
         isTeam: !!teamInfo,
-        memberNames: teamInfo?.memberNames ?? [runner.name],
+        memberNames: teamInfo?.memberNames ?? (runner.name ? [runner.name] : []),
         sectionStatus,
         teamLabel,
       });
     });
 
     return rows;
-  };
+  }, [padletData, viewingTeams, availableRunners]);
+
+  // Sync Padlet data with Database when loaded
+  useEffect(() => {
+    const syncAll = async () => {
+      setIsSyncing(true);
+      try {
+        for (const hwId of Object.keys(padletData)) {
+          const pData = padletData[hwId];
+          if (pData && !pData.loading && !pData.error && availableRunners.length > 0) {
+            const hw = homeworks.find(h => h.id === hwId);
+            if (hw) {
+              const rows = buildSubmissionRows(hw);
+              const syncData = availableRunners.map(runner => {
+                const row = rows.find(r => r.label === (runner.name ?? 'Unknown'));
+                const isCompleted = row ? Object.values(row.sectionStatus).some(v => v === true) : false;
+                return {
+                  user_id: runner.id,
+                  status: isCompleted ? "completed" : "pending"
+                };
+              });
+              await syncHomeworkSubmissions(hwId, syncData);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Sync failed:", err);
+      } finally {
+        setIsSyncing(false);
+      }
+    };
+
+    if (Object.keys(padletData).length > 0) {
+      syncAll();
+    }
+  }, [padletData, availableRunners, homeworks, buildSubmissionRows]);
+
+  const handleFetchTeams = useCallback(async (homeworkId: string) => {
+    let shouldFetch = false;
+    setViewingId(prev => {
+      if (prev === homeworkId) {
+        return null; // toggle off
+      }
+      shouldFetch = true;
+      return homeworkId;
+    });
+
+    if (!shouldFetch) return;
+
+    const { data, error } = await supabase
+      .from("homework_team_assignments")
+      .select("team_name,user_id")
+      .eq("homework_id", homeworkId);
+
+    if (!error && data) {
+      setViewingTeams(data as { team_name: string; user_id: string }[]);
+    } else {
+      setViewingTeams([]);
+    }
+  }, []);
+
+  // Silently fetch team data for a homework without toggling viewingId (used by status tab)
+  const fetchTeamData = useCallback(async (homeworkId: string) => {
+    const { data, error } = await supabase
+      .from("homework_team_assignments")
+      .select("team_name,user_id")
+      .eq("homework_id", homeworkId);
+
+    if (!error && data) {
+      setViewingTeams(data as { team_name: string; user_id: string }[]);
+    }
+  }, []);
+
+  const resetForm = useCallback(() => {
+    setNewTitle("");
+    setSubmissionLink("");
+    setPadletBoardId("");
+    setIndividualTasks([""]);
+    setTeamTasks([""]);
+    setIsIndividual(true);
+    setIsTeam(false);
+    setTeams([]);
+    setTeamSearchQueries([]);
+  }, []);
+
+  const handleAddHomework = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTitle.trim()) return;
+    if (!isIndividual && !isTeam) {
+      alert("개인 또는 팀 중 적어도 하나는 선택해야 합니다.");
+      return;
+    }
+
+    const { data: hwData, error: hwError } = await supabase
+      .from("homeworks")
+      .insert([
+        {
+          title: newTitle,
+          submission_link: submissionLink.trim() || null,
+          padlet_board_id: padletBoardId.trim() || null,
+          individual_content: isIndividual ? individualTasks.filter(t => t.trim() !== "") : [],
+          team_content: isTeam ? teamTasks.filter(t => t.trim() !== "") : [],
+          is_individual: isIndividual,
+          is_team: isTeam,
+        },
+      ])
+      .select()
+      .single();
+
+    if (hwError || !hwData) {
+      alert("과제 생성 중 에러가 발생했습니다.");
+      return;
+    }
+
+    // Handle Team Assignments if Team is selected
+    if (isTeam && teams.length > 0) {
+      const assignments = teams.flatMap(t => 
+        t.memberIds.map(mId => ({
+          homework_id: hwData.id,
+          user_id: mId,
+          team_name: t.teamName
+        }))
+      );
+
+      const { error: teamError } = await supabase
+        .from("homework_team_assignments")
+        .insert(assignments);
+
+      if (teamError) {
+        alert("팀 배정 중 일부 에러가 발생했습니다.");
+      }
+    }
+
+    setHomeworks(prev => [hwData as unknown as Homework, ...prev]);
+    resetForm();
+    setIsAdding(false);
+  }, [newTitle, submissionLink, padletBoardId, isIndividual, isTeam, individualTasks, teamTasks, teams, resetForm]);
+
+  const addTeam = useCallback(() => {
+    setTeams(prev => [...prev, { teamName: `Team ${prev.length + 1}`, memberIds: [] }]);
+    setTeamSearchQueries(prev => [...prev, ""]);
+  }, []);
+
+  const removeTeam = useCallback((index: number) => {
+    setTeams(prev => prev.filter((_, i) => i !== index));
+    setTeamSearchQueries(prev => prev.filter((_, i) => i !== index));
+  }, []);
+
+  const toggleMemberInTeam = useCallback((teamIndex: number, userId: string) => {
+    setTeams(prevTeams => {
+      const newTeams = [...prevTeams];
+      const memberIds = newTeams[teamIndex].memberIds;
+      if (memberIds.includes(userId)) {
+        newTeams[teamIndex] = { 
+          ...newTeams[teamIndex], 
+          memberIds: memberIds.filter(id => id !== userId) 
+        };
+      } else {
+        newTeams[teamIndex] = { 
+          ...newTeams[teamIndex], 
+          memberIds: [...memberIds, userId] 
+        };
+      }
+      return newTeams;
+    });
+    
+    // Clear search after adding
+    setTeamSearchQueries(prevQueries => {
+      const newQueries = [...prevQueries];
+      newQueries[teamIndex] = "";
+      return newQueries;
+    });
+  }, []);
+
+  const handleDeleteHomework = useCallback(async (id: string) => {
+    if (!window.confirm("정말 삭제하시겠습니까?")) return;
+    const { error } = await supabase.from("homeworks").delete().eq("id", id);
+    if (!error) {
+      setHomeworks(prev => prev.filter((hw) => hw.id !== id));
+    }
+  }, []);
+
+  const loadPadletData = useCallback(async (hwId: string, boardId: string) => {
+    if (!boardId) return;
+
+    setPadletData(prev => ({ ...prev, [hwId]: { sections: [], posts: [], loading: true, error: null } }));
+
+    try {
+      const res = await fetch(`/api/padlet/board?board_id=${boardId}`);
+      const json = await res.json();
+
+      if (!res.ok) {
+        setPadletData(prev => ({ ...prev, [hwId]: { sections: [], posts: [], loading: false, error: json.error || '불러오기 실패' } }));
+        return;
+      }
+
+      const sections: PadletSection[] = json.sections || [];
+      const posts: PadletPost[] = json.posts || [];
+
+      setPadletData(prev => ({ ...prev, [hwId]: { sections, posts, loading: false, error: null } }));
+    } catch (e: unknown) {
+      setPadletData(prev => ({ ...prev, [hwId]: { sections: [], posts: [], loading: false, error: (e as Error).message } }));
+    }
+  }, []);
 
 
   return (
@@ -400,6 +413,7 @@ export function HomeworkClient() {
           className={`flex h-10 w-10 items-center justify-center rounded-full text-white shadow-lg transition-all hover:scale-110 active:scale-95 ${
             isAdding ? "bg-[#6b6b5e] rotate-45" : "bg-[#FF6C0F] shadow-orange-200"
           }`}
+          aria-label={isAdding ? "과제 추가 취소" : "새 과제 추가"}
         >
           <span className="text-2xl font-light leading-none">+</span>
         </button>
@@ -417,8 +431,9 @@ export function HomeworkClient() {
               <section className="space-y-4">
                 <h3 className="text-xs font-black uppercase tracking-widest text-[#a1a196] border-b border-[#f0efe6] pb-2">Step 1. Basic Info</h3>
                 <div>
-                  <label className="block text-sm font-bold text-[#16140f] mb-2">과제 제목 (Main Title)</label>
+                  <label htmlFor="hw-title" className="block text-sm font-bold text-[#16140f] mb-2">과제 제목 (Main Title)</label>
                   <input
+                    id="hw-title"
                     type="text"
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value)}
@@ -428,9 +443,10 @@ export function HomeworkClient() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-[#16140f] mb-1 mt-4">Padlet Board ID</label>
+                  <label htmlFor="padlet-id" className="block text-sm font-bold text-[#16140f] mb-1 mt-4">Padlet Board ID</label>
                   <p className="text-[11px] text-[#a1a196] mb-2">Padlet URL에서 숫자 ID를 입력하세요. (예: padlet.com/user/<strong>12345678</strong>)</p>
                   <input
+                    id="padlet-id"
                     type="text"
                     value={padletBoardId}
                     onChange={(e) => setPadletBoardId(e.target.value)}
@@ -439,8 +455,9 @@ export function HomeworkClient() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-[#16140f] mb-2 mt-4">과제 제출 링크 (Submission Link, 러너에게 표시)</label>
+                  <label htmlFor="submit-link" className="block text-sm font-bold text-[#16140f] mb-2 mt-4">과제 제출 링크 (Submission Link, 러너에게 표시)</label>
                   <input
+                    id="submit-link"
                     type="url"
                     value={submissionLink}
                     onChange={(e) => setSubmissionLink(e.target.value)}
@@ -462,7 +479,7 @@ export function HomeworkClient() {
                         : "border-[#f0efe6] bg-white text-[#a1a196] hover:border-[#d9d9cc]"
                     }`}
                   >
-                    <span className={`text-4xl transition-transform group-hover:scale-110 ${isIndividual ? "filter-none" : "grayscale opacity-50"}`}>👤</span>
+                    <span role="img" aria-label="개인" className={`text-4xl transition-transform group-hover:scale-110 ${isIndividual ? "filter-none" : "grayscale opacity-50"}`}>👤</span>
                     <div className="text-center">
                       <p className="text-sm font-black">개인 과제 활성화</p>
                       <p className="text-[10px] font-medium mt-0.5">개별 가이드라인 작성</p>
@@ -477,7 +494,7 @@ export function HomeworkClient() {
                         : "border-[#f0efe6] bg-white text-[#a1a196] hover:border-[#d9d9cc]"
                     }`}
                   >
-                    <span className={`text-4xl transition-transform group-hover:scale-110 ${isTeam ? "filter-none" : "grayscale opacity-50"}`}>👥</span>
+                    <span role="img" aria-label="팀" className={`text-4xl transition-transform group-hover:scale-110 ${isTeam ? "filter-none" : "grayscale opacity-50"}`}>👥</span>
                     <div className="text-center">
                       <p className="text-sm font-black">팀 과제 활성화</p>
                       <p className="text-[10px] font-medium mt-0.5">협동 가이드라인 작성</p>
@@ -495,7 +512,7 @@ export function HomeworkClient() {
                     <div className="space-y-4 rounded-2xl border border-blue-100 bg-blue-50/30 p-5">
                       <div className="flex items-center justify-between mb-1">
                         <label className="flex items-center gap-2 text-sm font-bold text-blue-600">
-                          <span>👤</span> 개인 과제 목록
+                          <span role="img" aria-label="개인">👤</span> 개인 과제 목록
                         </label>
                         <button
                           type="button"
@@ -507,7 +524,7 @@ export function HomeworkClient() {
                       </div>
                       <div className="space-y-3">
                         {individualTasks.map((task, idx) => (
-                          <div key={idx} className="group relative">
+                          <div key={`indiv-task-${idx}`} className="group relative">
                             <textarea
                               value={task}
                               onChange={(e) => {
@@ -538,7 +555,7 @@ export function HomeworkClient() {
                     <div className="space-y-4 rounded-2xl border border-purple-100 bg-purple-50/30 p-5">
                       <div className="flex items-center justify-between mb-1">
                         <label className="flex items-center gap-2 text-sm font-bold text-purple-600">
-                          <span>👥</span> 팀 과제 목록
+                          <span role="img" aria-label="팀">👥</span> 팀 과제 목록
                         </label>
                         <button
                           type="button"
@@ -550,7 +567,7 @@ export function HomeworkClient() {
                       </div>
                       <div className="space-y-3">
                         {teamTasks.map((task, idx) => (
-                          <div key={idx} className="group relative">
+                          <div key={`team-task-${idx}`} className="group relative">
                             <textarea
                               value={task}
                               onChange={(e) => {
@@ -601,17 +618,21 @@ export function HomeworkClient() {
 
               <div className="flex-1 space-y-6 overflow-y-visible">
                 {teams.map((t, idx) => (
-                  <div key={idx} className="group relative rounded-2xl border-2 border-[#f0efe6] bg-white p-5 shadow-sm transition-all hover:border-[#FF6C0F]">
+                  <div key={`team-builder-${idx}`} className="group relative rounded-2xl border-2 border-[#f0efe6] bg-white p-5 shadow-sm transition-all hover:border-[#FF6C0F]">
                     <div className="flex items-center justify-between mb-4">
                       <input
                         type="text"
                         value={t.teamName}
                         onChange={(e) => {
-                          const newTeams = [...teams];
-                          newTeams[idx].teamName = e.target.value;
-                          setTeams(newTeams);
+                          const val = e.target.value;
+                          setTeams(prev => {
+                            const newTs = [...prev];
+                            newTs[idx] = { ...newTs[idx], teamName: val };
+                            return newTs;
+                          });
                         }}
                         className="text-sm font-black text-[#FF6C0F] bg-transparent border-none p-0 focus:ring-0 w-2/3"
+                        placeholder="팀 이름"
                       />
                       <button
                         type="button"
@@ -627,8 +648,8 @@ export function HomeworkClient() {
                       {t.memberIds.map(mId => {
                         const runner = availableRunners.find(r => r.id === mId);
                         return (
-                          <div key={mId} className="flex items-center gap-2 rounded-xl bg-[#f5f5ee] px-3 py-1.5 text-[11px] font-bold text-[#16140f] border border-[#d9d9cc]">
-                            {runner?.name}
+                          <div key={`team-${idx}-member-${mId}`} className="flex items-center gap-2 rounded-xl bg-[#f5f5ee] px-3 py-1.5 text-[11px] font-bold text-[#16140f] border border-[#d9d9cc]">
+                            {runner?.name || "Unknown"}
                             <button 
                               type="button" 
                               onClick={() => toggleMemberInTeam(idx, mId)}
@@ -644,7 +665,7 @@ export function HomeworkClient() {
                       )}
                     </div>
 
-                    {/* Member Search - REDESIGNED to prevent clipping */}
+                    {/* Member Search */}
                     <div className="space-y-2">
                        <label className="text-[10px] font-black uppercase tracking-tighter text-[#a1a196]">Add Member</label>
                        <div className="flex items-center gap-2">
@@ -653,35 +674,38 @@ export function HomeworkClient() {
                           placeholder="이름 검색..."
                           value={teamSearchQueries[idx] || ""}
                           onChange={(e) => {
-                            const newQueries = [...teamSearchQueries];
-                            newQueries[idx] = e.target.value;
-                            setTeamSearchQueries(newQueries);
+                            const val = e.target.value;
+                            setTeamSearchQueries(prev => {
+                              const newQs = [...prev];
+                              newQs[idx] = val;
+                              return newQs;
+                            });
                           }}
                           className="flex-1 rounded-xl border border-[#f0efe6] bg-[#fcfcfb] px-3 py-2 text-xs focus:border-[#FF6C0F] focus:outline-none transition-all"
                         />
                        </div>
                        
-                       {/* Result List - INTEGRATED (not absolute) to prevent clipping */}
+                       {/* Result List */}
                        {teamSearchQueries[idx] && (
                         <div className="mt-2 space-y-1 max-h-32 overflow-y-auto rounded-xl border border-dashed border-[#d9d9cc] bg-[#fcfcfb] p-2 animate-in fade-in duration-200">
                           {availableRunners
                             .filter(r => 
-                              r.name.toLowerCase().includes(teamSearchQueries[idx].toLowerCase()) &&
+                              (r.name?.toLowerCase() || "").includes(teamSearchQueries[idx]?.toLowerCase() || "") &&
                               !teams.some(team => team.memberIds.includes(r.id))
                             )
                             .map(runner => (
                               <button
-                                key={runner.id}
+                                key={`search-result-${runner.id}`}
                                 type="button"
                                 onClick={() => toggleMemberInTeam(idx, runner.id)}
                                 className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-[11px] font-bold hover:bg-[#FF6C0F] hover:text-white transition-all shadow-sm"
                               >
-                                <span>{runner.name}</span>
+                                <span>{runner.name || "Unknown"}</span>
                                 <span className="text-[9px] opacity-70">{runner.role}</span>
                               </button>
                             ))}
                           {availableRunners.filter(r => 
-                            r.name.toLowerCase().includes(teamSearchQueries[idx].toLowerCase()) &&
+                            (r.name?.toLowerCase() || "").includes(teamSearchQueries[idx]?.toLowerCase() || "") &&
                             !teams.some(team => team.memberIds.includes(r.id))
                           ).length === 0 && (
                             <p className="py-2 text-center text-[10px] text-[#a1a196]">검색 결과가 없습니다.</p>
@@ -693,7 +717,7 @@ export function HomeworkClient() {
                 ))}
                 {teams.length === 0 && isTeam && (
                   <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border-2 border-dashed border-[#d9d9cc]">
-                    <span className="text-4xl mb-4">📂</span>
+                    <span role="img" aria-label="빈 폴더" className="text-4xl mb-4">📂</span>
                     <p className="text-sm font-bold text-[#6b6b5e]">배정할 팀을 만들어주세요.</p>
                   </div>
                 )}
@@ -724,12 +748,12 @@ export function HomeworkClient() {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-32 gap-4">
             <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#FF6C0F] border-t-transparent" />
-            <p className="text-sm font-black text-[#a1a196] uppercase tracking-widest">Synchronizing...</p>
+            <p className="text-sm font-black text-[#a1a196] uppercase tracking-[2px]">Synchronizing...</p>
           </div>
         ) : homeworks.length === 0 ? (
           <div className="rounded-[40px] border-4 border-dashed border-[#d9d9cc] bg-white p-32 text-center">
             <div className="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-3xl bg-[#f5f5ee]">
-              <span className="text-5xl">📦</span>
+              <span role="img" aria-label="빈 박스" className="text-5xl">📦</span>
             </div>
             <h3 className="text-2xl font-black text-[#16140f]">No Homework Found</h3>
             <p className="mt-2 text-[#6b6b5e] font-medium">관리 중인 과제가 없습니다. 새로운 과제를 생성해보세요.</p>
@@ -740,7 +764,7 @@ export function HomeworkClient() {
               <div className="flex flex-wrap items-center justify-between px-10 py-7 gap-6">
                 <div className="flex items-center gap-6">
                   <div className="flex h-16 w-16 items-center justify-center rounded-[24px] bg-[#f5f5ee] text-3xl group-hover:bg-[#FFF0E5] group-hover:rotate-3 transition-all duration-300">
-                    📚
+                    <span role="img" aria-label="책">📚</span>
                   </div>
                   <div>
                     <h3 className="text-xl font-black text-[#16140f]">{hw.title}</h3>
@@ -804,7 +828,7 @@ export function HomeworkClient() {
                     <button
                       onClick={() => {
                         setActiveTab(prev => ({ ...prev, [hw.id]: 'status' }));
-                        fetchPadletSubmissions(hw);
+                        loadPadletData(hw.id, hw.padlet_board_id!);
                         // Auto-load team assignments if not loaded yet (without toggling the details panel)
                         if (hw.is_team && viewingTeams.length === 0) {
                           fetchTeamData(hw.id);
@@ -832,8 +856,8 @@ export function HomeworkClient() {
                                 <span className="h-2 w-2 rounded-full bg-blue-600" /> 개인 과제 목록
                               </h4>
                               <div className="space-y-4">
-                                {(Array.isArray(hw.individual_content) ? hw.individual_content : [hw.individual_content]).map((task: string, tIdx: number) => (
-                                  <div key={tIdx} className="rounded-[28px] bg-white p-8 shadow-sm border border-[#f0efe6] whitespace-pre-wrap text-[#4a4a40] leading-[1.8] font-medium transition-all hover:shadow-md">
+                                {hw.individual_content.map((task: string, tIdx: number) => (
+                                  <div key={`indiv-content-${hw.id}-${tIdx}`} className="rounded-[28px] bg-white p-8 shadow-sm border border-[#f0efe6] whitespace-pre-wrap text-[#4a4a40] leading-[1.8] font-medium transition-all hover:shadow-md">
                                     <span className="text-blue-500 font-bold mr-2">#{tIdx + 1}</span> {task}
                                   </div>
                                 ))}
@@ -846,8 +870,8 @@ export function HomeworkClient() {
                                 <span className="h-2 w-2 rounded-full bg-purple-600" /> 팀 협동 과제 목록
                               </h4>
                               <div className="space-y-4">
-                                {(Array.isArray(hw.team_content) ? hw.team_content : [hw.team_content]).map((task: string, tIdx: number) => (
-                                  <div key={tIdx} className="rounded-[28px] bg-white p-8 shadow-sm border border-[#f0efe6] whitespace-pre-wrap text-[#4a4a40] leading-[1.8] font-medium transition-all hover:shadow-md">
+                                {hw.team_content.map((task: string, tIdx: number) => (
+                                  <div key={`team-content-${hw.id}-${tIdx}`} className="rounded-[28px] bg-white p-8 shadow-sm border border-[#f0efe6] whitespace-pre-wrap text-[#4a4a40] leading-[1.8] font-medium transition-all hover:shadow-md">
                                     <span className="text-purple-500 font-bold mr-2">#{tIdx + 1}</span> {task}
                                   </div>
                                 ))}
@@ -862,8 +886,8 @@ export function HomeworkClient() {
                                 <span className="h-2 w-2 rounded-full bg-[#FF6C0F]" /> 팀 빌딩 현황
                               </h4>
                               <div className="space-y-5 rounded-[32px] bg-white p-8 shadow-lg border-2 border-[#f0efe6]">
-                                {Array.from(new Set(viewingTeams.map(vt => vt.team_name))).map(teamName => (
-                                  <div key={teamName} className="group/item">
+                                {[...new Set(viewingTeams.map(vt => vt.team_name))].map(teamName => (
+                                  <div key={`team-view-${hw.id}-${teamName}`} className="group/item">
                                     <p className="text-sm font-black text-[#FF6C0F] mb-3 flex items-center justify-between">
                                       {teamName}
                                       <span className="text-[10px] font-bold text-[#a1a196] bg-[#f5f5ee] px-2 py-0.5 rounded-lg">
@@ -874,7 +898,7 @@ export function HomeworkClient() {
                                       {viewingTeams.filter(vt => vt.team_name === teamName).map((member) => {
                                         const runner = availableRunners.find(r => r.id === member.user_id);
                                         return (
-                                          <span key={member.user_id} className="inline-flex items-center rounded-xl bg-[#f5f5ee] px-3 py-1.5 text-[11px] font-bold text-[#16140f] border border-transparent transition-all group-hover/item:border-[#FF6C0F] group-hover/item:bg-white">
+                                          <span key={`member-tag-${hw.id}-${member.user_id}`} className="inline-flex items-center rounded-xl bg-[#f5f5ee] px-3 py-1.5 text-[11px] font-bold text-[#16140f] border border-transparent transition-all group-hover/item:border-[#FF6C0F] group-hover/item:bg-white">
                                             {runner?.name || 'Unknown'}
                                           </span>
                                         );
@@ -896,13 +920,23 @@ export function HomeworkClient() {
                       if (!hw.padlet_board_id) {
                         return (
                           <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border-2 border-dashed border-[#d9d9cc]">
-                            <span className="text-4xl mb-4">🚫</span>
+                            <span role="img" aria-label="금지" className="text-4xl mb-4">🚫</span>
                             <p className="text-sm font-bold text-[#a1a196]">Padlet Board ID가 설정되지 않았습니다.</p>
                           </div>
                         );
                       }
                       if (pData?.loading) return <div className="text-center py-20 text-xs font-black text-[#a1a196] animate-pulse">PADLET 부르는 중...</div>;
                       if (pData?.error) return <div className="text-center py-20 text-red-400 text-xs font-bold">{pData.error}</div>;
+                      if (!pData) return (
+                        <div className="text-center py-20">
+                          <button 
+                            onClick={() => loadPadletData(hw.id, hw.padlet_board_id!)}
+                            className="text-xs font-black text-[#FF6C0F] hover:underline"
+                          >
+                            제출 결과 부르기 (Load status)
+                          </button>
+                        </div>
+                      );
 
                       const rows = buildSubmissionRows(hw);
 
@@ -910,7 +944,7 @@ export function HomeworkClient() {
                       if (hw.is_team && viewingTeams.length === 0 && rows.length === 0) {
                         return (
                           <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border-2 border-dashed border-[#d9d9cc]">
-                            <span className="text-4xl mb-4">👥</span>
+                            <span role="img" aria-label="팀원" className="text-4xl mb-4">👥</span>
                             <p className="text-sm font-bold text-[#6b6b5e]">팀 배정 정보가 없습니다.</p>
                             <p className="text-xs text-[#a1a196] mt-1">과제를 생성할 때 팀을 배정했는지 확인하세요.</p>
                           </div>
@@ -923,8 +957,8 @@ export function HomeworkClient() {
                             <thead>
                               <tr className="border-b-2 border-[#f0efe6]">
                                 <th className="py-4 px-4 text-[10px] font-black uppercase tracking-widest text-[#a1a196] w-1/4">대상 (Type)</th>
-                                {pData.sections.length > 0 ? pData.sections.map(s => (
-                                  <th key={s.id} className="py-4 px-4 text-[10px] font-black uppercase tracking-widest text-[#a1a196] text-center">
+                                {pData.sections && pData.sections.length > 0 ? pData.sections.map(s => (
+                                  <th key={`head-${hw.id}-${s.id}`} className="py-4 px-4 text-[10px] font-black uppercase tracking-widest text-[#a1a196] text-center">
                                     {s.title}
                                   </th>
                                 )) : (
@@ -934,7 +968,7 @@ export function HomeworkClient() {
                             </thead>
                             <tbody className="divide-y divide-[#f0efe6]">
                               {rows.map((row, rIdx) => (
-                                <tr key={rIdx} className="hover:bg-white transition-colors">
+                                <tr key={`row-${hw.id}-${rIdx}`} className="hover:bg-white transition-colors">
                                   <td className="py-5 px-4">
                                     <p className="text-sm font-black text-[#16140f]">{row.label}</p>
                                     {row.teamLabel && (
@@ -944,11 +978,11 @@ export function HomeworkClient() {
                                     )}
                                   </td>
                                   {Object.keys(row.sectionStatus).map(sId => (
-                                    <td key={sId} className="py-5 px-4 text-center">
+                                    <td key={`cell-${hw.id}-${rIdx}-${sId}`} className="py-5 px-4 text-center">
                                       {row.sectionStatus[sId] ? (
-                                        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-green-50 text-green-600 ring-2 ring-green-100">✅</span>
+                                        <span role="img" aria-label="제출 완료" className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-green-50 text-green-600 ring-2 ring-green-100">✅</span>
                                       ) : (
-                                        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-red-50 text-red-200 ring-1 ring-red-50 opacity-40">❌</span>
+                                        <span role="img" aria-label="미제출" className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-red-50 text-red-200 ring-1 ring-red-50 opacity-40">❌</span>
                                       )}
                                     </td>
                                   ))}
