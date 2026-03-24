@@ -125,7 +125,7 @@ function toTagLabel(slug: string): string {
 
 function revalidateBlogPaths(slug?: string) {
   revalidatePath("/blog");
-  revalidatePath("/blog/[slug]");
+  revalidatePath("/blog/[slug]", "page");
 
   if (slug) {
     revalidatePath(`/blog/${slug}`);
@@ -411,7 +411,7 @@ export async function deletePost(postId: string): Promise<ActionResult> {
     }
 
     revalidatePath("/blog");
-    revalidatePath("/blog/[slug]");
+    revalidatePath("/blog/[slug]", "page");
 
     return { success: true };
   } catch (error) {

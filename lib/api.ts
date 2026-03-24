@@ -126,7 +126,7 @@ export interface CompanyDetail {
 }
 
 import { createClient } from "@/lib/supabase/server";
-import type { Database, MemberType } from "@/lib/supabase/types";
+import type { Database, MemberType, ProfileRole, ProfileVisibility } from "@/lib/supabase/types";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 import {
@@ -207,6 +207,8 @@ export interface BlogPost {
   imageUrl?: string;
   type?: "news" | "blog";
   authorId?: string;
+  authorRole?: ProfileRole;
+  authorProfileVisibility?: ProfileVisibility;
   published?: boolean;
   id?: string;
 }
@@ -297,7 +299,7 @@ async function mapRowsToBlogPosts(rows: PostRow[]): Promise<BlogPost[]> {
   const authorIds = [...new Set(rows.map((row) => row.author_id))];
 
   const [profilesResult, tagsByPostId] = await Promise.all([
-    supabase.from("profiles").select("id,name,slug").in("id", authorIds),
+    supabase.from("profiles").select("id,name,slug,role,profile_visibility").in("id", authorIds),
     getTagsByPostIds(rows.map((row) => row.id)),
   ]);
   const profiles = handleQueryResult(
@@ -306,7 +308,7 @@ async function mapRowsToBlogPosts(rows: PostRow[]): Promise<BlogPost[]> {
     []
   );
 
-  const profileById = new Map<string, Pick<ProfileRow, "name" | "slug">>(
+  const profileById = new Map<string, Pick<ProfileRow, "name" | "slug" | "role" | "profile_visibility">>(
     (profiles ?? []).map((profile) => [profile.id, profile])
   );
 
@@ -319,6 +321,8 @@ async function mapRowsToBlogPosts(rows: PostRow[]): Promise<BlogPost[]> {
       content: row.content,
       author: profile?.name ?? "",
       authorSlug: profile?.slug ?? "",
+      authorRole: profile?.role,
+      authorProfileVisibility: profile?.profile_visibility,
       date: formatBlogDate(row.created_at),
       tags: tagsByPostId.get(row.id) ?? [],
       featured: row.featured,
@@ -630,6 +634,58 @@ export async function getBlogPostBySlug(
 
   const [mapped] = await mapRowsToBlogPosts([row]);
   return mapped;
+}
+
+export async function getBlogPostBySlugForOwner(
+  slug: string
+): Promise<BlogPost | undefined> {
+  const supabase = await createClient();
+  const rowResult = await supabase
+    .from("posts")
+    .select("*")
+    .eq("slug", slug)
+    .maybeSingle();
+  const row = handleQueryResult(
+    rowResult,
+    `Failed to fetch owner blog post by slug: ${slug}`,
+    null
+  );
+
+  if (!row) {
+    return undefined;
+  }
+
+  const [mapped] = await mapRowsToBlogPosts([row]);
+  return mapped;
+}
+
+export async function getBlogPostsByAuthorId(authorId: string): Promise<BlogPost[]> {
+  const supabase = createReadonlySupabaseClient();
+  const rowsResult = await supabase
+    .from("posts")
+    .select("*")
+    .eq("author_id", authorId)
+    .eq("type", "blog")
+    .eq("published", true)
+    .order("created_at", { ascending: false });
+
+  const rows = handleQueryResult(rowsResult, `Failed to fetch blog posts by author: ${authorId}`, []);
+
+  return mapRowsToBlogPosts(rows ?? []);
+}
+
+export async function getBlogPostsByAuthorIdForOwner(authorId: string): Promise<BlogPost[]> {
+  const supabase = await createClient();
+  const rowsResult = await supabase
+    .from("posts")
+    .select("*")
+    .eq("author_id", authorId)
+    .eq("type", "blog")
+    .order("created_at", { ascending: false });
+
+  const rows = handleQueryResult(rowsResult, `Failed to fetch owner blog posts by author: ${authorId}`, []);
+
+  return mapRowsToBlogPosts(rows ?? []);
 }
 
 export async function getBlogTags(): Promise<TagInfo[]> {
