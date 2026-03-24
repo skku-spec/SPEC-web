@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth";
+import { logAuditEvent } from "@/lib/helpers/audit-log";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 
@@ -271,6 +272,8 @@ export async function createMember(
       return { error: "멤버 생성 중 오류가 발생했습니다." };
     }
 
+    await logAuditEvent({ action: "create", entityType: "member", entityId: data.id });
+
     const result: MemberActionResult<MemberWithProfile> = {
       success: true,
       data: toMemberWithProfile(data as unknown as Database["public"]["Tables"]["members"]["Row"] & { profiles: unknown }),
@@ -341,6 +344,8 @@ export async function updateMember(
       return { error: "해당 멤버를 찾을 수 없습니다." };
     }
 
+    await logAuditEvent({ action: "update", entityType: "member", entityId: id });
+
     revalidateAll();
 
     return {
@@ -376,6 +381,8 @@ export async function deleteMember(
     if (!data || data.length === 0) {
       return { error: "삭제할 멤버를 찾을 수 없습니다." };
     }
+
+    await logAuditEvent({ action: "delete", entityType: "member", entityId: id });
 
     revalidateAll();
 

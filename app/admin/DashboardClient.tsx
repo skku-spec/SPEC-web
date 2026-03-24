@@ -1,6 +1,9 @@
 "use client"
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import { Download } from "lucide-react";
+import { exportMembersCSV } from "@/lib/actions/members";
+import { exportApplicationsCSV, exportAttendanceCSV } from "@/lib/actions/export";
 
 type Profile = {
   id: string;
@@ -32,12 +35,18 @@ type Submission = {
   status: string;
 }
 
+type ApplicationStats = Record<
+  string,
+  { total: number; pending: number; accepted: number; rejected: number; under_review: number }
+>;
+
 type Props = {
   runners: Profile[];
   sessions: Session[];
   logs: AttendanceLog[];
   homeworks: Homework[];
   submissions: Submission[];
+  applicationStats: ApplicationStats;
 }
 
 export function DashboardClient({
@@ -45,8 +54,47 @@ export function DashboardClient({
   sessions,
   logs,
   homeworks,
-  submissions
+  submissions,
+  applicationStats
 }: Props) {
+  const [exportLoading, setExportLoading] = useState<string | null>(null);
+
+  const downloadCSV = useCallback((csv: string, filename: string) => {
+    const bom = "\uFEFF";
+    const blob = new Blob([bom + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, []);
+
+  const handleExport = useCallback(async (type: "members" | "applications" | "attendance") => {
+    setExportLoading(type);
+    try {
+      let result: { success?: boolean; error?: string; data?: string };
+      let filename: string;
+      if (type === "members") {
+        result = await exportMembersCSV();
+        filename = `members_${new Date().toISOString().slice(0, 10)}.csv`;
+      } else if (type === "applications") {
+        result = await exportApplicationsCSV();
+        filename = `applications_${new Date().toISOString().slice(0, 10)}.csv`;
+      } else {
+        result = await exportAttendanceCSV();
+        filename = `attendance_${new Date().toISOString().slice(0, 10)}.csv`;
+      }
+      if (result.success && result.data) {
+        downloadCSV(result.data, filename);
+      }
+    } finally {
+      setExportLoading(null);
+    }
+  }, [downloadCSV]);
+
   const safeRunners = runners || [];
   const safeSessions = sessions || [];
   const safeLogs = logs || [];
@@ -220,6 +268,93 @@ export function DashboardClient({
              아직 생성된 출석 세션이나 과제가 없습니다.
           </div>
         )}
+      </div>
+
+      {/* 지원서 통계 */}
+      {Object.keys(applicationStats).length > 0 && (
+        <div className="overflow-x-auto rounded-lg border border-[#ddd9cc] bg-white">
+          <div className="border-b border-[#ece8db] bg-[#f0efe6] px-4 py-3">
+            <h2 className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">지원서 통계</h2>
+            <p className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e] mt-0.5">기수별 지원 현황을 확인하세요.</p>
+          </div>
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-[#f0efe6] text-left">
+              <tr>
+                <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold">기수</th>
+                <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-right">전체</th>
+                <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-right">대기</th>
+                <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-right">검토중</th>
+                <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-right">합격</th>
+                <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-right">불합격</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(applicationStats)
+                .sort(([a], [b]) => b.localeCompare(a, undefined, { numeric: true }))
+                .map(([batch, stats]) => (
+                  <tr key={batch} className="border-t border-[#ece8db]">
+                    <td className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{batch}기</td>
+                    <td className="px-4 py-3 font-['Pretendard',sans-serif] text-sm text-[#4a4a40] text-right">{stats.total}</td>
+                    <td className="px-4 py-3 text-right">
+                      <span className="inline-flex rounded-full px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold bg-[#FFF0E5] text-[#FF6C0F]">
+                        {stats.pending}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <span className="inline-flex rounded-full px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold bg-[#E8F0FE] text-[#2563EB]">
+                        {stats.under_review}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <span className="inline-flex rounded-full px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold bg-[#E6F9E6] text-[#2f9e44]">
+                        {stats.accepted}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <span className="inline-flex rounded-full px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold bg-[#FEE2E2] text-[#b42318]">
+                        {stats.rejected}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* 데이터 내보내기 */}
+      <div className="rounded-lg border border-[#ddd9cc] bg-white p-5">
+        <h2 className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">데이터 내보내기</h2>
+        <p className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e] mt-0.5 mb-4">각 데이터를 CSV 파일로 다운로드합니다.</p>
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            disabled={exportLoading !== null}
+            onClick={() => handleExport("members")}
+            className="inline-flex items-center gap-1.5 h-8 rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f] transition-colors hover:bg-[#fcfcf8] disabled:opacity-50"
+          >
+            <Download className="h-3.5 w-3.5" strokeWidth={2} />
+            {exportLoading === "members" ? "내보내는 중..." : "멤버 목록 CSV"}
+          </button>
+          <button
+            type="button"
+            disabled={exportLoading !== null}
+            onClick={() => handleExport("applications")}
+            className="inline-flex items-center gap-1.5 h-8 rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f] transition-colors hover:bg-[#fcfcf8] disabled:opacity-50"
+          >
+            <Download className="h-3.5 w-3.5" strokeWidth={2} />
+            {exportLoading === "applications" ? "내보내는 중..." : "지원서 목록 CSV"}
+          </button>
+          <button
+            type="button"
+            disabled={exportLoading !== null}
+            onClick={() => handleExport("attendance")}
+            className="inline-flex items-center gap-1.5 h-8 rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f] transition-colors hover:bg-[#fcfcf8] disabled:opacity-50"
+          >
+            <Download className="h-3.5 w-3.5" strokeWidth={2} />
+            {exportLoading === "attendance" ? "내보내는 중..." : "출석 데이터 CSV"}
+          </button>
+        </div>
       </div>
     </div>
   );

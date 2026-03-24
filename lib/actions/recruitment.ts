@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth";
+import { logAuditEvent } from "@/lib/helpers/audit-log";
 import { createClient } from "@/lib/supabase/server";
 import {
   type RecruitmentSettings,
@@ -198,6 +199,12 @@ export async function upsertRecruitmentSettings(
       return { error: "모집 설정 저장 중 오류가 발생했습니다." };
     }
 
+    await logAuditEvent({
+      action: "update",
+      entityType: "recruitment",
+      details: { batch: input.batch, status: input.status },
+    });
+
     revalidatePath("/apply");
     revalidatePath("/admin/recruitment");
     revalidatePath("/");
@@ -255,6 +262,12 @@ export async function updateRecruitmentStatus(
     if (!data) {
       return { error: "해당 기수의 모집 설정을 찾을 수 없습니다." };
     }
+
+    await logAuditEvent({
+      action: "status_change",
+      entityType: "recruitment",
+      details: { batch: trimmedBatch, status },
+    });
 
     revalidatePath("/apply");
     revalidatePath("/admin/recruitment");

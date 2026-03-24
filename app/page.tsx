@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import ScrollBackground from "@/components/ScrollBackground";
 import Hero from "@/components/Hero";
 import RecruitmentCard from "@/components/RecruitmentCard";
+import Partners from "@/components/Partners";
 
 const Philosophy = dynamic(() => import("@/components/Philosophy"));
 const Manifesto = dynamic(() => import("@/components/Manifesto"));
-const Partners = dynamic(() => import("@/components/Partners"));
 const TwoTracks = dynamic(() => import("@/components/TwoTracks"));
 const CurriculumRoadmap = dynamic(() => import("@/components/CurriculumRoadmap"));
 const AlumniGrid = dynamic(() => import("@/components/AlumniGrid"));
@@ -37,7 +38,9 @@ export default function Home() {
 
       <div className="landing-section relative z-10 py-12 md:py-20">
         <div className="mx-auto max-w-[960px] px-6">
-          <Partners />
+          <Suspense>
+            <Partners />
+          </Suspense>
         </div>
       </div>
 

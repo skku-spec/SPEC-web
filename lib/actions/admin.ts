@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { logAuditEvent } from "@/lib/helpers/audit-log";
 import { createClient } from "@/lib/supabase/server";
 
 type UserRole = "outsider" | "runner" | "preneur" | "member" | "admin";
@@ -75,6 +76,13 @@ export async function updateUserRole(userId: string, newRole: UserRole): Promise
     if (updateError) {
       throw new Error(`Failed to update user role: ${updateError.message}`);
     }
+
+    await logAuditEvent({
+      action: "role_change",
+      entityType: "user",
+      entityId: userId,
+      details: { newRole },
+    });
 
     revalidatePath("/admin/users");
 

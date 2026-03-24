@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { requireRole } from "@/lib/auth";
+import { logAuditEvent } from "@/lib/helpers/audit-log";
 import { createClient } from "@/lib/supabase/server";
 
 export type SiteSetting = {
@@ -203,6 +204,12 @@ export async function updateSetting(
 
     if (updateError) throw new Error(updateError.message);
 
+    await logAuditEvent({
+      action: "update",
+      entityType: "site_setting",
+      details: { key },
+    });
+
     revalidateSettingsPaths();
     return { success: true };
   } catch (err) {
@@ -258,6 +265,12 @@ export async function updateSettings(
 
       if (updateError) throw new Error(`"${key}" 업데이트 실패: ${updateError.message}`);
     }
+
+    await logAuditEvent({
+      action: "update",
+      entityType: "site_setting",
+      details: { keys: updates.map((u) => u.key) },
+    });
 
     revalidateSettingsPaths();
     return { success: true };

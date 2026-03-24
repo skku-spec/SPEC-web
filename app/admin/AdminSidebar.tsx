@@ -16,6 +16,7 @@ import {
   FormInput,
   GraduationCap,
   HelpCircle,
+  Handshake,
   type LucideIcon,
 } from "lucide-react";
 
@@ -42,6 +43,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "채용", href: "/admin/jobs", icon: Briefcase },
   { label: "런칭", href: "/admin/launches", icon: Rocket },
   { label: "자료실", href: "/admin/library", icon: Library },
+  { label: "파트너", href: "/admin/partners", icon: Handshake },
   { label: "설정", href: "/admin/settings", icon: Cog },
 ];
 

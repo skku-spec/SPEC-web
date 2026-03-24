@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { requireRole } from "@/lib/auth";
+import { logAuditEvent } from "@/lib/helpers/audit-log";
 import { createClient } from "@/lib/supabase/server";
 
 type ActionResult<T = unknown> = {
@@ -92,6 +93,13 @@ export async function convertApplicationToMember(applicationId: string): Promise
   if (memberError) {
     return { error: `멤버 등록 실패: ${memberError.message}` };
   }
+
+  await logAuditEvent({
+    action: "convert",
+    entityType: "application",
+    entityId: applicationId,
+    details: { memberId: member.id },
+  });
 
   revalidatePath("/admin/members");
   revalidatePath("/admin/applications");
