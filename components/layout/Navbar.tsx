@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -80,15 +80,18 @@ export default function Navbar() {
   const dropdownBg = isHome ? "bg-black/90 border-white/10" : "bg-white border-gray-200";
   const dropdownText = isHome ? "text-white/80 hover:text-white hover:bg-white/10" : "text-[#16140f] hover:bg-gray-100";
 
-  const displayName =
-    (profile?.first_name && profile?.last_name
-      ? `${profile.first_name} ${profile.last_name}`
-      : profile?.name?.trim()) ||
-    user?.email?.split("@")[0] ||
-    "사용자";
-  const roleLabel = ROLE_LABEL[role] ?? "외부";
-  const initials = getInitials(displayName);
-  const applyDdayLabel = getApplyDdayLabel();
+  const displayName = useMemo(
+    () =>
+      (profile?.first_name && profile?.last_name
+        ? `${profile.last_name}${profile.first_name}`
+        : profile?.name?.trim()) ||
+      user?.email?.split("@")[0] ||
+      "사용자",
+    [profile, user?.email],
+  );
+  const roleLabel = useMemo(() => ROLE_LABEL[role] ?? "외부", [role]);
+  const initials = useMemo(() => getInitials(displayName), [displayName]);
+  const applyDdayLabel = useMemo(() => getApplyDdayLabel(), []);
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [showComingSoon, setShowComingSoon] = useState(false);
@@ -115,7 +118,7 @@ export default function Navbar() {
 
   return (
     <div className={`sticky top-0 isolate z-50 ${isHome ? "bg-transparent" : "bg-[#f5f5ee]"}`}>
-      {RECRUITMENT_BATCH.showBanner && (
+      {/* {RECRUITMENT_BATCH.showBanner && (
         <div className="bg-[#FF6C0F] text-[#FCFCF8] text-center py-[10px] px-[6px]">
           <Link
             href="/apply"
@@ -139,7 +142,7 @@ export default function Navbar() {
             </svg>
           </Link>
         </div>
-      )}
+      )} */}
 
       <nav>
           <div className="relative hidden min-[1024px]:flex items-center justify-center w-full max-w-[1400px] mx-auto px-8 py-2">
@@ -280,12 +283,12 @@ export default function Navbar() {
           </div>
 
           <div className="absolute right-8 flex items-center gap-3">
-           <ApplyButton
+           {/* <ApplyButton
               href={isAuthenticated ? "/apply" : "/login?redirect=/apply"}
               size="sm"
             >
               Apply
-            </ApplyButton>
+            </ApplyButton> */}
 
             {isAuthenticated ? (
               <div className="nav-item">
@@ -416,7 +419,7 @@ export default function Navbar() {
                 <Link href="/people" onClick={() => setMenuOpen(false)} className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}>
                   멤버
                 </Link>
-                {isAuthenticated && role !== "outsider" && role !== "runner" && (
+                {isAuthenticated && (role === "admin" || role === "preneur" || role === "runner") && (
                   <>
                     <Link
                       href="/profile"

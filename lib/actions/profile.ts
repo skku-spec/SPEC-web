@@ -16,8 +16,8 @@ function readField(formData: FormData, key: string) {
 
 export async function updateProfile(formData: FormData): Promise<ActionResult> {
   const username = readField(formData, "username");
-  const firstName = readField(formData, "first_name");
-  const lastName = readField(formData, "last_name");
+  const firstName = readField(formData, "first_name").replace(/\s+/g, "");
+  const lastName = readField(formData, "last_name").replace(/\s+/g, "");
   let linkedinUrl = readField(formData, "linkedin_url");
 
   if (!username || !firstName || !lastName) {

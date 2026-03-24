@@ -121,7 +121,7 @@ function mapMemberToPerson(
   return {
     name: member.name,
     slug: member.slug,
-    href: publicHref ?? `/u/${member.slug}`,
+    href: publicHref ?? `/people/${member.slug}`,
     title: getMemberTitle(member),
     bio: member.bio ?? "",
     photo: MEMBER_PHOTOS[member.name] ?? member.photo_url ?? DEFAULT_PHOTO,

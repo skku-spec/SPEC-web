@@ -3,6 +3,18 @@
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { syncHomeworkSubmissions } from "@/lib/actions/tracker";
+import {
+  User,
+  Users,
+  BookOpen,
+  ClipboardList,
+  BarChart3,
+  FolderOpen,
+  Package,
+  AlertCircle,
+  Check,
+  X,
+} from "lucide-react";
 
 type Homework = {
   id: string;
@@ -384,22 +396,21 @@ export function HomeworkClient() {
 
 
   return (
-    <div className="space-y-6 pb-20">
-      {/* Header */}
+    <div className="mx-auto max-w-6xl space-y-6 pb-20">
       <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-black text-[#16140f]">
-            전체 과제 관리 {isSyncing && <span className="ml-2 inline-flex items-center text-[10px] font-black text-amber-500 animate-pulse uppercase tracking-[2px]">● Synchronizing...</span>}
+        <div>
+          <h1 className="mb-1 font-[system-ui] text-[clamp(2rem,4vw,2.75rem)] font-black">
+            Homework {isSyncing && <span className="ml-2 inline-flex items-center font-['Pretendard',sans-serif] text-[10px] font-semibold text-amber-500 animate-pulse">● Syncing...</span>}
           </h1>
-          <p className="text-sm font-medium text-[#a1a196]">과제를 생성하고 유형별 내용을 작성하세요.</p>
+          <p className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e] sm:text-sm">과제를 생성하고 유형별 내용을 작성하세요.</p>
         </div>
         <button
           onClick={() => setIsAdding(!isAdding)}
-          className={`flex h-10 w-10 items-center justify-center rounded-full text-white shadow-lg transition-all hover:scale-110 active:scale-95 ${
-            isAdding ? "bg-[#6b6b5e] rotate-45" : "bg-[#FF6C0F] shadow-orange-200"
+          className={`inline-flex h-8 items-center rounded-md px-3 font-['Pretendard',sans-serif] text-xs font-semibold text-white transition-colors ${
+            isAdding ? "bg-[#6b6b5e]" : "bg-[#16140f] hover:bg-[#16140f]/80"
           }`}
         >
-          <span className="text-2xl font-light leading-none">+</span>
+          {isAdding ? "취소" : "새 과제"}
         </button>
       </div>
 
@@ -407,7 +418,7 @@ export function HomeworkClient() {
       {isAdding && (
         <form
           onSubmit={handleAddHomework}
-          className="animate-in fade-in slide-in-from-top-4 rounded-xl border border-[#d9d9cc] bg-white p-6 shadow-sm space-y-8"
+          className="animate-in fade-in slide-in-from-top-4 rounded-lg border border-[#ddd9cc] bg-white p-6 shadow-sm space-y-8"
         >
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
             {/* Left Column: Basic Info & Mode Selection */}
@@ -421,7 +432,7 @@ export function HomeworkClient() {
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value)}
                     placeholder="예: 3월 2주차 기획 및 개발 과제"
-                    className="w-full rounded-xl border border-[#d9d9cc] bg-[#fcfcfb] px-4 py-3 text-sm focus:border-[#FF6C0F] focus:ring-1 focus:ring-[#FF6C0F] focus:outline-none transition-all"
+                    className="w-full rounded-lg border border-[#ddd9cc] bg-white px-4 py-2.5 font-['Pretendard',sans-serif] text-sm text-[#16140f] outline-none transition-colors placeholder:text-[#16140f]/40 focus:border-[#FF6C0F]/50 focus:ring-2 focus:ring-[#FF6C0F]/10"
                     required
                   />
                 </div>
@@ -433,7 +444,7 @@ export function HomeworkClient() {
                     value={padletBoardId}
                     onChange={(e) => setPadletBoardId(e.target.value)}
                     placeholder="예: 123456789"
-                    className="w-full rounded-xl border border-[#d9d9cc] bg-[#fcfcfb] px-4 py-3 text-sm focus:border-[#FF6C0F] focus:ring-1 focus:ring-[#FF6C0F] focus:outline-none transition-all font-mono"
+                    className="w-full rounded-lg border border-[#ddd9cc] bg-white px-4 py-2.5 font-mono text-sm text-[#16140f] outline-none transition-colors placeholder:text-[#16140f]/40 focus:border-[#FF6C0F]/50 focus:ring-2 focus:ring-[#FF6C0F]/10"
                   />
                 </div>
                 <div>
@@ -443,7 +454,7 @@ export function HomeworkClient() {
                     value={submissionLink}
                     onChange={(e) => setSubmissionLink(e.target.value)}
                     placeholder="https://padlet.com/..."
-                    className="w-full rounded-xl border border-[#d9d9cc] bg-[#fcfcfb] px-4 py-3 text-sm focus:border-[#FF6C0F] focus:ring-1 focus:ring-[#FF6C0F] focus:outline-none transition-all"
+                    className="w-full rounded-lg border border-[#ddd9cc] bg-white px-4 py-2.5 font-['Pretendard',sans-serif] text-sm text-[#16140f] outline-none transition-colors placeholder:text-[#16140f]/40 focus:border-[#FF6C0F]/50 focus:ring-2 focus:ring-[#FF6C0F]/10"
                   />
                 </div>
               </section>
@@ -454,31 +465,31 @@ export function HomeworkClient() {
                   <button
                     type="button"
                     onClick={() => setIsIndividual(!isIndividual)}
-                    className={`group flex flex-col items-center justify-center gap-3 rounded-2xl border-2 p-6 transition-all ${
+                    className={`group flex flex-col items-center justify-center gap-3 rounded-lg border p-6 transition-all ${
                       isIndividual 
-                        ? "border-[#FF6C0F] bg-[#FFF0E5] text-[#FF6C0F] shadow-inner" 
-                        : "border-[#f0efe6] bg-white text-[#a1a196] hover:border-[#d9d9cc]"
+                        ? "border-[#FF6C0F] bg-[#FFF0E5] text-[#FF6C0F]" 
+                        : "border-[#ddd9cc] bg-white text-[#a1a196] hover:border-[#FF6C0F]/30"
                     }`}
                   >
-                    <span className={`text-4xl transition-transform group-hover:scale-110 ${isIndividual ? "filter-none" : "grayscale opacity-50"}`}>👤</span>
+                    <User className={`h-8 w-8 transition-transform group-hover:scale-110 ${isIndividual ? "opacity-100" : "opacity-30"}`} strokeWidth={1.5} />
                     <div className="text-center">
-                      <p className="text-sm font-black">개인 과제 활성화</p>
-                      <p className="text-[10px] font-medium mt-0.5">개별 가이드라인 작성</p>
+                      <p className="font-['Pretendard',sans-serif] text-sm font-semibold">개인 과제 활성화</p>
+                      <p className="font-['Pretendard',sans-serif] text-[10px] text-[#6b6b5e] mt-0.5">개별 가이드라인 작성</p>
                     </div>
                   </button>
                   <button
                     type="button"
                     onClick={() => setIsTeam(!isTeam)}
-                    className={`group flex flex-col items-center justify-center gap-3 rounded-2xl border-2 p-6 transition-all ${
+                    className={`group flex flex-col items-center justify-center gap-3 rounded-lg border p-6 transition-all ${
                       isTeam 
-                        ? "border-[#FF6C0F] bg-[#FFF0E5] text-[#FF6C0F] shadow-inner" 
-                        : "border-[#f0efe6] bg-white text-[#a1a196] hover:border-[#d9d9cc]"
+                        ? "border-[#FF6C0F] bg-[#FFF0E5] text-[#FF6C0F]" 
+                        : "border-[#ddd9cc] bg-white text-[#a1a196] hover:border-[#FF6C0F]/30"
                     }`}
                   >
-                    <span className={`text-4xl transition-transform group-hover:scale-110 ${isTeam ? "filter-none" : "grayscale opacity-50"}`}>👥</span>
+                    <Users className={`h-8 w-8 transition-transform group-hover:scale-110 ${isTeam ? "opacity-100" : "opacity-30"}`} strokeWidth={1.5} />
                     <div className="text-center">
-                      <p className="text-sm font-black">팀 과제 활성화</p>
-                      <p className="text-[10px] font-medium mt-0.5">협동 가이드라인 작성</p>
+                      <p className="font-['Pretendard',sans-serif] text-sm font-semibold">팀 과제 활성화</p>
+                      <p className="font-['Pretendard',sans-serif] text-[10px] text-[#6b6b5e] mt-0.5">협동 가이드라인 작성</p>
                     </div>
                   </button>
                 </div>
@@ -493,7 +504,7 @@ export function HomeworkClient() {
                     <div className="space-y-4 rounded-2xl border border-blue-100 bg-blue-50/30 p-5">
                       <div className="flex items-center justify-between mb-1">
                         <label className="flex items-center gap-2 text-sm font-bold text-blue-600">
-                          <span>👤</span> 개인 과제 목록
+                          <User className="h-4 w-4" strokeWidth={2} /> 개인 과제 목록
                         </label>
                         <button
                           type="button"
@@ -536,7 +547,7 @@ export function HomeworkClient() {
                     <div className="space-y-4 rounded-2xl border border-purple-100 bg-purple-50/30 p-5">
                       <div className="flex items-center justify-between mb-1">
                         <label className="flex items-center gap-2 text-sm font-bold text-purple-600">
-                          <span>👥</span> 팀 과제 목록
+                          <Users className="h-4 w-4" strokeWidth={2} /> 팀 과제 목록
                         </label>
                         <button
                           type="button"
@@ -691,7 +702,7 @@ export function HomeworkClient() {
                 ))}
                 {teams.length === 0 && isTeam && (
                   <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border-2 border-dashed border-[#d9d9cc]">
-                    <span className="text-4xl mb-4">📂</span>
+                    <FolderOpen className="h-10 w-10 mb-4 text-[#a1a196]" strokeWidth={1.5} />
                     <p className="text-sm font-bold text-[#6b6b5e]">배정할 팀을 만들어주세요.</p>
                   </div>
                 )}
@@ -725,58 +736,57 @@ export function HomeworkClient() {
             <p className="text-sm font-black text-[#a1a196] uppercase tracking-widest">Synchronizing...</p>
           </div>
         ) : homeworks.length === 0 ? (
-          <div className="rounded-[40px] border-4 border-dashed border-[#d9d9cc] bg-white p-32 text-center">
-            <div className="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-3xl bg-[#f5f5ee]">
-              <span className="text-5xl">📦</span>
+          <div className="rounded-lg border border-[#ddd9cc] bg-white p-16 text-center">
+            <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-full bg-[#e8e6dc]">
+              <Package className="h-8 w-8 text-[#6b6b5e]" strokeWidth={1.5} />
             </div>
-            <h3 className="text-2xl font-black text-[#16140f]">No Homework Found</h3>
-            <p className="mt-2 text-[#6b6b5e] font-medium">관리 중인 과제가 없습니다. 새로운 과제를 생성해보세요.</p>
+            <h3 className="font-['Pretendard',sans-serif] text-lg font-semibold text-[#16140f]">No Homework Found</h3>
+            <p className="mt-2 font-['Pretendard',sans-serif] text-sm text-[#6b6b5e]">관리 중인 과제가 없습니다. 새로운 과제를 생성해보세요.</p>
           </div>
         ) : (
           homeworks.map((hw: Homework) => (
-            <div key={hw.id} className="group overflow-hidden rounded-[32px] border-2 border-[#d9d9cc] bg-white transition-all hover:border-[#FF6C0F] hover:shadow-2xl hover:-translate-y-1">
-              <div className="flex flex-wrap items-center justify-between px-10 py-7 gap-6">
-                <div className="flex items-center gap-6">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-[24px] bg-[#f5f5ee] text-3xl group-hover:bg-[#FFF0E5] group-hover:rotate-3 transition-all duration-300">
-                    📚
+            <div key={hw.id} className="group overflow-hidden rounded-lg border border-[#ddd9cc] bg-white transition-all hover:border-[#FF6C0F]/50 hover:shadow-md">
+              <div className="flex flex-wrap items-center justify-between px-4 py-4 sm:px-6 gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="grid h-10 w-10 place-items-center rounded-full bg-[#e8e6dc]">
+                    <BookOpen className="h-5 w-5 text-[#4a4a40]" strokeWidth={1.5} />
                   </div>
                   <div>
-                    <h3 className="text-xl font-black text-[#16140f]">{hw.title}</h3>
-                    <div className="flex gap-2 mt-2">
+                    <h3 className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{hw.title}</h3>
+                    <div className="flex gap-2 mt-1.5">
                       {hw.is_individual && (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-[11px] font-black text-blue-600 ring-2 ring-blue-100">
-                          <span className="h-1.5 w-1.5 rounded-full bg-blue-600" /> 개인과제
+                        <span className="inline-flex rounded-full bg-[#E8F0FE] px-2.5 py-0.5 font-['Pretendard',sans-serif] text-xs font-semibold text-[#2563EB]">
+                          개인과제
                         </span>
                       )}
                       {hw.is_team && (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-50 px-3 py-1 text-[11px] font-black text-purple-600 ring-2 ring-purple-100">
-                          <span className="h-1.5 w-1.5 rounded-full bg-purple-600" /> 팀과제
+                        <span className="inline-flex rounded-full bg-[#F3E8FF] px-2.5 py-0.5 font-['Pretendard',sans-serif] text-xs font-semibold text-[#7C3AED]">
+                          팀과제
                         </span>
                       )}
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-8">
+                <div className="flex items-center gap-4">
                   <div className="text-right hidden sm:block">
-                    <p className="text-[10px] font-black text-[#a1a196] uppercase tracking-tighter">Distributed On</p>
-                    <p className="text-sm font-black text-[#6b6b5e]">
+                    <p className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">
                       {new Date(hw.created_at).toLocaleDateString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit' })}
                     </p>
                   </div>
-                  <div className="flex gap-3">
+                  <div className="flex gap-2">
                     <button
                       onClick={() => handleFetchTeams(hw.id)}
-                      className={`rounded-2xl px-6 py-3 text-sm font-black transition-all ${
+                      className={`inline-flex h-8 items-center rounded-md px-3 font-['Pretendard',sans-serif] text-xs font-semibold transition-colors ${
                         viewingId === hw.id 
-                        ? "bg-[#16140f] text-white shadow-lg" 
-                        : "bg-[#f5f5ee] text-[#16140f] hover:bg-[#16140f] hover:text-white"
+                        ? "bg-[#16140f] text-white" 
+                        : "border border-[#ddd9cc] text-[#16140f] hover:bg-[#fcfcf8]"
                       }`}
                     >
                       {viewingId === hw.id ? "닫기" : "열람하기"}
                     </button>
                     <button
                       onClick={() => handleDeleteHomework(hw.id)}
-                      className="rounded-2xl border-2 border-red-50 px-4 py-3 text-xs font-black text-red-300 transition-all hover:bg-red-500 hover:text-white hover:border-red-500"
+                      className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#b42318] underline-offset-2 hover:underline"
                     >
                       삭제
                     </button>
@@ -786,18 +796,17 @@ export function HomeworkClient() {
               
               {/* Detail Area */}
               {viewingId === hw.id && (
-                <div className="border-t-2 border-[#f0efe6] bg-[#fcfcfb] animate-in slide-in-from-top-6 duration-500">
-                  {/* Tabs */}
-                  <div className="flex items-center gap-1 px-10 pt-8 border-b border-[#f0efe6]">
+                <div className="border-t border-[#ece8db] bg-[#fcfcf8] animate-in slide-in-from-top-6 duration-500">
+                  <div className="flex items-center gap-1 px-4 pt-4 sm:px-6 border-b border-[#ece8db]">
                     <button
                       onClick={() => setActiveTab(prev => ({ ...prev, [hw.id]: 'content' }))}
-                      className={`px-5 py-2.5 text-xs font-black rounded-t-xl transition-all ${
+                      className={`px-4 py-2 font-['Pretendard',sans-serif] text-xs font-semibold rounded-t-lg transition-all ${
                         (activeTab[hw.id] ?? 'content') === 'content'
-                          ? 'bg-white border-2 border-b-white border-[#f0efe6] text-[#16140f] -mb-[2px]'
-                          : 'text-[#a1a196] hover:text-[#16140f]'
+                          ? 'bg-white border border-b-white border-[#ece8db] text-[#16140f] -mb-[1px]'
+                          : 'text-[#6b6b5e] hover:text-[#16140f]'
                       }`}
                     >
-                      📋 과제 내용
+                      <ClipboardList className="mr-1 inline h-3.5 w-3.5" strokeWidth={2} /> 과제 내용
                     </button>
                     <button
                       onClick={() => {
@@ -808,18 +817,18 @@ export function HomeworkClient() {
                           fetchTeamData(hw.id);
                         }
                       }}
-                      className={`px-5 py-2.5 text-xs font-black rounded-t-xl transition-all ${
+                      className={`px-4 py-2 font-['Pretendard',sans-serif] text-xs font-semibold rounded-t-lg transition-all ${
                         activeTab[hw.id] === 'status'
-                          ? 'bg-white border-2 border-b-white border-[#f0efe6] text-[#FF6C0F] -mb-[2px]'
-                          : 'text-[#a1a196] hover:text-[#FF6C0F]'
+                          ? 'bg-white border border-b-white border-[#ece8db] text-[#FF6C0F] -mb-[1px]'
+                          : 'text-[#6b6b5e] hover:text-[#FF6C0F]'
                       }`}
                     >
-                      📊 제출 현황
+                      <BarChart3 className="mr-1 inline h-3.5 w-3.5" strokeWidth={2} /> 제출 현황
                       {!hw.padlet_board_id && <span className="ml-1 text-[9px] text-red-400">(Board ID 없음)</span>}
                     </button>
                   </div>
 
-                  <div className="p-10">
+                  <div className="p-4 sm:p-6">
                     {/* Tab: 과제 내용 */}
                     {(activeTab[hw.id] ?? 'content') === 'content' && (
                       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
@@ -831,8 +840,8 @@ export function HomeworkClient() {
                               </h4>
                               <div className="space-y-4">
                                 {(Array.isArray(hw.individual_content) ? hw.individual_content : [hw.individual_content]).map((task: string, tIdx: number) => (
-                                  <div key={tIdx} className="rounded-[28px] bg-white p-8 shadow-sm border border-[#f0efe6] whitespace-pre-wrap text-[#4a4a40] leading-[1.8] font-medium transition-all hover:shadow-md">
-                                    <span className="text-blue-500 font-bold mr-2">#{tIdx + 1}</span> {task}
+                                  <div key={tIdx} className="rounded-lg bg-white p-4 border border-[#ece8db] whitespace-pre-wrap font-['Pretendard',sans-serif] text-sm text-[#4a4a40] leading-[1.8]">
+                                    <span className="text-[#2563EB] font-semibold mr-2">#{tIdx + 1}</span> {task}
                                   </div>
                                 ))}
                               </div>
@@ -845,8 +854,8 @@ export function HomeworkClient() {
                               </h4>
                               <div className="space-y-4">
                                 {(Array.isArray(hw.team_content) ? hw.team_content : [hw.team_content]).map((task: string, tIdx: number) => (
-                                  <div key={tIdx} className="rounded-[28px] bg-white p-8 shadow-sm border border-[#f0efe6] whitespace-pre-wrap text-[#4a4a40] leading-[1.8] font-medium transition-all hover:shadow-md">
-                                    <span className="text-purple-500 font-bold mr-2">#{tIdx + 1}</span> {task}
+                                  <div key={tIdx} className="rounded-lg bg-white p-4 border border-[#ece8db] whitespace-pre-wrap font-['Pretendard',sans-serif] text-sm text-[#4a4a40] leading-[1.8]">
+                                    <span className="text-[#7C3AED] font-semibold mr-2">#{tIdx + 1}</span> {task}
                                   </div>
                                 ))}
                               </div>
@@ -859,7 +868,7 @@ export function HomeworkClient() {
                               <h4 className="flex items-center gap-2.5 text-sm font-black text-[#FF6C0F] uppercase tracking-widest">
                                 <span className="h-2 w-2 rounded-full bg-[#FF6C0F]" /> 팀 빌딩 현황
                               </h4>
-                              <div className="space-y-5 rounded-[32px] bg-white p-8 shadow-lg border-2 border-[#f0efe6]">
+                              <div className="space-y-5 rounded-lg bg-white p-5 border border-[#ddd9cc]">
                                 {Array.from(new Set(viewingTeams.map(vt => vt.team_name))).map(teamName => (
                                   <div key={teamName} className="group/item">
                                     <p className="text-sm font-black text-[#FF6C0F] mb-3 flex items-center justify-between">
@@ -894,7 +903,7 @@ export function HomeworkClient() {
                       if (!hw.padlet_board_id) {
                         return (
                           <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border-2 border-dashed border-[#d9d9cc]">
-                            <span className="text-4xl mb-4">🚫</span>
+                            <AlertCircle className="h-10 w-10 mb-4 text-[#a1a196]" strokeWidth={1.5} />
                             <p className="text-sm font-bold text-[#a1a196]">Padlet Board ID가 설정되지 않았습니다.</p>
                           </div>
                         );
@@ -908,7 +917,7 @@ export function HomeworkClient() {
                       if (hw.is_team && viewingTeams.length === 0 && rows.length === 0) {
                         return (
                           <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border-2 border-dashed border-[#d9d9cc]">
-                            <span className="text-4xl mb-4">👥</span>
+                            <Users className="h-10 w-10 mb-4 text-[#6b6b5e]" strokeWidth={1.5} />
                             <p className="text-sm font-bold text-[#6b6b5e]">팀 배정 정보가 없습니다.</p>
                             <p className="text-xs text-[#a1a196] mt-1">과제를 생성할 때 팀을 배정했는지 확인하세요.</p>
                           </div>
@@ -918,23 +927,23 @@ export function HomeworkClient() {
                       return (
                         <div className="overflow-x-auto">
                           <table className="w-full text-left border-collapse min-w-[600px]">
-                            <thead>
-                              <tr className="border-b-2 border-[#f0efe6]">
-                                <th className="py-4 px-4 text-[10px] font-black uppercase tracking-widest text-[#a1a196] w-1/4">대상 (Type)</th>
+                            <thead className="bg-[#f0efe6] text-left">
+                              <tr>
+                                <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold w-1/4">대상</th>
                                 {pData.sections.length > 0 ? pData.sections.map(s => (
-                                  <th key={s.id} className="py-4 px-4 text-[10px] font-black uppercase tracking-widest text-[#a1a196] text-center">
+                                  <th key={s.id} className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-center">
                                     {s.title}
                                   </th>
                                 )) : (
-                                  <th className="py-4 px-4 text-[10px] font-black uppercase tracking-widest text-[#a1a196] text-center">전체 (No Section)</th>
+                                  <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-center">전체</th>
                                 )}
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-[#f0efe6]">
+                            <tbody>
                               {rows.map((row, rIdx) => (
-                                <tr key={rIdx} className="hover:bg-white transition-colors">
-                                  <td className="py-5 px-4">
-                                    <p className="text-sm font-black text-[#16140f]">{row.label}</p>
+                                <tr key={rIdx} className="border-t border-[#ece8db] hover:bg-[#fcfcf8] transition-colors">
+                                  <td className="px-4 py-3">
+                                    <p className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{row.label}</p>
                                     {row.teamLabel && (
                                       <span className="inline-block mt-0.5 text-[10px] font-bold text-[#FF6C0F] bg-orange-50 px-2 py-0.5 rounded-lg">
                                         {row.teamLabel}
@@ -942,11 +951,11 @@ export function HomeworkClient() {
                                     )}
                                   </td>
                                   {Object.keys(row.sectionStatus).map(sId => (
-                                    <td key={sId} className="py-5 px-4 text-center">
+                                    <td key={sId} className="px-4 py-3 text-center">
                                       {row.sectionStatus[sId] ? (
-                                        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-green-50 text-green-600 ring-2 ring-green-100">✅</span>
+                                        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-green-50 text-green-600 ring-2 ring-green-100"><Check className="h-4 w-4" strokeWidth={3} /></span>
                                       ) : (
-                                        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-red-50 text-red-200 ring-1 ring-red-50 opacity-40">❌</span>
+                                        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-red-50 text-red-200 ring-1 ring-red-50 opacity-40"><X className="h-4 w-4" strokeWidth={3} /></span>
                                       )}
                                     </td>
                                   ))}

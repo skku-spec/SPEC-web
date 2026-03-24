@@ -53,6 +53,13 @@ const STATUS_OPTS: { key: Status; label: string; color: string; text: string; ho
   { key: "excused", label: "공", color: "bg-blue-500", text: "text-blue-500", hover: "hover:bg-blue-100", active: "bg-blue-50" },
 ];
 
+const STATUS_LABELS: Record<Status, string> = {
+  present: "출석",
+  late: "지각",
+  absent: "결석",
+  excused: "공결",
+};
+
 export function AttendanceClient({
   runners,
   sessions: initialSessions,
@@ -100,8 +107,6 @@ export function AttendanceClient({
     });
   };
 
-
-
   const handleMarkAllPresent = async (sessionId: string) => {
     if (!isAdminOrPreneur) return;
     startTransition(async () => {
@@ -139,87 +144,80 @@ export function AttendanceClient({
 
   return (
     <div className="space-y-4">
-      {/* Search & Actions Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-[#d9d9cc] bg-white p-6 shadow-sm">
-        <div className="space-y-0.5">
-          <h2 className="text-xl font-black tracking-tight text-[#16140f]">{hideHomework ? "출석부 관리" : "통합 현황판"}</h2>
-          <p className="text-xs font-medium text-[#a1a196]">
-            {hideHomework ? "세션별 출석 현황을 관리하고 기록하세요." : "출석과 과제 현황을 한꺼번에 관리하세요."}
-          </p>
+      {isAdminOrPreneur && (
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            type="text"
+            placeholder="새 세션 (예: 5주차)"
+            value={newSessionTitle}
+            onChange={(e) => setNewSessionTitle(e.target.value)}
+            className="w-48 rounded-lg border border-[#ddd9cc] bg-white py-2.5 px-4 font-['Pretendard',sans-serif] text-sm text-[#16140f] outline-none transition-colors placeholder:text-[#16140f]/40 focus:border-[#FF6C0F]/50 focus:ring-2 focus:ring-[#FF6C0F]/10"
+          />
+          <button
+            onClick={handleAddSession}
+            disabled={isPending}
+            className="inline-flex h-[42px] items-center rounded-lg bg-[#16140f] px-4 font-['Pretendard',sans-serif] text-xs font-semibold text-white transition-colors hover:bg-[#16140f]/80 disabled:opacity-50"
+          >
+            세션 추가
+          </button>
         </div>
+      )}
 
-        {isAdminOrPreneur && (
-          <div className="flex items-center gap-2">
-            <input 
-              type="text" 
-              placeholder="새 세션 (예: 5주차)"
-              value={newSessionTitle}
-              onChange={(e) => setNewSessionTitle(e.target.value)}
-              className="h-10 w-48 rounded-xl border border-[#d9d9cc] bg-[#fcfcfb] px-4 text-xs font-bold outline-none focus:border-[#FF6C0F]"
-            />
-            <button 
-              onClick={handleAddSession}
-              disabled={isPending}
-              className="h-10 px-5 rounded-xl bg-[#FF6C0F] text-xs font-bold text-white transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
-            >
-              세션 추가+
-            </button>
-          </div>
-        )}
-      </div>
-
-      <div className="relative overflow-hidden rounded-[32px] border border-[#d9d9cc] bg-white shadow-sm overflow-x-auto">
+      <div className="overflow-x-auto rounded-lg border border-[#ddd9cc] bg-white">
         <table className="w-full border-collapse text-left">
-          <thead>
-            <tr className="bg-[#fcfcfb] border-b border-[#f0efe6]">
-              <th className="sticky left-0 z-30 bg-[#fcfcfb] px-6 py-5 border-r border-[#f0efe6] min-w-[200px]">
-                <div className="text-[10px] font-black uppercase tracking-widest text-[#a1a196]">러너 정보 및 요약</div>
+          <thead className="bg-[#f0efe6] text-left">
+            <tr>
+              <th className="sticky left-0 z-30 bg-[#f0efe6] px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold min-w-[200px]">
+                러너
               </th>
-              
-              {/* Attendance Headers */}
+
               {sessions.map(s => (
-                <th key={s.id} className="px-3 py-5 border-r border-[#f0efe6] min-w-[110px] text-center bg-white/50">
-                  <div className="text-[10px] font-black text-[#FF6C0F] leading-tight">{s.title}</div>
-                  <div className="text-[9px] font-bold text-[#6b6b5e]">출석</div>
+                <th key={s.id} className="px-3 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-center min-w-[110px]">
+                  <div>{s.title}</div>
                   {isAdminOrPreneur && (
-                    <div className="mt-2 flex items-center justify-center gap-1">
-                      <button onClick={() => handleMarkAllPresent(s.id)} className="text-[8px] font-black bg-[#FF6C0F]/10 text-[#FF6C0F] px-1.5 py-0.5 rounded hover:bg-[#FF6C0F] hover:text-white transition-colors">전원 출석</button>
-                    </div>
+                    <button
+                      onClick={() => handleMarkAllPresent(s.id)}
+                      className="mt-1 font-['Pretendard',sans-serif] text-[10px] font-semibold text-[#FF6C0F] hover:underline"
+                    >
+                      전원 출석
+                    </button>
                   )}
                 </th>
               ))}
 
-              {/* Homework Headers */}
               {!hideHomework && homeworks.map((h, i) => (
-                <th key={h.id} className="px-3 py-5 border-r border-[#f0efe6] min-w-[100px] text-center bg-blue-50/30">
-                  <div className="text-[10px] font-black text-blue-600 leading-tight">{i + 1}주차 과제</div>
-                  <div className="text-[9px] font-bold text-blue-400">과제</div>
+                <th key={h.id} className="px-3 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-center min-w-[100px]">
+                  {i + 1}주차 과제
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#f0efe6]">
+          <tbody>
             {runners.map(runner => {
               const stats = calculateStats(runner.id);
               return (
-                <tr key={runner.id} className="hover:bg-[#fcfcfb] transition-colors group text-center">
-                  <td className="sticky left-0 z-20 bg-white group-hover:bg-[#fcfcfb] px-6 py-4 border-r border-[#f0efe6] text-left">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-sm font-black text-[#16140f]">{runner.name}</span>
-                      <div className="flex gap-2">
-                        <span className="text-[9px] font-bold text-green-500">출 {stats.present}</span>
-                        <span className="text-[9px] font-bold text-amber-500">지 {stats.late}</span>
-                        <span className="text-[9px] font-bold text-red-500">결 {stats.absent}</span>
-                        {!hideHomework && <span className="text-[9px] font-bold text-blue-600">과제 {stats.homework}/{homeworks.length}</span>}
+                <tr key={runner.id} className="border-t border-[#ece8db] transition-colors hover:bg-[#fcfcf8] group text-center">
+                  <td className="sticky left-0 z-20 bg-white group-hover:bg-[#fcfcf8] px-4 py-3 text-left">
+                    <div className="flex items-center gap-3">
+                      <div className="grid h-9 w-9 place-items-center rounded-full bg-[#e8e6dc] font-['Pretendard',sans-serif] text-sm font-semibold text-[#4a4a40]">
+                        {runner.name.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{runner.name}</p>
+                        <div className="flex gap-2 font-['Pretendard',sans-serif] text-[10px] text-[#6b6b5e]">
+                          <span className="text-green-600">출 {stats.present}</span>
+                          <span className="text-amber-600">지 {stats.late}</span>
+                          <span className="text-red-600">결 {stats.absent}</span>
+                          {!hideHomework && <span className="text-blue-600">과제 {stats.homework}/{homeworks.length}</span>}
+                        </div>
                       </div>
                     </div>
                   </td>
-                  
-                  {/* Attendance Cells */}
+
                   {sessions.map(session => {
                     const currentStatus = getAttendanceStatus(runner.id, session.id);
                     return (
-                      <td key={session.id} className="px-2 py-3 border-r border-[#f0efe6]">
+                      <td key={session.id} className="px-2 py-3">
                         <div className="flex items-center justify-center gap-1">
                           {STATUS_OPTS.map(opt => {
                             const isActive = currentStatus === opt.key;
@@ -228,10 +226,10 @@ export function AttendanceClient({
                                 key={opt.key}
                                 onClick={() => handleUpdateStatus(runner.id, session.id, opt.key)}
                                 disabled={!isAdminOrPreneur || isPending}
-                                className={`flex h-7 w-7 items-center justify-center rounded-lg text-[10px] font-black transition-all border ${
-                                  isActive 
-                                    ? `${opt.active} ${opt.text} ${opt.color.replace('bg-', 'border-')}` 
-                                    : `bg-white text-[#d9d9cc] border-[#f0efe6] ${opt.hover}`
+                                className={`flex h-7 w-7 items-center justify-center rounded-md font-['Pretendard',sans-serif] text-[10px] font-semibold transition-all border ${
+                                  isActive
+                                    ? `${opt.active} ${opt.text} ${opt.color.replace('bg-', 'border-')}`
+                                    : `bg-white text-[#ddd9cc] border-[#ece8db] ${opt.hover}`
                                 }`}
                               >
                                 {opt.label}
@@ -243,15 +241,13 @@ export function AttendanceClient({
                     );
                   })}
 
-                  {/* Homework Cells */}
-                  {/* Homework Cells */}
                   {!hideHomework && homeworks.map(homework => {
                     const isCompleted = getHomeworkStatus(runner.id, homework.id);
                     return (
-                      <td key={homework.id} className="px-2 py-3 border-r border-[#f0efe6]">
+                      <td key={homework.id} className="px-2 py-3">
                         <div
-                          className={`mx-auto flex h-8 w-8 items-center justify-center rounded-lg font-black text-[11px] transition-all ${
-                            isCompleted ? "bg-blue-600 text-white shadow-sm" : "bg-gray-50 text-gray-300 border border-gray-100"
+                          className={`mx-auto flex h-7 w-7 items-center justify-center rounded-md font-['Pretendard',sans-serif] text-[11px] font-semibold ${
+                            isCompleted ? "bg-blue-600 text-white" : "bg-[#f0efe6] text-[#ddd9cc]"
                           }`}
                         >
                           {isCompleted ? "✓" : "-"}
@@ -266,18 +262,19 @@ export function AttendanceClient({
         </table>
       </div>
 
-      <div className="flex items-center justify-center gap-6 rounded-2xl border border-[#d9d9cc] bg-[#fcfcfb] p-4 text-[10px] font-bold">
-        <div className="text-[#a1a196] uppercase tracking-widest mr-4">범례</div>
+      <div className="flex items-center gap-4 font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">
         {STATUS_OPTS.map(opt => (
-          <div key={opt.key} className="flex items-center gap-1.5 focus:outline-none">
-            <span className={`h-2 w-2 rounded-full ${opt.color.replace('bg-', 'bg-')}`} style={{ backgroundColor: opt.color.includes('bg-') ? '' : opt.color }} />
-            <span className="text-[#16140f] outline-none">{opt.key === 'present' ? '출석' : opt.key === 'late' ? '지각' : opt.key === 'absent' ? '결석' : '공결'}</span>
+          <div key={opt.key} className="flex items-center gap-1.5">
+            <span className={`h-2 w-2 rounded-full ${opt.color}`} />
+            <span>{STATUS_LABELS[opt.key]}</span>
           </div>
         ))}
-        <div className="ml-6 pl-6 border-l border-[#d9d9cc] flex items-center gap-2">
-          <span className="h-2 w-2 rounded bg-blue-600" />
-          <span className="text-[#16140f]">과제 완료</span>
-        </div>
+        {!hideHomework && (
+          <div className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-blue-600" />
+            <span>과제 완료</span>
+          </div>
+        )}
       </div>
     </div>
   );

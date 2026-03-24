@@ -31,8 +31,8 @@ export async function signIn(formData: FormData): Promise<AuthActionResult> {
 }
 
 export async function signUp(formData: FormData): Promise<AuthActionResult> {
-  const first_name = readField(formData, "first_name");
-  const last_name = readField(formData, "last_name");
+  const first_name = readField(formData, "first_name").replace(/\s+/g, "");
+  const last_name = readField(formData, "last_name").replace(/\s+/g, "");
   const email = readField(formData, "email").toLowerCase();
   const username = readField(formData, "username");
   const password = readField(formData, "password");

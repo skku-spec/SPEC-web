@@ -48,13 +48,13 @@ export default function CTA() {
              필요한 건 단 하나 — <span className="font-semibold text-white">실행할 의지.</span>
            </p>
 
-          <ApplyButton href="/apply" size="lg" className="mt-16">
+          {/* <ApplyButton href="/apply" size="lg" className="mt-16">
             4기 지원하기
           </ApplyButton>
 
            <p className="mt-4 font-['Pretendard',sans-serif] text-sm text-white/40">
               마감: 2026년 3월 | 성균관대 재학생 대상
-           </p>
+           </p> */}
        </div>
      </section>
    );

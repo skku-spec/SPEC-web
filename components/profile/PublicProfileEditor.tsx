@@ -314,7 +314,7 @@ export default function PublicProfileEditor({ initial, initialExperiences, isEdi
           공개 프로필 편집
         </h2>
         <p className="mt-2 font-['Pretendard',sans-serif] text-[14px] leading-relaxed text-[#6b6b5e]">
-          소개, 링크, 경력, 공개 여부를 저장하면 저자 페이지 `/u/{initial.slug}`에 반영됩니다.
+          소개, 링크, 경력, 공개 여부를 저장하면 공개 프로필 페이지 `/profile/{initial.slug}`에 반영됩니다.
         </p>
       </div>
 
@@ -344,7 +344,7 @@ export default function PublicProfileEditor({ initial, initialExperiences, isEdi
             <label className="space-y-2 md:col-span-2">
               <span className="font-['Pretendard',sans-serif] text-[13px] font-medium text-[#16140f]/70">공개 주소</span>
               <div className="rounded-xl border border-[#ddd9cc] bg-white px-4 py-3 font-['Pretendard',sans-serif] text-[14px] text-[#16140f]/80">
-                /u/{initial.slug}
+                /profile/{initial.slug}
               </div>
               <p className="font-['Pretendard',sans-serif] text-[12px] text-[#6b6b5e]">
                 현재 버전에서는 공개 링크 주소를 변경할 수 없습니다.
@@ -383,7 +383,7 @@ export default function PublicProfileEditor({ initial, initialExperiences, isEdi
             <div>
               <h3 className="font-[system-ui] text-[1.15rem] font-black text-[#16140f]">공개 여부</h3>
               <p className="mt-1 font-['Pretendard',sans-serif] text-[13px] text-[#6b6b5e]">
-                공개 상태일 때만 블로그 저자 링크와 `/u/[slug]` 페이지가 활성화됩니다.
+                공개 상태일 때만 블로그 저자 링크와 `/profile/[slug]` 페이지가 활성화됩니다.
               </p>
             </div>
             <input type="hidden" name="profile_visibility" value={profileVisibility} />
@@ -437,7 +437,7 @@ export default function PublicProfileEditor({ initial, initialExperiences, isEdi
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="font-['Pretendard',sans-serif] text-[13px] text-[#6b6b5e]">
-            저장 후 `/profile`, `/blog`, `/u/[slug]`에 반영됩니다.
+            저장 후 `/profile`, `/blog`, `/profile/[slug]`에 반영됩니다.
           </p>
           <button
             type="submit"

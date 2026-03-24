@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -47,15 +47,18 @@ export default function Navbar() {
   const dropdownBg = isHome ? "bg-black/90 border-white/10" : "bg-white border-gray-200";
   const dropdownText = isHome ? "text-white/80 hover:text-white hover:bg-white/10" : "text-[#16140f] hover:bg-gray-100";
 
-  const displayName =
-    (profile?.first_name && profile?.last_name
-      ? `${profile.first_name} ${profile.last_name}`
-      : profile?.name?.trim()) ||
-    user?.email?.split("@")[0] ||
-    "사용자";
-  const roleLabel = ROLE_LABEL[role] ?? "외부";
-  const initials = getInitials(displayName);
-  const applyDdayLabel = getRecruitmentApplyDdayLabel();
+  const displayName = useMemo(
+    () =>
+      (profile?.first_name && profile?.last_name
+        ? `${profile.last_name}${profile.first_name}`
+        : profile?.name?.trim()) ||
+      user?.email?.split("@")[0] ||
+      "사용자",
+    [profile, user?.email],
+  );
+  const roleLabel = useMemo(() => ROLE_LABEL[role] ?? "외부", [role]);
+  const initials = useMemo(() => getInitials(displayName), [displayName]);
+  const applyDdayLabel = useMemo(() => getRecruitmentApplyDdayLabel(), []);
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [showComingSoon, setShowComingSoon] = useState(false);
@@ -399,13 +402,26 @@ export default function Navbar() {
                 </Link>
               </div>
 
-              {isAuthenticated && role !== "outsider" && role !== "runner" && (
+              {isAuthenticated && (role === "admin" || role === "preneur" || role === "runner") && (
                 <>
                   <p className={`mb-3 mt-6 text-xs font-semibold uppercase tracking-widest font-['Pretendard',sans-serif] ${isHome ? "text-white/40" : "text-[#16140f]/40"}`}>
                     멤버 메뉴
                   </p>
                   <div className="mb-6 flex flex-col gap-1">
-
+                    <Link
+                      href="/profile"
+                      onClick={() => setMenuOpen(false)}
+                      className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}
+                    >
+                      내 프로필
+                    </Link>
+                    <Link
+                      href="/apply/status"
+                      onClick={() => setMenuOpen(false)}
+                      className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}
+                    >
+                      지원 현황 확인
+                    </Link>
                     {role === "admin" && (
                       <Link
                         href="/admin"

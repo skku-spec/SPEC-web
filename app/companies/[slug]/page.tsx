@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
@@ -59,7 +60,7 @@ interface RelatedCompany {
   oneLiner: string;
 }
 
-async function getCompanyPageData(
+const getCompanyPageData = cache(async function getCompanyPageData(
   slug: string,
 ): Promise<{ company: CompanyDetail; related: RelatedCompany[] } | null> {
   const supabase = await createClient();
@@ -170,7 +171,7 @@ async function getCompanyPageData(
   }));
 
   return { company, related };
-}
+});
 
 interface PageProps {
   params: Promise<{ slug: string }>;

@@ -1,9 +1,8 @@
 import type { ReactNode } from "react";
 
-import Link from "next/link";
-
 import { requireRole } from "@/lib/auth";
 
+import { MobileAdminNav } from "./AdminNav";
 import { AdminSidebar } from "./AdminSidebar";
 
 type AdminLayoutProps = {
@@ -25,21 +24,10 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
 
         <div className="flex min-w-0 flex-1 flex-col">
           {/* Mobile header — shown on mobile only */}
-          <div className="flex items-center gap-3 border-b border-[#ddd9cc] bg-white px-5 py-3 lg:hidden">
-            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[#16140f]">
-              <span className="text-[10px] font-bold text-white">S</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-sm font-semibold text-[#16140f] [font-family:system-ui,-apple-system,sans-serif]">Admin</h1>
-              <span className="text-[#ddd9cc]">·</span>
-            </div>
-            <nav className="flex items-center gap-1.5 overflow-x-auto">
-              <Link href="/admin" className="shrink-0 rounded-md px-2.5 py-1 text-xs font-medium text-[#4a4a40] hover:bg-[#f0efe6]">📊 Dashboard</Link>
-              <Link href="/admin/users" className="shrink-0 rounded-md px-2.5 py-1 text-xs font-medium text-[#4a4a40] hover:bg-[#f0efe6]">👥 Users</Link>
-              <Link href="/admin/applications" className="shrink-0 rounded-md px-2.5 py-1 text-xs font-medium text-[#4a4a40] hover:bg-[#f0efe6]">📋 Applications</Link>
-              <Link href="/admin/posts" className="shrink-0 rounded-md px-2.5 py-1 text-xs font-medium text-[#4a4a40] hover:bg-[#f0efe6]">📝 Posts</Link>
-              <Link href="/admin/homework" className="shrink-0 rounded-md px-2.5 py-1 text-xs font-medium text-[#4a4a40] hover:bg-[#f0efe6]">📖 Homework</Link>
-            </nav>
+          <div className="flex items-center gap-3 border-b border-[#d9d9cc] bg-white px-5 py-3 lg:hidden">
+            <h1 className="text-sm font-semibold text-[#16140f]">관리자 센터</h1>
+            <span className="text-[#d9d9cc]">&middot;</span>
+            <MobileAdminNav />
           </div>
 
           <main className="flex-1 px-5 py-6 sm:px-8 sm:py-10 lg:px-10">{children}</main>

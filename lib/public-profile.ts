@@ -75,7 +75,7 @@ export function getPublicAuthorHref(profile: {
     return null;
   }
 
-  return `/u/${profile.slug}`;
+  return `/profile/${profile.slug}`;
 }
 
 export function getDisplayRoleLine(profile: Pick<PublicProfile, "current_role" | "company">): string | null {
