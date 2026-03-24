@@ -8,11 +8,11 @@ export default async function AdminDashboardPage() {
     <section className="space-y-8 pb-10">
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
         <DashboardClient 
-          runners={trackerData.runners as any} 
+          runners={trackerData.runners} 
           sessions={trackerData.sessions} 
           logs={trackerData.logs} 
-          homeworks={trackerData.homeworks as any}
-          submissions={trackerData.submissions as any}
+          homeworks={trackerData.homeworks}
+          submissions={trackerData.submissions}
         />
       </div>
     </section>

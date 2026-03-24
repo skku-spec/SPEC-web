@@ -10,7 +10,7 @@ export default async function DashboardAttendancePage() {
   return (
     <div className="mx-auto max-w-7xl animate-in fade-in slide-in-from-bottom-4 duration-500">
       <AttendanceClient 
-        runners={data.runners as any} 
+        runners={data.runners} 
         sessions={data.sessions} 
         homeworks={data.homeworks} 
         logs={data.logs} 

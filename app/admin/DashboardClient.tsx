@@ -24,7 +24,6 @@ type AttendanceLog = {
 type Homework = {
   id: string;
   title: string;
-  week: number;
 }
 
 type Submission = {

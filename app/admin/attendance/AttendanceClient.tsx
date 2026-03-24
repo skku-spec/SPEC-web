@@ -8,6 +8,7 @@ type Profile = {
   name: string;
   role: string | null;
 }
+type Status = "present" | "late" | "absent" | "excused";
 
 type Session = {
   id: string;
@@ -25,7 +26,8 @@ type AttendanceLog = {
 type Homework = {
   id: string;
   title: string;
-  week: number;
+  is_individual?: boolean;
+  is_team?: boolean;
 }
 
 type Submission = {
@@ -44,7 +46,7 @@ type Props = {
   hideHomework?: boolean;
 }
 
-const STATUS_OPTS = [
+const STATUS_OPTS: { key: Status; label: string; color: string; text: string; hover: string; active: string }[] = [
   { key: "present", label: "출", color: "bg-green-500", text: "text-green-500", hover: "hover:bg-green-100", active: "bg-green-50" },
   { key: "late", label: "지", color: "bg-amber-500", text: "text-amber-500", hover: "hover:bg-amber-100", active: "bg-amber-50" },
   { key: "absent", label: "결", color: "bg-red-500", text: "text-red-500", hover: "hover:bg-red-100", active: "bg-red-50" },
@@ -85,10 +87,10 @@ export function AttendanceClient({
     };
   };
 
-  const handleUpdateStatus = async (userId: string, sessionId: string, status: string) => {
+  const handleUpdateStatus = async (userId: string, sessionId: string, status: Status) => {
     if (!isAdminOrPreneur) return;
     startTransition(async () => {
-      await markAttendance(userId, sessionId, status as any);
+      await markAttendance(userId, sessionId, status);
       setLogs(prev => {
         const filtered = prev.filter(l => !(l.user_id === userId && l.session_id === sessionId));
         const current = prev.find(l => l.user_id === userId && l.session_id === sessionId);
@@ -188,9 +190,9 @@ export function AttendanceClient({
               ))}
 
               {/* Homework Headers */}
-              {!hideHomework && homeworks.map(h => (
+              {!hideHomework && homeworks.map((h, i) => (
                 <th key={h.id} className="px-3 py-5 border-r border-[#f0efe6] min-w-[100px] text-center bg-blue-50/30">
-                  <div className="text-[10px] font-black text-blue-600 leading-tight">{h.week}주차 과제</div>
+                  <div className="text-[10px] font-black text-blue-600 leading-tight">{i + 1}주차 과제</div>
                   <div className="text-[9px] font-bold text-blue-400">과제</div>
                 </th>
               ))}

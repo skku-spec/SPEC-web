@@ -46,12 +46,12 @@ export default async function DashboardPage() {
       {/* Attendance Section */}
       <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
         <AttendanceClient 
-          runners={trackerData.runners as any} 
+          runners={trackerData.runners} 
           sessions={trackerData.sessions} 
           logs={trackerData.logs} 
           isAdminOrPreneur={trackerData.isAdminOrPreneur}
-          homeworks={trackerData.homeworks as any}
-          submissions={trackerData.submissions as any}
+          homeworks={trackerData.homeworks}
+          submissions={trackerData.submissions}
           hideHomework={false}
         />
       </section>
