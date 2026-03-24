@@ -22,8 +22,8 @@ function isBlogEditRoute(pathname: string) {
   return pathname === "/blog/edit" || pathname.startsWith("/blog/edit/");
 }
 
-function isProfileRoute(pathname: string) {
-  return pathname === "/profile" || pathname.startsWith("/profile/");
+export function isPrivateProfileRoute(pathname: string) {
+  return pathname === "/profile" || pathname === "/profile/edit";
 }
 
 const BLOCKED_ROUTES = [
@@ -100,7 +100,7 @@ export async function middleware(request: NextRequest) {
 
   const needsAdmin = isAdminRoute(pathname);
   const needsWriter = isBlogWriteRoute(pathname) || isBlogEditRoute(pathname);
-  const needsAuth = isProfileRoute(pathname);
+  const needsAuth = isPrivateProfileRoute(pathname);
 
   if (!needsAdmin && !needsWriter && !needsAuth) {
     return response;

@@ -8,6 +8,7 @@ import LogoutButton from "@/app/profile/LogoutButton";
 import OwnedPostsSection from "@/components/profile/OwnedPostsSection";
 import ProfileAvatarEditor from "@/components/profile/ProfileAvatarEditor";
 import PublicProfileEditor from "@/components/profile/PublicProfileEditor";
+import { getPublicAuthorHref } from "@/lib/public-profile";
 import { getProfileExperiencesForOwner } from "@/lib/public-profile";
 import { getBlogPostsByAuthorIdForOwner } from "@/lib/api";
 
@@ -57,6 +58,11 @@ export default async function ProfilePage() {
   const lastName = profile?.last_name?.trim() || "-";
   const linkedinUrl = profile?.linkedin_url?.trim() || "";
   const canEditPublicProfile = canWrite(role);
+  const publicProfileHref = getPublicAuthorHref({
+    slug: profile?.slug,
+    role: profile?.role,
+    profile_visibility: profile?.profile_visibility,
+  });
 
   let experiences: Awaited<ReturnType<typeof getProfileExperiencesForOwner>> = [];
   let ownedPosts: Awaited<ReturnType<typeof getBlogPostsByAuthorIdForOwner>> = [];
@@ -156,6 +162,29 @@ export default async function ProfilePage() {
           </div>
 
           <div className="mt-8 space-y-3">
+            <div className="rounded-xl border border-[#e1dfd4] bg-white px-4 py-4">
+              <p className="font-['Pretendard',sans-serif] text-[12px] font-semibold uppercase tracking-[0.08em] text-[#16140f]/45">
+                Public URL
+              </p>
+              {publicProfileHref ? (
+                <div className="mt-2 space-y-2">
+                  <p className="break-all font-['MaruBuri',serif] text-[15px] text-[#16140f]">
+                    {publicProfileHref}
+                  </p>
+                  <Link
+                    href={publicProfileHref}
+                    className="inline-flex text-[13px] font-semibold text-[#FF6C0F] underline underline-offset-4"
+                  >
+                    공개 프로필 보기
+                  </Link>
+                </div>
+              ) : (
+                <p className="mt-2 font-['Pretendard',sans-serif] text-[13px] leading-relaxed text-[#6b6b5e]">
+                  공개 프로필이 아직 비공개 상태입니다. 아래 공개 프로필 편집 영역에서 공개로 전환하면 이름이 들어간 공유 링크가 활성화됩니다.
+                </p>
+              )}
+            </div>
+
             <Link
               href="/profile/edit"
               className="block w-full rounded-xl bg-[#FF6C0F] px-4 py-3 text-center font-['Pretendard',sans-serif] text-[15px] font-semibold text-white transition-colors hover:opacity-85"

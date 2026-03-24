@@ -183,12 +183,12 @@ function buildProfileUpdate(formData: FormData): ProfileUpdate {
 
 function revalidatePublicProfilePaths(slug: string) {
   revalidatePath("/profile");
+  revalidatePath("/profile/[slug]", "page");
+  revalidatePath(`/profile/${slug}`);
   revalidatePath("/blog");
   revalidatePath("/blog/[slug]", "page");
   revalidatePath("/people");
   revalidatePath("/people/[slug]", "page");
-  revalidatePath("/u/[slug]", "page");
-  revalidatePath(`/u/${slug}`);
 }
 
 export async function savePublicProfile(formData: FormData): Promise<ActionResult> {
