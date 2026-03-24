@@ -220,7 +220,7 @@ export default function Navbar() {
           </div>
 
           <div className="absolute right-8 lg:right-10 flex items-center gap-3">
-            {/* Apply button removed */}
+            <ApplyButton size="sm">Apply</ApplyButton>
 
 
             {isAuthenticated ? (
@@ -399,6 +399,16 @@ export default function Navbar() {
               <div className="mb-6 flex flex-col gap-1">
                 <Link href="/blog" onClick={() => setMenuOpen(false)} className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}>
                   블로그
+                </Link>
+              </div>
+
+              <div className="mb-6">
+                <Link
+                  href="/apply"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex w-full items-center justify-center rounded-full bg-[#FF6C0F] py-3 font-['Source_Serif_4',serif] text-sm font-semibold italic text-white transition-all hover:brightness-[1.08]"
+                >
+                  Apply Now
                 </Link>
               </div>
 
