@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 type LoginPageProps = {
-  searchParams: Promise<{ registered?: string; redirect?: string }>;
+  searchParams: Promise<{ registered?: string; redirect?: string; reset?: string; error?: string }>;
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
@@ -24,7 +24,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </h1>
         </div>
 
-        <LoginForm registered={params.registered === "true"} redirect={params.redirect} />
+        <LoginForm
+          registered={params.registered === "true"}
+          passwordReset={params.reset === "true"}
+          authError={params.error === "auth"}
+          redirect={params.redirect}
+        />
       </div>
     </div>
   );
