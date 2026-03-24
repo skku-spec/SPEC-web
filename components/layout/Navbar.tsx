@@ -309,7 +309,7 @@ export default function Navbar() {
                     />
                   </svg>
                 </button>
-                <div className="dropdown-menu hidden">
+                <div className="dropdown-menu hidden" style={{ left: 'auto', right: 0, transform: 'none' }}>
                   <div className={`dropdown-container ${dropdownBg} backdrop-blur-sm rounded-lg p-2 mt-2 border min-w-[220px]`}>
                      <div className="px-4 py-2">
                       <p className="truncate text-sm font-medium font-['Pretendard',sans-serif] text-[#16140f]">{displayName}</p>
