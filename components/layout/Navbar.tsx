@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -12,6 +12,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 
 import ApplyButton from "@/components/ui/ApplyButton";
+
 const ROLE_LABEL: Record<string, string> = {
   outsider: "외부인",
   runner: "러너",
@@ -80,24 +81,27 @@ export default function Navbar() {
   const dropdownBg = isHome ? "bg-black/90 border-white/10" : "bg-white border-gray-200";
   const dropdownText = isHome ? "text-white/80 hover:text-white hover:bg-white/10" : "text-[#16140f] hover:bg-gray-100";
 
-  const displayName =
-    (profile?.first_name && profile?.last_name
-      ? `${profile.first_name} ${profile.last_name}`
-      : profile?.name?.trim()) ||
-    user?.email?.split("@")[0] ||
-    "사용자";
-  const roleLabel = ROLE_LABEL[role] ?? "외부";
-  const initials = getInitials(displayName);
-  const applyDdayLabel = getApplyDdayLabel();
+  const displayName = useMemo(
+    () =>
+      (profile?.first_name && profile?.last_name
+        ? `${profile.first_name} ${profile.last_name}`
+        : profile?.name?.trim()) ||
+      user?.email?.split("@")[0] ||
+      "사용자",
+    [profile?.first_name, profile?.last_name, profile?.name, user?.email],
+  );
+  const roleLabel = useMemo(() => ROLE_LABEL[role] ?? "외부", [role]);
+  const initials = useMemo(() => getInitials(displayName), [displayName]);
+  const applyDdayLabel = useMemo(() => getApplyDdayLabel(), []);
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [showComingSoon, setShowComingSoon] = useState(false);
 
-  const handleComingSoon = () => {
+  const handleComingSoon = useCallback(() => {
     setShowComingSoon(true);
     setMenuOpen(false);
     setTimeout(() => setShowComingSoon(false), 2000);
-  };
+  }, []);
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
@@ -106,12 +110,12 @@ export default function Navbar() {
     };
   }, [menuOpen]);
 
-  const handleSignOut = async () => {
+  const handleSignOut = useCallback(async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
     setMenuOpen(false);
-    router.refresh();
-  };
+    router.push("/");
+  }, [router]);
 
   return (
     <div className={`sticky top-0 isolate z-50 ${isHome ? "bg-transparent" : "bg-[#f5f5ee]"}`}>

@@ -104,13 +104,17 @@ export default function ProfileEditForm({
     formData.set("confirm_password", confirmPassword);
 
     startPasswordTransition(async () => {
-      const result = await updatePassword(formData);
-      if (result.error) {
-        setPasswordError(result.error);
-      } else {
-        setPasswordSuccess("비밀번호가 변경되었습니다.");
-        setNewPassword("");
-        setConfirmPassword("");
+      try {
+        const result = await updatePassword(formData);
+        if (result.error) {
+          setPasswordError(result.error);
+        } else {
+          setPasswordSuccess("비밀번호가 변경되었습니다.");
+          setNewPassword("");
+          setConfirmPassword("");
+        }
+      } catch {
+        setPasswordError("비밀번호 변경 중 오류가 발생했습니다. 다시 시도해주세요.");
       }
     });
   };

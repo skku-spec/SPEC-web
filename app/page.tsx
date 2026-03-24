@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import ScrollBackground from "@/components/ScrollBackground";
 import Hero from "@/components/Hero";
-import Philosophy from "@/components/Philosophy";
-import Manifesto from "@/components/Manifesto";
-import Partners from "@/components/Partners";
-import TwoTracks from "@/components/TwoTracks";
-import CurriculumRoadmap from "@/components/CurriculumRoadmap";
-import AlumniGrid from "@/components/AlumniGrid";
 
-import CTA from "@/components/CTA";
+const Philosophy = dynamic(() => import("@/components/Philosophy"));
+const Manifesto = dynamic(() => import("@/components/Manifesto"));
+const Partners = dynamic(() => import("@/components/Partners"));
+const TwoTracks = dynamic(() => import("@/components/TwoTracks"));
+const CurriculumRoadmap = dynamic(() => import("@/components/CurriculumRoadmap"));
+const AlumniGrid = dynamic(() => import("@/components/AlumniGrid"));
+const CTA = dynamic(() => import("@/components/CTA"));
 
 export const metadata: Metadata = {
   title: "SKKU SPEC | 성균관대학교 창업 학회",

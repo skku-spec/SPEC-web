@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -11,6 +12,7 @@ import {
   getBlogTags,
   getRelatedPosts,
 } from "@/lib/api";
+import { getPublicAuthorHref } from "@/lib/public-profile";
 
 import InteractiveSection from "./InteractiveSection";
 import PostAuthorActions from "./PostAuthorActions";
@@ -21,7 +23,7 @@ export async function generateMetadata({
   params,
 }: {
   params: Promise<{ slug: string }>;
-}) {
+}): Promise<Metadata> {
   const { slug } = await params;
   return {
     title: "SPEC Blog | SPEC",
@@ -120,6 +122,11 @@ export default async function BlogPostPage({
     .map((name) => name[0] ?? "")
     .join("")
     .slice(0, 2) || "S";
+  const authorHref = getPublicAuthorHref({
+    slug: post.authorSlug,
+    role: post.authorRole,
+    profile_visibility: post.authorProfileVisibility,
+  });
 
   return (
     <section className="min-h-screen pb-24">
@@ -143,9 +150,18 @@ export default async function BlogPostPage({
                 {authorInitials}
               </div>
               <div>
-                <p className="font-['Pretendard',sans-serif] text-[14px] font-medium text-[#16140f]">
-                  {authorName}
-                </p>
+                {authorHref ? (
+                  <Link
+                    href={authorHref}
+                    className="font-['Pretendard',sans-serif] text-[14px] font-medium text-[#16140f] transition-colors hover:text-[#FF6C0F]"
+                  >
+                    {authorName}
+                  </Link>
+                ) : (
+                  <p className="font-['Pretendard',sans-serif] text-[14px] font-medium text-[#16140f]">
+                    {authorName}
+                  </p>
+                )}
                 <p className="font-['Pretendard',sans-serif] text-[13px] text-[#6b6b5e]">
                   {post.date}
                 </p>

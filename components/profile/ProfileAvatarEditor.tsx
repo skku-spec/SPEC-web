@@ -10,7 +10,6 @@ import {
   type PointerEvent as ReactPointerEvent,
   type WheelEvent as ReactWheelEvent,
 } from "react";
-import { useRouter } from "next/navigation";
 
 type ProfileAvatarEditorProps = {
   name: string;
@@ -85,7 +84,6 @@ function getInitial(name: string) {
 }
 
 export default function ProfileAvatarEditor({ name, photoUrl }: ProfileAvatarEditorProps) {
-  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragStateRef = useRef<DragState | null>(null);
   const [isSaving, startTransition] = useTransition();
@@ -299,7 +297,6 @@ export default function ProfileAvatarEditor({ name, photoUrl }: ProfileAvatarEdi
           setCurrentPhotoUrl(payload.photoUrl);
           setSuccessMessage("프로필 사진이 업데이트되었어요.");
           resetCropState();
-          router.refresh();
         } catch (error) {
           setErrorMessage(error instanceof Error ? error.message : "프로필 사진 저장에 실패했어요.");
         }

@@ -42,13 +42,6 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
                 href="/dashboard/homework"
                 className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-[#16140f] hover:bg-[#f0efe6] transition-colors"
               >
-                <span className="text-base">📚</span>
-                <span>Homework</span>
-              </Link>
-              <Link
-                href="/dashboard/attendance"
-                className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-[#16140f] hover:bg-[#f0efe6] transition-colors"
-              >
                 <span className="text-base">📅</span>
                 <span>출석 현황</span>
               </Link>
@@ -66,14 +59,6 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
               <h1 className="text-sm font-semibold text-[#16140f] [font-family:system-ui,-apple-system,sans-serif]">대시보드</h1>
               <span className="text-[#d9d9cc]">·</span>
               <nav className="flex items-center gap-2">
-                {role !== "runner" && (
-                  <>
-                    <Link href="/dashboard/applications" className="text-sm font-medium text-[#FF6C0F]">
-                      모집 지원서
-                    </Link>
-                    <span className="text-[#d9d9cc]">·</span>
-                  </>
-                )}
                 <Link href="/dashboard/homework" className="text-sm font-medium text-[#FF6C0F]">
                   Homework
                 </Link>

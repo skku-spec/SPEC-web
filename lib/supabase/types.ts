@@ -10,7 +10,10 @@ export type ProfileRole =
   | "outsider"
   | "runner"
   | "preneur"
+  | "member"
   | "admin";
+
+export type ProfileVisibility = "private" | "public";
 
 export type PostType = "news" | "blog";
 
@@ -30,6 +33,12 @@ export type Database = {
           photo: string;
           batch: string;
           company: string;
+          headline: string;
+          current_role: string;
+          website_url: string;
+          brunch_url: string;
+          github_url: string;
+          profile_visibility: ProfileVisibility;
           username: string;
           first_name: string;
           last_name: string;
@@ -46,6 +55,12 @@ export type Database = {
           photo: string;
           batch: string;
           company: string;
+          headline: string;
+          current_role: string;
+          website_url: string;
+          brunch_url: string;
+          github_url: string;
+          profile_visibility?: ProfileVisibility;
           username: string;
           first_name: string;
           last_name: string;
@@ -62,10 +77,58 @@ export type Database = {
           photo?: string;
           batch?: string;
           company?: string;
+          headline?: string;
+          current_role?: string;
+          website_url?: string;
+          brunch_url?: string;
+          github_url?: string;
+          profile_visibility?: ProfileVisibility;
           username?: string;
           first_name?: string;
           last_name?: string;
           linkedin_url?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      profile_experiences: {
+        Row: {
+          id: string;
+          profile_id: string;
+          organization: string;
+          title: string;
+          start_date: string | null;
+          end_date: string | null;
+          is_current: boolean;
+          description: string;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          profile_id: string;
+          organization: string;
+          title: string;
+          start_date?: string | null;
+          end_date?: string | null;
+          is_current?: boolean;
+          description?: string;
+          sort_order: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          profile_id?: string;
+          organization?: string;
+          title?: string;
+          start_date?: string | null;
+          end_date?: string | null;
+          is_current?: boolean;
+          description?: string;
+          sort_order?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -328,6 +391,7 @@ export type Database = {
           id: string;
           name: string;
           slug: string;
+          public_profile_id: string | null;
           student_id: string | null;
           phone: string | null;
           email: string | null;
@@ -350,6 +414,7 @@ export type Database = {
           id?: string;
           name: string;
           slug: string;
+          public_profile_id?: string | null;
           student_id?: string | null;
           phone?: string | null;
           email?: string | null;
@@ -372,6 +437,7 @@ export type Database = {
           id?: string;
           name?: string;
           slug?: string;
+          public_profile_id?: string | null;
           student_id?: string | null;
           phone?: string | null;
           email?: string | null;
@@ -778,10 +844,26 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      save_public_profile: {
+        Args: {
+          input_profile_id: string;
+          input_name: string;
+          input_headline: string;
+          input_current_role: string;
+          input_company: string;
+          input_bio: string;
+          input_linkedin_url: string;
+          input_website_url: string;
+          input_brunch_url: string;
+          input_github_url: string;
+          input_profile_visibility: ProfileVisibility;
+          input_experiences: Json;
+        };
+        Returns: undefined;
+      };
     };
     Enums: {
-      [_ in never]: never;
+      profile_visibility: ProfileVisibility;
     };
     CompositeTypes: {
       [_ in never]: never;

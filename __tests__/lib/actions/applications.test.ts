@@ -230,7 +230,7 @@ describe("submitApplication", () => {
         user_id: "user-1",
       }),
     );
-    expect(mockedRevalidatePath).toHaveBeenCalledWith("/dashboard/applications");
+    expect(mockedRevalidatePath).toHaveBeenCalledWith("/admin/applications");
   });
 
   it("returns duplicate submission error for 23505", async () => {

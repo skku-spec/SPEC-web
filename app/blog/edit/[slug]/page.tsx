@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 
 import PostEditorForm from "@/app/blog/PostEditorForm";
-import { getBlogPostBySlug, getBlogTags } from "@/lib/api";
+import { getBlogPostBySlugForOwner, getBlogTags } from "@/lib/api";
+import { normalizeRole, requireAuth } from "@/lib/auth";
 
 export const revalidate = 60;
 
@@ -11,9 +12,18 @@ export default async function BlogEditPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const [post, tags] = await Promise.all([getBlogPostBySlug(slug), getBlogTags()]);
+  const { user, profile } = await requireAuth();
+  const role = normalizeRole(profile?.role);
+  const [post, tags] = await Promise.all([getBlogPostBySlugForOwner(slug), getBlogTags()]);
 
   if (!post) {
+    notFound();
+  }
+
+  const isOwner = post.authorId === user.id;
+  const isAdmin = role === "admin";
+
+  if (!isOwner && !isAdmin) {
     notFound();
   }
 

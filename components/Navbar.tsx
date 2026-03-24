@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -12,6 +12,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 
 import ApplyButton from "@/components/ui/ApplyButton";
+
 const ROLE_LABEL: Record<string, string> = {
   outsider: "외부인",
   runner: "러너",
@@ -46,24 +47,27 @@ export default function Navbar() {
   const dropdownBg = isHome ? "bg-black/90 border-white/10" : "bg-white border-gray-200";
   const dropdownText = isHome ? "text-white/80 hover:text-white hover:bg-white/10" : "text-[#16140f] hover:bg-gray-100";
 
-  const displayName =
-    (profile?.first_name && profile?.last_name
-      ? `${profile.first_name} ${profile.last_name}`
-      : profile?.name?.trim()) ||
-    user?.email?.split("@")[0] ||
-    "사용자";
-  const roleLabel = ROLE_LABEL[role] ?? "외부";
-  const initials = getInitials(displayName);
-  const applyDdayLabel = getRecruitmentApplyDdayLabel();
+  const displayName = useMemo(
+    () =>
+      (profile?.first_name && profile?.last_name
+        ? `${profile.first_name} ${profile.last_name}`
+        : profile?.name?.trim()) ||
+      user?.email?.split("@")[0] ||
+      "사용자",
+    [profile?.first_name, profile?.last_name, profile?.name, user?.email],
+  );
+  const roleLabel = useMemo(() => ROLE_LABEL[role] ?? "외부", [role]);
+  const initials = useMemo(() => getInitials(displayName), [displayName]);
+  const applyDdayLabel = useMemo(() => getRecruitmentApplyDdayLabel(), []);
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [showComingSoon, setShowComingSoon] = useState(false);
 
-  const handleComingSoon = () => {
+  const handleComingSoon = useCallback(() => {
     setShowComingSoon(true);
     setMenuOpen(false);
     setTimeout(() => setShowComingSoon(false), 2000);
-  };
+  }, []);
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
@@ -72,12 +76,12 @@ export default function Navbar() {
     };
   }, [menuOpen]);
 
-  const handleSignOut = async () => {
+  const handleSignOut = useCallback(async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
     setMenuOpen(false);
-    router.refresh();
-  };
+    router.push("/");
+  }, [router]);
 
   return (
     <div className={`sticky top-0 isolate z-50 ${isHome ? "bg-transparent" : "bg-[#f5f5ee]"}`}>
@@ -253,11 +257,7 @@ export default function Navbar() {
                     <Link href="/profile" className="dropdown-item block px-4 py-2 text-[#16140f] hover:bg-gray-100 rounded text-sm font-['Pretendard',sans-serif]">
                       내 프로필
                     </Link>
-                    {role !== "outsider" && role !== "runner" && (
-                      <Link href="/dashboard" className="dropdown-item block px-4 py-2 text-[#16140f] hover:bg-gray-100 rounded text-sm font-['Pretendard',sans-serif]">
-                        대시보드
-                      </Link>
-                    )}
+
                     {role === "admin" && (
                       <Link href="/admin" className="dropdown-item block px-4 py-2 text-[#16140f] hover:bg-gray-100 rounded text-sm font-['Pretendard',sans-serif]">
                         관리자
@@ -408,27 +408,7 @@ export default function Navbar() {
                     멤버 메뉴
                   </p>
                   <div className="mb-6 flex flex-col gap-1">
-                    <Link
-                      href="/profile"
-                      onClick={() => setMenuOpen(false)}
-                      className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}
-                    >
-                      내 프로필
-                    </Link>
-                    <Link
-                      href="/apply/status"
-                      onClick={() => setMenuOpen(false)}
-                      className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}
-                    >
-                      지원 현황 확인
-                    </Link>
-                    <Link
-                      href="/dashboard"
-                      onClick={() => setMenuOpen(false)}
-                      className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}
-                    >
-                      대시보드
-                    </Link>
+
                     {role === "admin" && (
                       <Link
                         href="/admin"

@@ -26,8 +26,6 @@ function isProfileRoute(pathname: string) {
   return pathname === "/profile" || pathname.startsWith("/profile/");
 }
 
-// Routes that exist as directories but are not linked in the header navigation.
-// Block access and redirect to home.
 const BLOCKED_ROUTES = [
   "/jobs",
   "/demoday",
@@ -93,10 +91,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
-  const response = await updateSession(request);
+  const { response, user } = await updateSession(request);
   const pathname = request.nextUrl.pathname;
 
-  // Block access to orphan routes not in header navigation
   if (isBlockedRoute(pathname)) {
     return redirectWithCookies(request, response, "/");
   }
@@ -108,28 +105,6 @@ export async function middleware(request: NextRequest) {
   if (!needsAdmin && !needsWriter && !needsAuth) {
     return response;
   }
-
-  const supabase = createServerClient<Database>(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            request.cookies.set(name, value);
-            response.cookies.set(name, value, options);
-          });
-        },
-      },
-    },
-  );
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
   if (!user) {
     if (needsWriter || needsAuth) {

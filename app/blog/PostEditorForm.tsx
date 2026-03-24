@@ -376,7 +376,6 @@ export default function PostEditorForm({ mode, post, initialTags = [] }: PostEdi
     }
 
     router.push(`/blog/${result.slug}`);
-    router.refresh();
   };
 
   /* ─── Save status display text ──────────────────────────────── */

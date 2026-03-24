@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 
 import { updateUserRole } from "@/lib/actions/admin";
 import CustomSelect from "@/components/ui/CustomSelect";
@@ -13,14 +12,15 @@ type UsersClientProps = {
   initialProfiles: Profile[];
 };
 
-type UserRole = "outsider" | "runner" | "preneur" | "admin";
+type UserRole = "outsider" | "runner" | "preneur" | "member" | "admin";
 
-const ROLE_OPTIONS: UserRole[] = ["admin", "preneur", "runner", "outsider"];
+const ROLE_OPTIONS: UserRole[] = ["admin", "member", "preneur", "runner", "outsider"];
 
 const ROLE_COLORS: Record<UserRole, string> = {
   admin: "#DC2626",
-  preneur: "#F59E0B", // Amber/Orange
-  runner: "#2563EB", // Blue
+  member: "#2563EB",
+  preneur: "#7C3AED",
+  runner: "#0F766E",
   outsider: "#6b6b5e",
 };
 
@@ -28,11 +28,12 @@ function formatRoleLabel(role: UserRole) {
   if (role === "outsider") return "외부인";
   if (role === "runner") return "러너";
   if (role === "preneur") return "프러너";
+  if (role === "member") return "부원";
   return "관리자";
 }
 
 function isProfileRole(value: string): value is UserRole {
-  return value === "admin" || value === "preneur" || value === "runner" || value === "outsider";
+  return value === "admin" || value === "member" || value === "preneur" || value === "runner" || value === "outsider";
 }
 
 function formatJoinedDate(date: string) {
@@ -44,7 +45,6 @@ function formatJoinedDate(date: string) {
 }
 
 export default function UsersClient({ initialProfiles }: UsersClientProps) {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState("");
 
@@ -68,7 +68,6 @@ export default function UsersClient({ initialProfiles }: UsersClientProps) {
           return;
         }
 
-        router.refresh();
       })();
     });
   };

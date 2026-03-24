@@ -1,7 +1,6 @@
 "use client";
 
 import { useTransition } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 import { updateApplicationStatus } from "@/lib/actions/applications";
@@ -53,7 +52,6 @@ function formatDate(date: string) {
 }
 
 export default function ApplicationsClient({ initialApplications }: ApplicationsClientProps) {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const handleStatusChange = (appId: string, nextStatus: ApplicationStatus) => {
@@ -66,7 +64,6 @@ export default function ApplicationsClient({ initialApplications }: Applications
           return;
         }
 
-        router.refresh();
       })();
     });
   };
@@ -142,7 +139,7 @@ export default function ApplicationsClient({ initialApplications }: Applications
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <Link
-                            href={`/dashboard/applications/${app.id}`}
+                            href={`/admin/applications/${app.id}`}
                             className="inline-flex h-8 items-center rounded-md border border-[#ddd9cc] px-3 text-xs font-medium text-[#16140f] hover:bg-[#fcfcf8]"
                           >
                             열람하기
@@ -197,7 +194,7 @@ export default function ApplicationsClient({ initialApplications }: Applications
                   />
                   <div className="flex items-center gap-2">
                     <Link
-                      href={`/dashboard/applications/${app.id}`}
+                      href={`/admin/applications/${app.id}`}
                       className="inline-flex h-8 items-center rounded-md border border-[#ddd9cc] px-3 text-xs font-medium text-[#16140f] hover:bg-[#fcfcf8]"
                     >
                       열람하기
