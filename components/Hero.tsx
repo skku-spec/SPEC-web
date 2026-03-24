@@ -1,10 +1,6 @@
 "use client";
 
 import ApplyButton from "@/components/ui/ApplyButton";
-import {
-  RECRUITMENT_BATCH,
-  RECRUITMENT_DEADLINE_LABEL,
-} from "@/lib/recruitment-schedule";
 export default function Hero() {
   return (
     <section
@@ -13,13 +9,6 @@ export default function Hero() {
     >
       <div className="relative flex h-[85vh] md:h-[90vh] flex-col items-center justify-center px-6">
        <div className="flex max-w-[1200px] flex-col items-center gap-8 mx-auto">
-          {/* Batch badge */}
-          <div className="relative inline-flex rounded-full p-[1px]" style={{ background: 'linear-gradient(135deg, rgba(249,115,22,0.6) 0%, rgba(255,255,255,0.12) 100%)' }}>
-            <span className="inline-block rounded-full bg-black/80 px-5 py-1.5 font-['Outfit',sans-serif] text-xs uppercase tracking-[0.1em] text-white/75">
-              {RECRUITMENT_BATCH.heroBadgeLabel}
-            </span>
-          </div>
-
             {/* Main headline */}
              <h1
                className="text-center font-black uppercase leading-[0.9] tracking-[-0.03em] text-white text-[36px] sm:text-[48px] md:text-[72px] lg:text-[96px]"
