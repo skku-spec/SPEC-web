@@ -2,10 +2,10 @@
 
 import {
   createContext,
-  useCallback,
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import type { User } from "@supabase/supabase-js";
@@ -31,47 +31,47 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  const loadUser = useCallback(async () => {
-    const supabase = createClient();
-
-    const {
-      data: { user: currentUser },
-    } = await supabase.auth.getUser();
-
-    setUser(currentUser);
-
-    if (!currentUser) {
-      setProfile(null);
-      setIsLoading(false);
-      return;
-    }
-
-    const { data: currentProfile } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", currentUser.id)
-      .maybeSingle();
-
-    setProfile(currentProfile ?? null);
-    setIsLoading(false);
-  }, []);
+  const fetchRef = useRef<() => Promise<void>>(async () => {});
 
   useEffect(() => {
     const supabase = createClient();
 
-    void loadUser();
+    async function fetchUser() {
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
+
+      setUser(currentUser);
+
+      if (!currentUser) {
+        setProfile(null);
+        setIsLoading(false);
+        return;
+      }
+
+      const { data: currentProfile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", currentUser.id)
+        .maybeSingle();
+
+      setProfile(currentProfile ?? null);
+      setIsLoading(false);
+    }
+
+    fetchRef.current = fetchUser;
+    fetchUser();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(() => {
-      void loadUser();
+      fetchUser();
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [loadUser]);
+  }, []);
 
   const value = useMemo<UserContextValue>(
     () => ({
@@ -80,9 +80,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       role: (profile?.role as UserRole | null) ?? "outsider",
       isLoading,
       isAuthenticated: Boolean(user),
-      refreshUser: loadUser,
+      refreshUser: async () => { await fetchRef.current?.(); },
     }),
-    [user, profile, isLoading, loadUser],
+    [user, profile, isLoading],
   );
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -47,18 +47,15 @@ export default function Navbar() {
   const dropdownBg = isHome ? "bg-black/90 border-white/10" : "bg-white border-gray-200";
   const dropdownText = isHome ? "text-white/80 hover:text-white hover:bg-white/10" : "text-[#16140f] hover:bg-gray-100";
 
-  const displayName = useMemo(
-    () =>
-      (profile?.first_name && profile?.last_name
-        ? `${profile.first_name} ${profile.last_name}`
-        : profile?.name?.trim()) ||
-      user?.email?.split("@")[0] ||
-      "사용자",
-    [profile?.first_name, profile?.last_name, profile?.name, user?.email],
-  );
-  const roleLabel = useMemo(() => ROLE_LABEL[role] ?? "외부", [role]);
-  const initials = useMemo(() => getInitials(displayName), [displayName]);
-  const applyDdayLabel = useMemo(() => getRecruitmentApplyDdayLabel(), []);
+  const displayName =
+    (profile?.first_name && profile?.last_name
+      ? `${profile.first_name} ${profile.last_name}`
+      : profile?.name?.trim()) ||
+    user?.email?.split("@")[0] ||
+    "사용자";
+  const roleLabel = ROLE_LABEL[role] ?? "외부";
+  const initials = getInitials(displayName);
+  const applyDdayLabel = getRecruitmentApplyDdayLabel();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [showComingSoon, setShowComingSoon] = useState(false);
