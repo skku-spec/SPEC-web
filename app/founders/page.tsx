@@ -34,6 +34,11 @@ function normalizeMemberType(
 export default async function FoundersPage() {
   const supabase = await createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const isLoggedIn = Boolean(user);
+
   const [{ data: memberRows }, { data: projectRows }, { data: memberProjectRows }] =
     await Promise.all([
       supabase
@@ -125,6 +130,7 @@ export default async function FoundersPage() {
       batchOptions={batchOptions}
       memberTypeOptions={memberTypeOptions}
       projectOptions={projectOptions}
+      isLoggedIn={isLoggedIn}
     />
   );
 }

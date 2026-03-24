@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Providers from "@/components/Providers";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://skku-spec.com"),
@@ -47,13 +48,15 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <div className="relative w-full max-w-[100vw] overflow-x-clip">
-          <div className="relative z-10">
-            <Navbar />
-            <main>{children}</main>
-            <Footer />
+        <Providers>
+          <div className="relative w-full max-w-[100vw] overflow-x-clip">
+            <div className="relative z-10">
+              <Navbar />
+              <main>{children}</main>
+              <Footer />
+            </div>
           </div>
-        </div>
+        </Providers>
       </body>
     </html>
   );

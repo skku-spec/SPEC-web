@@ -1,14 +1,20 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import type { User } from "@supabase/supabase-js";
 
 import type { Database } from "@/lib/supabase/types";
 
-export async function updateSession(request: NextRequest) {
+type SessionResult = {
+  response: NextResponse;
+  user: User | null;
+};
+
+export async function updateSession(request: NextRequest): Promise<SessionResult> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    return NextResponse.next({ request });
+    return { response: NextResponse.next({ request }), user: null };
   }
 
   let response = NextResponse.next({
@@ -36,7 +42,9 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  return response;
+  return { response, user };
 }

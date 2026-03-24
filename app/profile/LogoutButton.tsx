@@ -16,7 +16,6 @@ export default function LogoutButton() {
     await supabase.auth.signOut();
 
     router.push("/");
-    router.refresh();
     setIsLoading(false);
   };
 

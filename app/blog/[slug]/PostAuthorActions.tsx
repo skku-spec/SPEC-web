@@ -43,11 +43,10 @@ export default function PostAuthorActions({
       const result = await deletePost(postId);
       if (result.success) {
         router.push("/blog");
-        router.refresh();
       } else {
         alert(`삭제 실패: ${result.error || "알 수 없는 오류가 발생했습니다."}`);
       }
-    } catch (error) {
+    } catch {
       alert("삭제 중 오류가 발생했습니다.");
     } finally {
       setIsDeleting(false);
@@ -59,11 +58,10 @@ export default function PostAuthorActions({
     try {
       const result = await togglePublished(postId);
       if (result.success) {
-        router.refresh();
       } else {
         alert(`발행 상태 변경 실패: ${result.error || "알 수 없는 오류가 발생했습니다."}`);
       }
-    } catch (error) {
+    } catch {
       alert("발행 상태 변경 중 오류가 발생했습니다.");
     } finally {
       setIsToggling(false);

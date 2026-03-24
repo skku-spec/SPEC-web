@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import CustomSelect from "@/components/ui/CustomSelect";
 
 import { createLibraryItem, deleteLibraryItem } from "@/lib/actions/library";
@@ -30,7 +29,6 @@ function formatDate(date: string) {
 }
 
 export default function LibraryClient({ initialItems }: LibraryClientProps) {
-  const router = useRouter();
   const [showForm, setShowForm] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -45,7 +43,6 @@ export default function LibraryClient({ initialItems }: LibraryClientProps) {
         }
 
         setShowForm(false);
-        router.refresh();
       })();
     });
   };
@@ -65,7 +62,6 @@ export default function LibraryClient({ initialItems }: LibraryClientProps) {
           return;
         }
 
-        router.refresh();
       })();
     });
   };

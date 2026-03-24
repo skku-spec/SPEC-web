@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -12,6 +12,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 
 import ApplyButton from "@/components/ui/ApplyButton";
+
 const ROLE_LABEL: Record<string, string> = {
   outsider: "외부인",
   runner: "러너",
@@ -59,11 +60,11 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showComingSoon, setShowComingSoon] = useState(false);
 
-  const handleComingSoon = () => {
+  const handleComingSoon = useCallback(() => {
     setShowComingSoon(true);
     setMenuOpen(false);
     setTimeout(() => setShowComingSoon(false), 2000);
-  };
+  }, []);
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
@@ -72,40 +73,16 @@ export default function Navbar() {
     };
   }, [menuOpen]);
 
-  const handleSignOut = async () => {
+  const handleSignOut = useCallback(async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
     setMenuOpen(false);
-    router.refresh();
-  };
+    router.push("/");
+  }, [router]);
 
   return (
     <div className={`sticky top-0 isolate z-50 ${isHome ? "bg-transparent" : "bg-[#f5f5ee]"}`}>
-      {RECRUITMENT_BATCH.showBanner && (
-        <div className="bg-[#FF6C0F] text-[#FCFCF8] text-center py-[10px] px-[6px]">
-          <Link
-            href="/apply"
-            className="inline-flex items-center gap-1.5 font-['Pretendard',sans-serif] text-sm font-normal tracking-wide hover:opacity-80 transition-opacity no-underline text-white"
-          >
-            {`${RECRUITMENT_BATCH.bannerLabel} — 지원 마감 ${applyDdayLabel}`}
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 20 20"
-              fill="none"
-              className="ml-0.5"
-            >
-              <path
-                d="M8 6L12 10L8 14"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="square"
-                strokeLinejoin="miter"
-              />
-            </svg>
-          </Link>
-        </div>
-      )}
+      {/* Recruitment banner removed */}
 
       <nav>
           <div className="relative hidden min-[1024px]:flex items-center justify-center w-full max-w-[1600px] mx-auto px-8 lg:px-10 py-2">
@@ -137,12 +114,19 @@ export default function Navbar() {
                   <Link href="/curriculum" className={`dropdown-item block px-4 py-2 ${dropdownText} rounded text-sm font-['Pretendard',sans-serif]`}>
                     커리큘럼
                   </Link>
-                  <Link href="/apply" className={`dropdown-item block px-4 py-2 ${dropdownText} rounded text-sm font-['Pretendard',sans-serif]`}>
-                    지원하기
-                  </Link>
                   <Link href="/people" className={`dropdown-item block px-4 py-2 ${dropdownText} rounded text-sm font-['Pretendard',sans-serif]`}>
                     멤버
                   </Link>
+                  {isAuthenticated && (
+                    <>
+                      <Link href="/profile" className={`dropdown-item block px-4 py-2 ${dropdownText} rounded text-sm font-['Pretendard',sans-serif]`}>
+                        내 프로필
+                      </Link>
+                      <Link href="/apply/status" className={`dropdown-item block px-4 py-2 ${dropdownText} rounded text-sm font-['Pretendard',sans-serif]`}>
+                        지원 현황 확인
+                      </Link>
+                    </>
+                  )}
 
                 </div>
               </div>
@@ -233,9 +217,7 @@ export default function Navbar() {
           </div>
 
           <div className="absolute right-8 lg:right-10 flex items-center gap-3">
-           <ApplyButton href={isAuthenticated ? "/apply" : "/login?redirect=/apply"} size="sm">
-              Apply
-            </ApplyButton>
+            {/* Apply button removed */}
 
 
             {isAuthenticated ? (
@@ -272,11 +254,7 @@ export default function Navbar() {
                     <Link href="/profile" className="dropdown-item block px-4 py-2 text-[#16140f] hover:bg-gray-100 rounded text-sm font-['Pretendard',sans-serif]">
                       내 프로필
                     </Link>
-                    {role !== "outsider" && (
-                      <Link href="/dashboard/applications" className="dropdown-item block px-4 py-2 text-[#16140f] hover:bg-gray-100 rounded text-sm font-['Pretendard',sans-serif]">
-                        지원서 대시보드
-                      </Link>
-                    )}
+
                     {role === "admin" && (
                       <Link href="/admin" className="dropdown-item block px-4 py-2 text-[#16140f] hover:bg-gray-100 rounded text-sm font-['Pretendard',sans-serif]">
                         관리자
@@ -373,9 +351,6 @@ export default function Navbar() {
                 <Link href="/curriculum" onClick={() => setMenuOpen(false)} className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}>
                   커리큘럼
                 </Link>
-                <Link href="/apply" onClick={() => setMenuOpen(false)} className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}>
-                  지원하기
-                </Link>
                 <Link href="/people" onClick={() => setMenuOpen(false)} className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}>
                   멤버
                 </Link>
@@ -424,38 +399,28 @@ export default function Navbar() {
                 </Link>
               </div>
 
-              {isAuthenticated && role !== "outsider" && (
+              {isAuthenticated && role !== "outsider" && role !== "runner" && (
                 <>
                   <p className={`mb-3 mt-6 text-xs font-semibold uppercase tracking-widest font-['Pretendard',sans-serif] ${isHome ? "text-white/40" : "text-[#16140f]/40"}`}>
                     멤버 메뉴
                   </p>
                   <div className="mb-6 flex flex-col gap-1">
-                    <Link href="/dashboard/applications" onClick={() => setMenuOpen(false)} className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}>
-                      지원서 대시보드
-                    </Link>
+
                     {role === "admin" && (
-                      <Link href="/admin" onClick={() => setMenuOpen(false)} className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}>
+                      <Link
+                        href="/admin"
+                        onClick={() => setMenuOpen(false)}
+                        className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}
+                      >
                         관리자 패널
                       </Link>
                     )}
                   </div>
                 </>
               )}
-
             </div>
 
-            <div className={`px-6 py-5 ${isHome ? "border-t border-white/10" : "border-t border-[#16140f]/10"}`}>
-             <ApplyButton
-                href={isAuthenticated ? "/apply" : "/login?redirect=/apply"}
-                size="sm"
-                fullWidth
-                className="mb-4 py-3"
-                onClick={() => setMenuOpen(false)}
-              >
-                Apply Now
-              </ApplyButton>
-
-
+            <div className={`shrink-0 px-6 py-5 ${isHome ? "border-t border-white/10" : "border-t border-[#16140f]/10"}`}>
               {isAuthenticated ? (
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">

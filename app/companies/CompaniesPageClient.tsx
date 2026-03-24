@@ -276,14 +276,12 @@ function FilterCheckbox({
   onChange,
   count,
   small = false,
-  blue = false,
 }: {
   label: string;
   checked: boolean;
   onChange: () => void;
   count?: number;
   small?: boolean;
-  blue?: boolean;
 }) {
   return (
     <label className="flex cursor-pointer items-center gap-2.5 rounded-md px-1 py-1.5 transition-colors hover:bg-black/3">
@@ -291,11 +289,7 @@ function FilterCheckbox({
         type="checkbox"
         checked={checked}
         onChange={onChange}
-        className={`h-4 w-4 shrink-0 cursor-pointer rounded border-black/20 focus:ring-offset-0 ${
-          blue
-            ? "text-[#4d80f0] accent-[#4d80f0] focus:ring-[#4d80f0]/30"
-            : "text-[#FF6C0F] accent-[#FF6C0F] focus:ring-[#FF6C0F]/30"
-        }`}
+        className="h-4 w-4 shrink-0 cursor-pointer rounded border-black/20 text-[#FF6C0F] accent-[#FF6C0F] focus:ring-[#FF6C0F]/30 focus:ring-offset-0"
       />
       <span className={`font-['Pretendard',sans-serif] font-normal text-black/80 ${small ? "text-[13px]" : "text-[14px]"}`}>
         {label}
@@ -370,7 +364,6 @@ function FilterSection({
                 checked={allChecked}
                 onChange={onAllChange}
                 count={allCount}
-                blue
               />
             )}
             {visibleChildren}

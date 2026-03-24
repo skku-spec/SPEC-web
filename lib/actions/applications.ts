@@ -151,7 +151,7 @@ export async function submitApplication(formData: FormData): Promise<Application
   // 7. Success — INSERT policy is permissive (WITH CHECK true),
   // so if error is null the row was definitely saved.
 
-  revalidatePath("/dashboard/applications");
+  revalidatePath("/admin/applications");
   return { success: true };
 }
 
@@ -191,7 +191,7 @@ export async function deleteApplication(id: string): Promise<ApplicationState> {
     return { error: "삭제 권한이 없거나 해당 데이터를 찾을 수 없습니다." };
   }
 
-  revalidatePath("/dashboard/applications");
+  revalidatePath("/admin/applications");
   return { success: true };
 }
 
@@ -250,7 +250,7 @@ export async function updateApplicationStatus(
   }
 
   revalidatePath("/admin/applications");
-  revalidatePath("/dashboard/applications");
+  revalidatePath("/admin/applications");
   return { success: true };
 }
 

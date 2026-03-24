@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 
 import { updateUserRole } from "@/lib/actions/admin";
 import CustomSelect from "@/components/ui/CustomSelect";
@@ -46,7 +45,6 @@ function formatJoinedDate(date: string) {
 }
 
 export default function UsersClient({ initialProfiles }: UsersClientProps) {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState("");
 
@@ -70,7 +68,6 @@ export default function UsersClient({ initialProfiles }: UsersClientProps) {
           return;
         }
 
-        router.refresh();
       })();
     });
   };

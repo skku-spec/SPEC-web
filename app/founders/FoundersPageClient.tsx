@@ -30,6 +30,7 @@ interface FoundersPageClientProps {
   batchOptions: string[];
   memberTypeOptions: Array<Member["memberType"]>;
   projectOptions: ProjectOption[];
+  isLoggedIn: boolean;
 }
 
 export default function FoundersPageClient({
@@ -37,6 +38,7 @@ export default function FoundersPageClient({
   batchOptions: BATCH_OPTIONS,
   memberTypeOptions: MEMBER_TYPE_OPTIONS,
   projectOptions: PROJECT_OPTIONS,
+  isLoggedIn,
 }: FoundersPageClientProps) {
   const PROJECT_LABEL_MAP: Record<string, string> = useMemo(() => Object.fromEntries(
     PROJECT_OPTIONS.map((p) => [p.value, p.label])
@@ -120,13 +122,15 @@ export default function FoundersPageClient({
       <div className="mx-auto max-w-[1100px]">
         <div className="mb-10 text-center">
           <PageHeader title="Members" subtitle="SPEC 멤버 디렉토리입니다." align="center" className="mb-0 md:mb-0" />
-          <p className="mx-auto mt-6 font-['Pretendard',sans-serif] text-[15px] font-normal text-black/60">
-            SPEC 알럼나이를 찾고 계신가요?{" "}
-            <Link href="/login" className="underline text-[#FF6C0F] hover:text-[#e55c00]">
-              로그인
-            </Link>
-            하여 확인하세요.
-          </p>
+          {!isLoggedIn && (
+            <p className="mx-auto mt-6 font-['Pretendard',sans-serif] text-[15px] font-normal text-black/60">
+              SPEC 알럼나이를 찾고 계신가요?{" "}
+              <Link href="/login" className="underline text-[#FF6C0F] hover:text-[#e55c00]">
+                로그인
+              </Link>
+              하여 확인하세요.
+            </p>
+          )}
         </div>
 
         {/* Mobile filters */}
