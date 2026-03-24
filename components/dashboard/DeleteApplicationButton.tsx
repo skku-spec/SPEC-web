@@ -28,7 +28,7 @@ export default function DeleteApplicationButton({ id, applicantName }: DeleteApp
           router.push("/admin/applications");
         }
       }
-    } catch (error) {
+    } catch {
       alert("삭제 중 오류가 발생했습니다.");
     } finally {
       setIsDeleting(false);
