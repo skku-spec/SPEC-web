@@ -175,12 +175,25 @@ export default function Navbar() {
                   <Link href="/curriculum" className={`dropdown-item block px-4 py-2 ${dropdownText} rounded text-sm font-['Pretendard',sans-serif]`}>
                     커리큘럼
                   </Link>
-                  <Link href="/apply" className={`dropdown-item block px-4 py-2 ${dropdownText} rounded text-sm font-['Pretendard',sans-serif]`}>
-                    지원하기
-                  </Link>
                   <Link href="/people" className={`dropdown-item block px-4 py-2 ${dropdownText} rounded text-sm font-['Pretendard',sans-serif]`}>
                     멤버
                   </Link>
+                  {isAuthenticated && (
+                    <>
+                      <div className={`mx-4 my-2 h-px ${isHome ? "bg-white/10" : "bg-[#16140f]/10"}`} />
+                      <Link href="/profile" className={`dropdown-item block px-4 py-2 ${isHome ? "text-[#FF6C0F]" : "text-[#FF6C0F]"} hover:bg-white/5 rounded text-sm font-medium font-['Pretendard',sans-serif]`}>
+                        내 프로필
+                      </Link>
+                      <Link href="/apply/status" className={`dropdown-item block px-4 py-2 ${isHome ? "text-[#FF6C0F]" : "text-[#FF6C0F]"} hover:bg-white/5 rounded text-sm font-medium font-['Pretendard',sans-serif]`}>
+                        지원 현황 확인
+                      </Link>
+                      {role === "admin" && (
+                        <Link href="/admin" className={`dropdown-item block px-4 py-2 ${isHome ? "text-[#FF6C0F]" : "text-[#FF6C0F]"} hover:bg-white/5 rounded text-sm font-medium font-['Pretendard',sans-serif]`}>
+                          관리자
+                        </Link>
+                      )}
+                    </>
+                  )}
 
                 </div>
               </div>
@@ -404,13 +417,36 @@ export default function Navbar() {
                 <Link href="/curriculum" onClick={() => setMenuOpen(false)} className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}>
                   커리큘럼
                 </Link>
-                <Link href="/apply" onClick={() => setMenuOpen(false)} className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}>
-                  지원하기
-                </Link>
                 <Link href="/people" onClick={() => setMenuOpen(false)} className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}>
                   멤버
                 </Link>
-
+                {isAuthenticated && role !== "outsider" && role !== "runner" && (
+                  <>
+                    <Link
+                      href="/profile"
+                      onClick={() => setMenuOpen(false)}
+                      className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}
+                    >
+                      내 프로필
+                    </Link>
+                    <Link
+                      href="/apply/status"
+                      onClick={() => setMenuOpen(false)}
+                      className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}
+                    >
+                      지원 현황 확인
+                    </Link>
+                    {role === "admin" && (
+                      <Link
+                        href="/admin"
+                        onClick={() => setMenuOpen(false)}
+                        className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}
+                      >
+                        관리자
+                      </Link>
+                    )}
+                  </>
+                )}
               </div>
 
               <p className={`mb-3 text-xs font-semibold uppercase tracking-widest font-['Pretendard',sans-serif] ${isHome ? "text-white/40" : "text-[#16140f]/40"}`}>
@@ -456,17 +492,7 @@ export default function Navbar() {
               </div>
             </div>
 
-            <div className={`px-6 py-5 ${isHome ? "border-t border-white/10" : "border-t border-[#16140f]/10"}`}>
-             <ApplyButton
-                href={isAuthenticated ? "/apply" : "/login?redirect=/apply"}
-                size="sm"
-                fullWidth
-                className="mb-4 py-3"
-                onClick={() => setMenuOpen(false)}
-              >
-                Apply Now
-              </ApplyButton>
-
+            <div className={`shrink-0 px-6 py-5 ${isHome ? "border-t border-white/10" : "border-t border-[#16140f]/10"}`}>
               {isAuthenticated ? (
                 <>
                 <div className="flex items-center justify-between">
@@ -490,26 +516,6 @@ export default function Navbar() {
                   >
                     로그아웃
                   </button>
-                </div>
-                <div className="mt-3 flex flex-col gap-1">
-                  <Link
-                    href="/apply/status"
-                    onClick={() => setMenuOpen(false)}
-                    className={`block rounded-lg px-3 py-2 text-[13px] font-['Pretendard',sans-serif] font-medium transition-colors ${
-                      isHome ? "text-white/60 hover:text-white hover:bg-white/5" : "text-[#16140f]/60 hover:text-[#16140f] hover:bg-[#16140f]/5"
-                    }`}
-                  >
-                    지원 현황 확인
-                  </Link>
-                  <Link
-                    href="/profile"
-                    onClick={() => setMenuOpen(false)}
-                    className={`block rounded-lg px-3 py-2 text-[13px] font-['Pretendard',sans-serif] font-medium transition-colors ${
-                      isHome ? "text-white/60 hover:text-white hover:bg-white/5" : "text-[#16140f]/60 hover:text-[#16140f] hover:bg-[#16140f]/5"
-                    }`}
-                  >
-                    내 프로필
-                  </Link>
                 </div>
                 </>
               ) : (
