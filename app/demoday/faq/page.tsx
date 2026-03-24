@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getAllFaqItems } from "@/lib/actions/faq";
 
 export const metadata: Metadata = {
   title: "Demo Day FAQ | SPEC",
@@ -18,7 +19,7 @@ interface FAQSection {
   items: FAQItem[];
 }
 
-const FAQ_SECTIONS: FAQSection[] = [
+const FALLBACK_FAQ_SECTIONS: FAQSection[] = [
   {
     id: "the-basics",
     title: "기본 정보",
@@ -109,7 +110,33 @@ const FAQ_SECTIONS: FAQSection[] = [
   },
 ];
 
-export default function DemoDayFAQPage() {
+export default async function DemoDayFAQPage() {
+  // Fetch FAQ items from DB
+  const result = await getAllFaqItems();
+  const faqItems = result.data ?? [];
+
+  // Group items by section
+  const sections = faqItems.reduce((acc, item) => {
+    if (!acc[item.section]) {
+      acc[item.section] = { title: item.section_title, items: [] };
+    }
+    acc[item.section].items.push(item);
+    return acc;
+  }, {} as Record<string, { title: string; items: typeof faqItems }>);
+
+  // If DB is empty, use hardcoded fallback
+  const hasFaqData = faqItems.length > 0;
+  const displaySections = hasFaqData
+    ? Object.entries(sections).map(([id, data]) => ({
+        id,
+        title: data.title,
+        items: data.items.map((item) => ({
+          question: item.question,
+          answer: item.answer,
+        })),
+      }))
+    : FALLBACK_FAQ_SECTIONS;
+
   return (
     <div className="flex-1 px-4 pb-24 pt-14 md:pt-20">
       <div className="mx-auto max-w-[1100px]">
@@ -120,7 +147,7 @@ export default function DemoDayFAQPage() {
         <div className="flex flex-col gap-12 md:flex-row">
           <nav className="shrink-0 md:sticky md:top-24 md:w-[170px] md:self-start">
             <ul className="flex gap-3 md:flex-col md:gap-1">
-              {FAQ_SECTIONS.map((section) => (
+              {displaySections.map((section) => (
                 <li key={section.id}>
                    <a
                      href={`#${section.id}`}
@@ -134,7 +161,7 @@ export default function DemoDayFAQPage() {
           </nav>
 
           <article className="min-w-0 flex-1">
-            {FAQ_SECTIONS.map((section, sectionIndex) => (
+            {displaySections.map((section, sectionIndex) => (
               <section
                 key={section.id}
                 id={section.id}
