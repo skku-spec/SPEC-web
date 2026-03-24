@@ -165,3 +165,5 @@ export function getRecruitmentApplyDdayLabel(referenceDate: Date = new Date()) {
 
   return "마감";
 }
+
+

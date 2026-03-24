@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import ScrollBackground from "@/components/ScrollBackground";
 import Hero from "@/components/Hero";
+import RecruitmentCard from "@/components/RecruitmentCard";
 
 const Philosophy = dynamic(() => import("@/components/Philosophy"));
 const Manifesto = dynamic(() => import("@/components/Manifesto"));
@@ -55,6 +56,12 @@ export default function Home() {
       <div className="landing-section relative z-10 py-16 md:py-32">
         <div className="mx-auto max-w-[960px] px-6">
           <Manifesto />
+        </div>
+      </div>
+
+      <div className="landing-section relative z-10 py-8 md:py-16">
+        <div className="mx-auto max-w-[960px] px-6">
+          <RecruitmentCard />
         </div>
       </div>
 

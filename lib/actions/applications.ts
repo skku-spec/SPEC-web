@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { rateLimit } from "@/lib/rate-limit";
+import { getActiveRecruitment } from "@/lib/actions/recruitment";
 
 export type ApplicationState = {
   success?: boolean;
@@ -42,6 +43,13 @@ export async function submitApplication(formData: FormData): Promise<Application
   if (!rateLimitResult.allowed) {
     const retryMinutes = Math.ceil(rateLimitResult.retryAfterMs / 60_000);
     return { error: `너무 많은 요청입니다. ${retryMinutes}분 후에 다시 시도해주세요.` };
+  }
+
+  // 1.5. Recruitment status check
+  const recruitmentResult = await getActiveRecruitment();
+  const recruitment = recruitmentResult?.data ?? null;
+  if (!recruitment || recruitment.status !== "recruiting") {
+    return { error: "현재 모집 기간이 아닙니다." };
   }
 
   // 2. Extract form data
@@ -582,6 +590,13 @@ export async function updateMyApplication(formData: FormData): Promise<Applicati
 
   if (!user) {
     return { error: "로그인이 필요합니다." };
+  }
+
+  // Recruitment status check
+  const recruitmentResult = await getActiveRecruitment();
+  const recruitment = recruitmentResult?.data ?? null;
+  if (!recruitment || recruitment.status !== "recruiting") {
+    return { error: "현재 모집 기간이 아닙니다." };
   }
 
   // Extract form data

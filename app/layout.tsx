@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import RecruitmentBanner from "@/components/RecruitmentBanner";
 import Footer from "@/components/Footer";
 import Providers from "@/components/Providers";
 
@@ -51,6 +52,7 @@ export default function RootLayout({
         <Providers>
           <div className="relative w-full max-w-[100vw] overflow-x-clip">
             <div className="relative z-10">
+              <RecruitmentBanner />
               <Navbar />
               <main>{children}</main>
               <Footer />

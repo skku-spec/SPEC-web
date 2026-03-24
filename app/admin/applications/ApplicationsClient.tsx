@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 
 import { updateApplicationStatus } from "@/lib/actions/applications";
@@ -54,6 +54,20 @@ function formatDate(date: string) {
 export default function ApplicationsClient({ initialApplications }: ApplicationsClientProps) {
   const [isPending, startTransition] = useTransition();
 
+  const batches = useMemo(() => {
+    const unique = [...new Set(initialApplications.map((a) => a.batch))];
+    return unique.sort((a, b) => Number(b) - Number(a));
+  }, [initialApplications]);
+
+  const [selectedBatch, setSelectedBatch] = useState<string>(() =>
+    batches.length > 0 ? batches[0] : "all",
+  );
+
+  const filteredApplications = useMemo(() => {
+    if (selectedBatch === "all") return initialApplications;
+    return initialApplications.filter((a) => a.batch === selectedBatch);
+  }, [initialApplications, selectedBatch]);
+
   const handleStatusChange = (appId: string, nextStatus: ApplicationStatus) => {
     startTransition(() => {
       void (async () => {
@@ -72,7 +86,22 @@ export default function ApplicationsClient({ initialApplications }: Applications
     <section>
       <div className="mx-auto max-w-6xl">
         <h1 className="mb-6 font-[system-ui] text-[clamp(2rem,4vw,2.75rem)] font-black">Applications</h1>
-        <p className="text-xs text-[#6b6b5e] sm:text-sm">총 {initialApplications.length}건</p>
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <CustomSelect
+            value={selectedBatch}
+            onChange={setSelectedBatch}
+            options={[
+              { value: "all", label: "전체" },
+              ...batches.map((b) => ({ value: b, label: `${b}기` })),
+            ]}
+            className="w-[120px]"
+          />
+          <p className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">
+            {selectedBatch === "all"
+              ? `총 ${initialApplications.length}건`
+              : `총 ${initialApplications.length}건 중 ${filteredApplications.length}건`}
+          </p>
+        </div>
 
         <div className="mt-4 hidden rounded-lg border border-[#ddd9cc] bg-white lg:block">
           <table className="min-w-full border-collapse">
@@ -88,7 +117,7 @@ export default function ApplicationsClient({ initialApplications }: Applications
               </tr>
             </thead>
             <tbody>
-              {initialApplications.length === 0 ? (
+              {filteredApplications.length === 0 ? (
                 <tr className="border-t border-[#ece8db]">
                   <td
                     colSpan={7}
@@ -98,7 +127,7 @@ export default function ApplicationsClient({ initialApplications }: Applications
                   </td>
                 </tr>
               ) : (
-                initialApplications.map((app) => {
+                filteredApplications.map((app) => {
                   const initial = app.name.trim().charAt(0).toUpperCase() || "?";
 
                   return (
@@ -156,12 +185,12 @@ export default function ApplicationsClient({ initialApplications }: Applications
         </div>
 
         <div className="space-y-3 lg:hidden">
-          {initialApplications.length === 0 ? (
+          {filteredApplications.length === 0 ? (
             <div className="rounded-lg border border-[#ddd9cc] bg-white p-4 sm:p-5">
               <p className="font-['Pretendard',sans-serif] text-sm text-[#6b6b5e]">아직 접수된 지원서가 없습니다.</p>
             </div>
           ) : (
-            initialApplications.map((app) => (
+            filteredApplications.map((app) => (
               <article key={app.id} className="rounded-lg border border-[#ddd9cc] bg-white p-4 sm:p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">

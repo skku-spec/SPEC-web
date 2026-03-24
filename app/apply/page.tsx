@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import ApplyButton from "@/components/ui/ApplyButton";
+import { getActiveRecruitment } from "@/lib/actions/recruitment";
 import { getCurrentUser } from "@/lib/auth";
 import { getMyApplication } from "@/lib/actions/applications";
 import { getRecruitmentTimeline } from "@/lib/recruitment-schedule";
+import RecruitmentClosedView from "./RecruitmentClosedView";
 import ApplicationStatusCard from "./status/ApplicationStatusCard";
 
 export const metadata: Metadata = {
@@ -14,6 +16,20 @@ export const metadata: Metadata = {
 };
 
 export default async function ApplyPage() {
+  const recruitmentResult = await getActiveRecruitment();
+  const recruitment = recruitmentResult?.data ?? null;
+
+  if (!recruitment || recruitment.status !== "recruiting") {
+    return (
+      <div className="min-h-screen bg-[#f5f5ee]">
+        <RecruitmentClosedView
+          status={(recruitment?.status as "closed" | "reviewing" | "upcoming") ?? "closed"}
+          batchLabel={recruitment?.short_label}
+        />
+      </div>
+    );
+  }
+
   const { user } = await getCurrentUser();
   const recruitmentTimeline = getRecruitmentTimeline();
 

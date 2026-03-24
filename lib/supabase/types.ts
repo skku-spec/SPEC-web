@@ -839,6 +839,72 @@ export type Database = {
         };
         Relationships: [];
       };
+      recruitment_settings: {
+        Row: {
+          id: string;
+          batch: string;
+          batch_label: string;
+          short_label: string;
+          banner_label: string;
+          hero_badge: string;
+          status: "recruiting" | "reviewing" | "closed" | "upcoming";
+          show_banner: boolean;
+          timeline_steps: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          batch: string;
+          batch_label: string;
+          short_label: string;
+          banner_label?: string;
+          hero_badge?: string;
+          status?: "recruiting" | "reviewing" | "closed" | "upcoming";
+          show_banner?: boolean;
+          timeline_steps?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          batch?: string;
+          batch_label?: string;
+          short_label?: string;
+          banner_label?: string;
+          hero_badge?: string;
+          status?: "recruiting" | "reviewing" | "closed" | "upcoming";
+          show_banner?: boolean;
+          timeline_steps?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      recruitment_waitlist: {
+        Row: {
+          id: string;
+          phone: string;
+          name: string | null;
+          email: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          phone: string;
+          name?: string | null;
+          email?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          phone?: string;
+          name?: string | null;
+          email?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;

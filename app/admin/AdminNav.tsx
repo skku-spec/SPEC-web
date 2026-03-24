@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   Users,
   ClipboardList,
+  Settings,
   FileText,
   BookOpen,
   type LucideIcon,
@@ -22,6 +23,7 @@ const NAV_ITEMS: AdminNavItem[] = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { label: "Users", href: "/admin/users", icon: Users },
   { label: "Applications", href: "/admin/applications", icon: ClipboardList },
+  { label: "모집 설정", href: "/admin/recruitment", icon: Settings },
   { label: "Posts", href: "/admin/posts", icon: FileText },
   { label: "Homework", href: "/admin/homework", icon: BookOpen },
 ];

@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 import { getActiveRecruitment } from "@/lib/actions/recruitment";
 
-export default async function ApplyFormLayout({ children }: { children: ReactNode }) {
+export default async function ApplyEditLayout({ children }: { children: ReactNode }) {
   const result = await getActiveRecruitment();
   const recruitment = result?.data ?? null;
 
