@@ -50,7 +50,7 @@ export default function Navbar() {
   const displayName = useMemo(
     () =>
       (profile?.first_name && profile?.last_name
-        ? `${profile.first_name} ${profile.last_name}`
+        ? `${profile.last_name}${profile.first_name}`
         : profile?.name?.trim()) ||
       user?.email?.split("@")[0] ||
       "사용자",

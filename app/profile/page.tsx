@@ -46,7 +46,7 @@ export default async function ProfilePage() {
 
   const name =
     profile?.first_name && profile?.last_name
-      ? `${profile.first_name} ${profile.last_name}`
+      ? `${profile.last_name}${profile.first_name}`
       : profile?.name || user.user_metadata?.name || user.email?.split("@")[0] || "SPEC 멤버";
   const email = user.email || "-";
   const role = normalizeRole(profile?.role);

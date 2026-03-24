@@ -28,8 +28,8 @@ BEGIN
   v_username := coalesce(nullif(trim(new.raw_user_meta_data->>'username'), ''), split_part(new.email, '@', 1));
   v_linkedin_url := coalesce(nullif(trim(new.raw_user_meta_data->>'linkedin_url'), ''), '');
 
-  -- Build display name from first + last, fallback to username, then email prefix
-  v_name := trim(coalesce(nullif(trim(v_first_name || ' ' || v_last_name), ''), v_username, split_part(new.email, '@', 1), '사용자'));
+  -- Build display name from last + first, fallback to username, then email prefix
+  v_name := trim(coalesce(nullif(trim(v_last_name || v_first_name), ''), v_username, split_part(new.email, '@', 1), '사용자'));
   v_slug_base := coalesce(nullif(public.slugify(v_username), ''), 'user');
 
   INSERT INTO public.profiles (
