@@ -11,6 +11,7 @@ type Homework = {
   submission_link?: string;
   is_individual: boolean;
   is_team: boolean;
+  due_date?: string | null;
   created_at: string;
 };
 
@@ -107,13 +108,31 @@ export function RunnerHomeworkClient() {
                     <span role="img" aria-label="책" className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f5f5ee] text-2xl transition-transform group-hover:scale-110">📖</span>
                     <div>
                       <h3 className="text-lg font-black text-[#16140f]">{hw.title}</h3>
-                      <div className="flex gap-2 mt-1">
+                      <div className="flex flex-wrap gap-2 mt-1">
                         {hw.is_individual && (
                           <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full ring-1 ring-blue-100 italic">Individual</span>
                         )}
                         {hw.is_team && (
                           <span className="text-[10px] font-black text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full ring-1 ring-purple-100 italic">Team</span>
                         )}
+                        {hw.due_date && (() => {
+                          const now = new Date();
+                          const due = new Date(hw.due_date);
+                          if (due.getTime() < now.getTime()) {
+                            return (
+                              <span className="rounded-full bg-[#FEE2E2] px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold text-[#b42318]">
+                                마감
+                              </span>
+                            );
+                          }
+                          const diffMs = due.getTime() - now.getTime();
+                          const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+                          return (
+                            <span className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">
+                              D-{diffDays}
+                            </span>
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>

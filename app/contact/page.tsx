@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
+import { getSiteConfig } from "@/lib/helpers/site-settings";
 
 export const metadata: Metadata = {
   title: "Contact | SPEC",
@@ -13,28 +14,8 @@ const pClass =
 const linkClass =
   "text-[#16140f] underline decoration-gray-500 underline-offset-2 transition-all hover:decoration-gray-700";
 
-const emailCategories = [
-  { label: "일반 문의", email: "spec.skku@gmail.com" },
-  { label: "지원 관련", email: "apply@spec-skku.org" },
-  { label: "제휴/협업", email: "partnership@spec-skku.org" },
-  { label: "언론 문의", email: "press@spec-skku.org" },
-];
-
-const socialLinks = [
-  { label: "Blog", href: "/blog", internal: true },
-  {
-    label: "Instagram",
-    href: "https://instagram.com/spec.skku",
-    internal: false,
-  },
-  {
-    label: "LinkedIn",
-    href: "https://linkedin.com/company/spec-skku",
-    internal: false,
-  },
-];
-
-export default function ContactPage() {
+export default async function ContactPage() {
+  const config = await getSiteConfig();
   return (
     <main className="flex-1 px-4 pb-24 pt-14 md:pt-20">
       <div className="mx-auto max-w-[720px]">
@@ -55,7 +36,12 @@ export default function ContactPage() {
           </p>
 
           <div className="mb-8 space-y-4">
-            {emailCategories.map((item) => (
+            {[
+              { label: "일반 문의", email: config.contact_general_email },
+              { label: "지원 관련", email: config.contact_apply_email },
+              { label: "제휴/협업", email: config.contact_partnership_email },
+              { label: "언론 문의", email: config.contact_press_email },
+            ].map((item) => (
               <div key={item.email}>
                 <p className="font-['Pretendard',sans-serif] text-[15px] font-normal text-[#16140f]/60">
                   {item.label}
@@ -75,8 +61,7 @@ export default function ContactPage() {
               오피스 주소
             </p>
             <p className="font-['Pretendard',sans-serif] text-[18px] font-normal text-[#16140f]">
-              성균관대학교 자연과학캠퍼스<br/>
-              서울특별시 종로구 성균관로 25-2
+              {config.contact_office_address}
             </p>
           </div>
         </div>
@@ -86,7 +71,11 @@ export default function ContactPage() {
             소셜 미디어
           </h3>
           <ul className="space-y-2">
-            {socialLinks.map((link) => (
+            {[
+              { label: "Blog", href: "/blog", internal: true },
+              { label: "Instagram", href: config.social_instagram, internal: false },
+              { label: "LinkedIn", href: config.social_linkedin, internal: false },
+            ].map((link) => (
               <li key={link.label}>
                 {link.internal ? (
                   <Link

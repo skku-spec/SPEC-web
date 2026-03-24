@@ -905,6 +905,48 @@ export type Database = {
         };
         Relationships: [];
       };
+      site_settings: {
+        Row: {
+          id: string;
+          key: string;
+          value: string;
+          category: string;
+          label: string;
+          description: string | null;
+          value_type: string;
+          sort_order: number;
+          updated_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          key: string;
+          value?: string;
+          category?: string;
+          label?: string;
+          description?: string | null;
+          value_type?: string;
+          sort_order?: number;
+          updated_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          key?: string;
+          value?: string;
+          category?: string;
+          label?: string;
+          description?: string | null;
+          value_type?: string;
+          sort_order?: number;
+          updated_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;

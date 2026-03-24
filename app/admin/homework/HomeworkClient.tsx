@@ -25,6 +25,7 @@ type Homework = {
   padlet_board_id?: string;
   is_individual: boolean;
   is_team: boolean;
+  due_date?: string | null;
   created_at: string;
 };
 
@@ -78,6 +79,7 @@ export function HomeworkClient() {
   const [teamTasks, setTeamTasks] = useState<string[]>([""]);
   const [isIndividual, setIsIndividual] = useState(true);
   const [isTeam, setIsTeam] = useState(false);
+  const [dueDate, setDueDate] = useState("");
   const [teams, setTeams] = useState<TeamAssignment[]>([]);
   const [teamSearchQueries, setTeamSearchQueries] = useState<string[]>([]);
 
@@ -202,6 +204,7 @@ export function HomeworkClient() {
           team_content: isTeam ? teamTasks.filter(t => t.trim() !== "") : [],
           is_individual: isIndividual,
           is_team: isTeam,
+          due_date: dueDate ? new Date(dueDate).toISOString() : null,
         },
       ])
       .select()
@@ -240,6 +243,7 @@ export function HomeworkClient() {
     setNewTitle("");
     setSubmissionLink("");
     setPadletBoardId("");
+    setDueDate("");
     setIndividualTasks([""]);
     setTeamTasks([""]);
     setIsIndividual(true);
@@ -454,6 +458,15 @@ export function HomeworkClient() {
                     value={submissionLink}
                     onChange={(e) => setSubmissionLink(e.target.value)}
                     placeholder="https://padlet.com/..."
+                    className="w-full rounded-lg border border-[#ddd9cc] bg-white px-4 py-2.5 font-['Pretendard',sans-serif] text-sm text-[#16140f] outline-none transition-colors placeholder:text-[#16140f]/40 focus:border-[#FF6C0F]/50 focus:ring-2 focus:ring-[#FF6C0F]/10"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-[#16140f] mb-2 mt-4">마감일</label>
+                  <input
+                    type="datetime-local"
+                    value={dueDate}
+                    onChange={(e) => setDueDate(e.target.value)}
                     className="w-full rounded-lg border border-[#ddd9cc] bg-white px-4 py-2.5 font-['Pretendard',sans-serif] text-sm text-[#16140f] outline-none transition-colors placeholder:text-[#16140f]/40 focus:border-[#FF6C0F]/50 focus:ring-2 focus:ring-[#FF6C0F]/10"
                   />
                 </div>
@@ -771,6 +784,12 @@ export function HomeworkClient() {
                   <div className="text-right hidden sm:block">
                     <p className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">
                       {new Date(hw.created_at).toLocaleDateString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit' })}
+                    </p>
+                    <p className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e] mt-0.5">
+                      {"마감: "}
+                      {hw.due_date
+                        ? new Date(hw.due_date).toLocaleDateString("ko-KR", { year: "2-digit", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })
+                        : "없음"}
                     </p>
                   </div>
                   <div className="flex gap-2">

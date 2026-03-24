@@ -6,10 +6,16 @@ import { useEffect, useMemo, useState } from "react";
 import {
   LayoutDashboard,
   Users,
+  UserCog,
   ClipboardList,
   Settings,
   FileText,
   BookOpen,
+  CalendarDays,
+  Briefcase,
+  Rocket,
+  Library,
+  Cog,
   type LucideIcon,
 } from "lucide-react";
 
@@ -20,12 +26,18 @@ export type AdminNavItem = {
 };
 
 const NAV_ITEMS: AdminNavItem[] = [
-  { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { label: "Users", href: "/admin/users", icon: Users },
-  { label: "Applications", href: "/admin/applications", icon: ClipboardList },
+  { label: "대시보드", href: "/admin", icon: LayoutDashboard },
+  { label: "멤버 관리", href: "/admin/members", icon: Users },
+  { label: "사용자 계정", href: "/admin/users", icon: UserCog },
+  { label: "지원서", href: "/admin/applications", icon: ClipboardList },
   { label: "모집 설정", href: "/admin/recruitment", icon: Settings },
-  { label: "Posts", href: "/admin/posts", icon: FileText },
-  { label: "Homework", href: "/admin/homework", icon: BookOpen },
+  { label: "게시물", href: "/admin/posts", icon: FileText },
+  { label: "과제", href: "/admin/homework", icon: BookOpen },
+  { label: "출석", href: "/admin/attendance", icon: CalendarDays },
+  { label: "채용", href: "/admin/jobs", icon: Briefcase },
+  { label: "런칭", href: "/admin/launches", icon: Rocket },
+  { label: "자료실", href: "/admin/library", icon: Library },
+  { label: "설정", href: "/admin/settings", icon: Cog },
 ];
 
 function isActivePath(pathname: string, href: string): boolean {

@@ -1,0 +1,11 @@
+{
+  "active": false,
+  "current_phase": "complete",
+  "completed_at": "2026-03-24T13:30:00Z",
+  "_meta": {
+    "mode": "ralph",
+    "sessionId": null,
+    "updatedAt": "2026-03-24T13:28:12.277Z",
+    "updatedBy": "state_write_tool"
+  }
+}

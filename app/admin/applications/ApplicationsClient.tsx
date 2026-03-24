@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 
 import { updateApplicationStatus } from "@/lib/actions/applications";
 import type { ApplicationStatus } from "@/lib/actions/applications";
+import { convertApplicationToMember, getConversionStatus } from "@/lib/actions/member-conversion";
 import CustomSelect from "@/components/ui/CustomSelect";
 import DeleteApplicationButton from "@/components/dashboard/DeleteApplicationButton";
 import type { Database } from "@/lib/supabase/types";
@@ -53,6 +54,46 @@ function formatDate(date: string) {
 
 export default function ApplicationsClient({ initialApplications }: ApplicationsClientProps) {
   const [isPending, startTransition] = useTransition();
+  const [conversionStatus, setConversionStatus] = useState<Record<string, "idle" | "loading" | "done" | "already">>({});
+  const [conversionMsg, setConversionMsg] = useState<Record<string, { type: "success" | "error"; text: string }>>({});
+
+  const checkConversionStatuses = useCallback(async () => {
+    const accepted = initialApplications.filter((a) => a.status === "accepted");
+    for (const app of accepted) {
+      const result = await getConversionStatus(app.id);
+      if (result.success && result.data?.converted) {
+        setConversionStatus((prev) => ({ ...prev, [app.id]: "already" }));
+      }
+    }
+  }, [initialApplications]);
+
+  useEffect(() => {
+    checkConversionStatuses();
+  }, [checkConversionStatuses]);
+
+  const handleConvert = (appId: string) => {
+    setConversionStatus((prev) => ({ ...prev, [appId]: "loading" }));
+    startTransition(() => {
+      void (async () => {
+        const result = await convertApplicationToMember(appId);
+        if (result.success) {
+          setConversionStatus((prev) => ({ ...prev, [appId]: "done" }));
+          setConversionMsg((prev) => ({ ...prev, [appId]: { type: "success", text: "멤버 등록 완료" } }));
+        } else {
+          const isAlreadyExists = result.error?.includes("이미 존재합니다");
+          setConversionStatus((prev) => ({ ...prev, [appId]: isAlreadyExists ? "already" : "idle" }));
+          setConversionMsg((prev) => ({ ...prev, [appId]: { type: "error", text: result.error ?? "등록 실패" } }));
+        }
+        setTimeout(() => {
+          setConversionMsg((prev) => {
+            const next = { ...prev };
+            delete next[appId];
+            return next;
+          });
+        }, 3000);
+      })();
+    });
+  };
 
   const batches = useMemo(() => {
     const unique = [...new Set(initialApplications.map((a) => a.batch))];
@@ -173,6 +214,24 @@ export default function ApplicationsClient({ initialApplications }: Applications
                           >
                             열람하기
                           </Link>
+                          {app.status === "accepted" && (
+                            conversionStatus[app.id] === "done" || conversionStatus[app.id] === "already" ? (
+                              <span className="font-['Pretendard',sans-serif] text-xs font-semibold text-[#2f9e44]">등록됨</span>
+                            ) : (
+                              <button
+                                onClick={() => handleConvert(app.id)}
+                                disabled={isPending || conversionStatus[app.id] === "loading"}
+                                className="inline-flex h-8 items-center rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f] hover:bg-[#fcfcf8] disabled:opacity-50"
+                              >
+                                {conversionStatus[app.id] === "loading" ? "등록 중..." : "멤버 등록"}
+                              </button>
+                            )
+                          )}
+                          {conversionMsg[app.id] && (
+                            <span className={`font-['Pretendard',sans-serif] text-xs font-semibold ${conversionMsg[app.id].type === "success" ? "text-[#2f9e44]" : "text-[#b42318]"}`}>
+                              {conversionMsg[app.id].text}
+                            </span>
+                          )}
                           <DeleteApplicationButton id={app.id} applicantName={app.name} />
                         </div>
                       </td>
@@ -211,26 +270,44 @@ export default function ApplicationsClient({ initialApplications }: Applications
                   <p className="text-[#6b6b5e]">지원일: {formatDate(app.created_at)}</p>
                 </div>
 
-                <div className="mt-4 space-y-2">
-                  <CustomSelect
-                    value={app.status}
-                    onChange={(v) => {
-                      if (isValidApplicationStatus(v)) handleStatusChange(app.id, v);
-                    }}
-                    disabled={isPending}
-                    options={STATUS_OPTIONS.map((s) => ({ value: s, label: formatStatusLabel(s) }))}
-                    className="w-full sm:w-[160px]"
-                  />
-                  <div className="flex items-center gap-2">
-                    <Link
-                      href={`/admin/applications/${app.id}`}
-                      className="inline-flex h-8 items-center rounded-md border border-[#ddd9cc] px-3 text-xs font-medium text-[#16140f] hover:bg-[#fcfcf8]"
-                    >
-                      열람하기
-                    </Link>
-                    <DeleteApplicationButton id={app.id} applicantName={app.name} />
+                  <div className="mt-4 space-y-2">
+                    <CustomSelect
+                      value={app.status}
+                      onChange={(v) => {
+                        if (isValidApplicationStatus(v)) handleStatusChange(app.id, v);
+                      }}
+                      disabled={isPending}
+                      options={STATUS_OPTIONS.map((s) => ({ value: s, label: formatStatusLabel(s) }))}
+                      className="w-full sm:w-[160px]"
+                    />
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Link
+                        href={`/admin/applications/${app.id}`}
+                        className="inline-flex h-8 items-center rounded-md border border-[#ddd9cc] px-3 text-xs font-medium text-[#16140f] hover:bg-[#fcfcf8]"
+                      >
+                        열람하기
+                      </Link>
+                      {app.status === "accepted" && (
+                        conversionStatus[app.id] === "done" || conversionStatus[app.id] === "already" ? (
+                          <span className="font-['Pretendard',sans-serif] text-xs font-semibold text-[#2f9e44]">등록됨</span>
+                        ) : (
+                          <button
+                            onClick={() => handleConvert(app.id)}
+                            disabled={isPending || conversionStatus[app.id] === "loading"}
+                            className="inline-flex h-8 items-center rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f] hover:bg-[#fcfcf8] disabled:opacity-50"
+                          >
+                            {conversionStatus[app.id] === "loading" ? "등록 중..." : "멤버 등록"}
+                          </button>
+                        )
+                      )}
+                      {conversionMsg[app.id] && (
+                        <span className={`font-['Pretendard',sans-serif] text-xs font-semibold ${conversionMsg[app.id].type === "success" ? "text-[#2f9e44]" : "text-[#b42318]"}`}>
+                          {conversionMsg[app.id].text}
+                        </span>
+                      )}
+                      <DeleteApplicationButton id={app.id} applicantName={app.name} />
+                    </div>
                   </div>
-                </div>
               </article>
             ))
           )}

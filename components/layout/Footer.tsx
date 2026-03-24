@@ -1,7 +1,9 @@
 import Link from "next/link";
 import Image from "next/image";
+import { getSiteConfig } from "@/lib/helpers/site-settings";
 
-export default function Footer() {
+export default async function Footer() {
+  const config = await getSiteConfig();
   const footerLinks = {
     programs: [
       { label: "SPEC 프로그램", href: "/about" },
@@ -78,7 +80,7 @@ export default function Footer() {
         <div className="mt-12 flex flex-col items-center justify-between gap-6 border-t border-white/10 pt-8 sm:flex-row">
           <div className="flex gap-4">
             <a
-              href="https://www.instagram.com/skku_spec/"
+              href={config.social_instagram}
               target="_blank"
               rel="noopener noreferrer"
               className="text-white/50 transition-colors hover:text-white"
@@ -93,7 +95,7 @@ export default function Footer() {
               </svg>
             </a>
             <a
-              href="https://www.linkedin.com/company/109494240"
+              href={config.social_linkedin}
               target="_blank"
               rel="noopener noreferrer"
               className="text-white/50 transition-colors hover:text-white"
