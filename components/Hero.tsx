@@ -40,15 +40,6 @@ export default function Hero() {
                  </p>
                </div>
 
-             {/* CTA */}
-              <div className="mt-8 md:mt-10 flex flex-col items-center gap-3">
-              <ApplyButton href="/apply" size="md">
-                Apply Now
-              </ApplyButton>
-                  <span className="font-['Pretendard',sans-serif] text-sm text-white/40">
-                   {RECRUITMENT_DEADLINE_LABEL}
-                 </span>
-             </div>
         </div>
 
          {/* Scroll-down arrow */}

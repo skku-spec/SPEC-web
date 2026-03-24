@@ -7,7 +7,8 @@ type DashboardLayoutProps = {
 };
 
 export default async function DashboardLayout({ children }: DashboardLayoutProps) {
-  await requireRole("runner");
+  const { profile } = await requireRole("runner");
+  const role = profile?.role;
 
   return (
     <div className="min-h-screen bg-[#f5f5ee] text-[#16140f] [font-family:Pretendard,system-ui,sans-serif]">
@@ -28,14 +29,15 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
   <div className="mt-4 border-b border-[#f0efe6]" />
 </div>
             <nav className="flex flex-col gap-1">
-              <Link
-                href="/dashboard/applications"
-                className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-[#16140f] hover:bg-[#f0efe6] transition-colors"
-                // Ideally this would have active state styles
-              >
-                <span className="text-base">📋</span>
-                <span>모집 지원서</span>
-              </Link>
+              {role !== "runner" && (
+                <Link
+                  href="/dashboard/applications"
+                  className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-[#16140f] hover:bg-[#f0efe6] transition-colors"
+                >
+                  <span className="text-base">📋</span>
+                  <span>모집 지원서</span>
+                </Link>
+              )}
               <Link
                 href="/dashboard/homework"
                 className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-[#16140f] hover:bg-[#f0efe6] transition-colors"
@@ -64,10 +66,14 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
               <h1 className="text-sm font-semibold text-[#16140f] [font-family:system-ui,-apple-system,sans-serif]">대시보드</h1>
               <span className="text-[#d9d9cc]">·</span>
               <nav className="flex items-center gap-2">
-                <Link href="/dashboard/applications" className="text-sm font-medium text-[#FF6C0F]">
-                  모집 지원서
-                </Link>
-                <span className="text-[#d9d9cc]">·</span>
+                {role !== "runner" && (
+                  <>
+                    <Link href="/dashboard/applications" className="text-sm font-medium text-[#FF6C0F]">
+                      모집 지원서
+                    </Link>
+                    <span className="text-[#d9d9cc]">·</span>
+                  </>
+                )}
                 <Link href="/dashboard/homework" className="text-sm font-medium text-[#FF6C0F]">
                   Homework
                 </Link>
