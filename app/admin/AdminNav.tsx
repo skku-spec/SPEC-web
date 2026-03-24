@@ -16,6 +16,9 @@ import {
   Rocket,
   Library,
   Cog,
+  FormInput,
+  GraduationCap,
+  HelpCircle,
   type LucideIcon,
 } from "lucide-react";
 
@@ -34,6 +37,9 @@ const NAV_ITEMS: AdminNavItem[] = [
   { label: "게시물", href: "/admin/posts", icon: FileText },
   { label: "과제", href: "/admin/homework", icon: BookOpen },
   { label: "출석", href: "/admin/attendance", icon: CalendarDays },
+  { label: "폼 빌더", href: "/admin/form-builder", icon: FormInput },
+  { label: "커리큘럼", href: "/admin/curriculum", icon: GraduationCap },
+  { label: "FAQ", href: "/admin/faq", icon: HelpCircle },
   { label: "채용", href: "/admin/jobs", icon: Briefcase },
   { label: "런칭", href: "/admin/launches", icon: Rocket },
   { label: "자료실", href: "/admin/library", icon: Library },
