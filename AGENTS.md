@@ -17,6 +17,154 @@ Operational references:
 
 - Human workflow: `docs/BRANCH_POLICY.md`
 - Repository overview: `README.md`
+- Design system reference: `/design-system` (live) or `app/design-system/DesignSystemClient.tsx` (source)
+
+## SPEC Design System (MANDATORY)
+
+All UI work MUST follow these rules. Violations will be rejected in review.
+
+### Colors (CLOSED palette — do not add new colors)
+
+| Token | Hex | Usage |
+|-------|-----|-------|
+| primary | `#FF6C0F` | CTA, accents, active nav, focus rings |
+| dark | `#16140f` | Headings, body text, primary buttons |
+| background | `#f5f5ee` | Page background |
+| surface | `#fcfcf8` | Hover backgrounds |
+| text-secondary | `#4a4a40` | Table cell values |
+| text-tertiary | `#6b6b5e` | Subtitles, captions, placeholders |
+| border-default | `#ddd9cc` | Card/input/table outer borders |
+| border-row | `#ece8db` | Table row dividers |
+| border-light / thead-bg | `#f0efe6` | Table header background, internal dividers |
+| avatar-bg | `#e8e6dc` | Avatar circles |
+| success | `#2f9e44` | Accepted, toggle on, attendance present |
+| info | `#2563EB` | Under review, homework, member role |
+| error | `#b42318` | Rejected, delete actions |
+| badge-orange-bg | `#FFF0E5` | Pending badge, active nav background |
+| badge-blue-bg | `#E8F0FE` | Under review badge |
+| badge-green-bg | `#E6F9E6` | Accepted badge |
+| badge-red-bg | `#FEE2E2` | Rejected badge |
+
+For opacity, use Tailwind slash notation: `text-[#16140f]/60`. Inline `style` color only for dynamic values (role colors).
+
+### Typography
+
+| Element | Classes |
+|---------|---------|
+| Page title (H1) | `font-[system-ui] text-[clamp(2rem,4vw,2.75rem)] font-black` |
+| Table header | `font-['Pretendard',sans-serif] text-sm font-semibold` |
+| Body (name/key) | `font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]` |
+| Body (value) | `font-['Pretendard',sans-serif] text-sm text-[#4a4a40]` |
+| Caption | `font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]` |
+
+Rules:
+- `font-black` is ONLY for page H1 titles. Everything else uses `font-semibold` or lighter.
+- ALL UI text must declare `font-['Pretendard',sans-serif]` inline.
+- NO emojis. Use `lucide-react` icons instead.
+
+### Spacing & Radius
+
+| Element | Value |
+|---------|-------|
+| Table cell padding | `px-4 py-3` |
+| Input padding | `px-4 py-2.5` |
+| Button padding | `px-3` (h-8) or `px-4` (h-10) |
+| Card/form padding | `p-5` or `p-6` |
+| Page content padding | `px-5 py-6 sm:px-8 sm:py-10 lg:px-10` |
+| Container radius | `rounded-lg` (cards, tables, inputs) |
+| Button radius | `rounded-md` |
+| Avatar/badge radius | `rounded-full` |
+
+FORBIDDEN radius values: `rounded-[32px]`, `rounded-[40px]`, `rounded-3xl`, `rounded-2xl`.
+FORBIDDEN padding: `px-10`, `py-8` or larger on standard elements.
+
+### Component Patterns
+
+**Table container:**
+```
+overflow-x-auto rounded-lg border border-[#ddd9cc] bg-white
+thead: bg-[#f0efe6] text-left
+th: px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold
+tr: border-t border-[#ece8db]
+td: px-4 py-3 font-['Pretendard',sans-serif] text-sm text-[#4a4a40]
+```
+
+**Buttons:**
+```
+Primary:   h-8 rounded-md bg-[#16140f] px-3 font-['Pretendard',sans-serif] text-xs font-semibold text-white
+Secondary: h-8 rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f]
+Delete:    font-['Pretendard',sans-serif] text-sm font-semibold text-[#b42318] hover:underline
+```
+
+**Input:**
+```
+rounded-lg border border-[#ddd9cc] bg-white py-2.5 px-4
+font-['Pretendard',sans-serif] text-sm text-[#16140f]
+placeholder:text-[#16140f]/40
+focus:border-[#FF6C0F]/50 focus:ring-2 focus:ring-[#FF6C0F]/10
+```
+
+**Badge:**
+```
+rounded-full px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold
+Status: bg-[badge-color-bg] text-[status-color]
+Role:   text-white style={{ backgroundColor: ROLE_COLORS[role] }}
+```
+
+**Avatar:**
+```
+grid h-9 w-9 place-items-center rounded-full bg-[#e8e6dc]
+font-['Pretendard',sans-serif] text-sm font-semibold text-[#4a4a40]
+```
+
+### Icons (lucide-react ONLY)
+
+- Nav desktop: `h-[18px] w-[18px]`, active `strokeWidth={2.5}`, inactive `strokeWidth={2}`
+- Nav mobile: `h-3.5 w-3.5`
+- Inline/search: `h-4 w-4`, `strokeWidth={2}`
+- Card icons: `h-5 w-5`, `strokeWidth={1.5}`
+- Empty state: `h-8 w-8`, `strokeWidth={1.5}`
+- Icons must always appear with a text label. No icon-only buttons.
+
+### Layout Rules
+
+**Admin pages:**
+- Content wrapper: `mx-auto max-w-6xl`
+- H1: `mb-6 font-[system-ui] text-[clamp(2rem,4vw,2.75rem)] font-black`
+- Sidebar: `w-[240px]`, hidden below `lg:` breakpoint
+
+**Public pages:**
+- Standard content: `mx-auto max-w-[960px] px-6`
+- Directory pages: `mx-auto max-w-[1100px] px-6`
+- Article body: `max-w-[720px]`
+- Section spacing: `py-16 md:py-32`
+
+### FORBIDDEN Patterns (instant rejection)
+
+- Emojis in UI (📊 👥 ✅ etc.) — use lucide-react
+- `rounded-[32px]`, `rounded-[40px]`, `rounded-3xl` — use `rounded-lg`
+- `px-10`, `py-8` excessive padding — use `px-4 py-3`
+- `text-[10px] font-black uppercase tracking-widest` — use `text-sm font-semibold`
+- `border-[#d9d9cc]` (wrong hex) — use `border-[#ddd9cc]`
+- `shadow-lg`, `shadow-xl` on tables/cards — use border only, no shadow
+- `hover:scale-105`, `hover:-translate-y-1` transforms — use color transitions only
+- `rounded-full` FAB buttons with shadow — use `rounded-md h-8` rectangular buttons
+- `divide-y divide-[#f0efe6]` — use `border-t border-[#ece8db]` per row
+- Functions/components passed from Server to Client components as props
+
+### New Page Checklist
+
+When creating any new admin page, verify ALL items:
+1. `mx-auto max-w-6xl` wrapper
+2. H1 with `font-[system-ui] text-[clamp(2rem,4vw,2.75rem)] font-black`
+3. Table: `rounded-lg border border-[#ddd9cc] bg-white`
+4. thead: `bg-[#f0efe6] text-left`
+5. th/td: `px-4 py-3 font-['Pretendard',sans-serif] text-sm`
+6. Row divider: `border-t border-[#ece8db]`
+7. Avatar: `rounded-full bg-[#e8e6dc]`
+8. Buttons: `h-8 rounded-md`
+9. Empty state: inside table with `colSpan`, `py-8 text-center text-sm text-[#6b6b5e]`
+10. All text: `font-['Pretendard',sans-serif]` inline declaration
 
 <guidance_schema_contract>
 Canonical guidance schema for this template is defined in `docs/guidance-schema.md`.
