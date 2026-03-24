@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState, useTransition, type SyntheticEvent } from "react";
-import { useRouter } from "next/navigation";
 
 import { savePublicProfile } from "@/lib/actions/public-profile";
 import type { PublicProfileExperience } from "@/lib/public-profile";
@@ -212,7 +211,6 @@ function ExperienceEditor({
 }
 
 export default function PublicProfileEditor({ initial, initialExperiences, isEditable = true }: PublicProfileEditorProps) {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -302,7 +300,6 @@ export default function PublicProfileEditor({ initial, initialExperiences, isEdi
         }
 
         setSuccessMessage("공개 프로필이 저장되었어요.");
-        router.refresh();
       })();
     });
   };

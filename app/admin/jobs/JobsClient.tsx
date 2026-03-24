@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition, useRef } from "react";
-import { useRouter } from "next/navigation";
 
 import { createJob, updateJob, deleteJob, toggleJobActive } from "@/lib/actions/jobs";
 import { uploadJobLogo } from "@/lib/storage";
@@ -202,7 +201,6 @@ function JobForm({
 }
 
 export default function JobsClient({ initialJobs }: JobsClientProps) {
-  const router = useRouter();
   const [showForm, setShowForm] = useState(false);
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -218,7 +216,6 @@ export default function JobsClient({ initialJobs }: JobsClientProps) {
         }
 
         setShowForm(false);
-        router.refresh();
       })();
     });
   };
@@ -236,7 +233,6 @@ export default function JobsClient({ initialJobs }: JobsClientProps) {
         }
 
         setEditingJob(null);
-        router.refresh();
       })();
     });
   };
@@ -251,7 +247,6 @@ export default function JobsClient({ initialJobs }: JobsClientProps) {
           return;
         }
 
-        router.refresh();
       })();
     });
   };
@@ -269,7 +264,6 @@ export default function JobsClient({ initialJobs }: JobsClientProps) {
           return;
         }
 
-        router.refresh();
       })();
     });
   };

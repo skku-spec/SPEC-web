@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 
 import { createLaunch, deleteLaunch } from "@/lib/actions/launches";
 import type { Database } from "@/lib/supabase/types";
@@ -40,7 +39,6 @@ function slugify(value: string) {
 }
 
 export default function LaunchesClient({ initialLaunches }: LaunchesClientProps) {
-  const router = useRouter();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<LaunchFormState>(INITIAL_FORM_STATE);
   const [isPending, startTransition] = useTransition();
@@ -65,7 +63,6 @@ export default function LaunchesClient({ initialLaunches }: LaunchesClientProps)
 
         setForm(INITIAL_FORM_STATE);
         setShowForm(false);
-        router.refresh();
       })();
     });
   };
@@ -85,7 +82,6 @@ export default function LaunchesClient({ initialLaunches }: LaunchesClientProps)
           return;
         }
 
-        router.refresh();
       })();
     });
   };

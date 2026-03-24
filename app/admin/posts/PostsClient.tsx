@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 
 import { deletePost, toggleFeatured, togglePublished } from "@/lib/actions/posts";
@@ -22,7 +21,6 @@ function getAuthorName(post: PostWithAuthor) {
 }
 
 export default function PostsClient({ initialPosts }: PostsClientProps) {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const runAction = (action: () => Promise<{ success: boolean; error?: string }>) => {
@@ -35,7 +33,6 @@ export default function PostsClient({ initialPosts }: PostsClientProps) {
           return;
         }
 
-        router.refresh();
       })();
     });
   };

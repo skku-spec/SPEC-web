@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 
 import { addComment, deleteComment, type CommentWithAuthor } from "@/lib/actions/comments";
 import { useUser } from "@/hooks/useUser";
@@ -73,7 +72,6 @@ function buildThread(comments: CommentWithAuthor[]): ThreadNode[] {
 }
 
 export default function CommentSection({ postId, initialComments }: CommentSectionProps) {
-  const router = useRouter();
   const { user, role, isLoading, isAuthenticated } = useUser();
   const [comments, setComments] = useState<CommentWithAuthor[]>(initialComments);
   const [draft, setDraft] = useState("");
@@ -104,7 +102,6 @@ export default function CommentSection({ postId, initialComments }: CommentSecti
       }
 
       setDraft("");
-      router.refresh();
     });
   };
 
@@ -128,7 +125,6 @@ export default function CommentSection({ postId, initialComments }: CommentSecti
 
       setReplyDraft("");
       setReplyTarget(null);
-      router.refresh();
     });
   };
 
@@ -142,7 +138,6 @@ export default function CommentSection({ postId, initialComments }: CommentSecti
       }
 
       setComments((current) => current.filter((comment) => comment.id !== commentId && comment.parentId !== commentId));
-      router.refresh();
     });
   };
 
