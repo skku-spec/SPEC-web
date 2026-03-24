@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 
 import { signIn } from "@/lib/actions/auth";
 
@@ -11,8 +12,18 @@ type LoginFormProps = {
 };
 
 export default function LoginForm({ registered, redirect }: LoginFormProps) {
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  const target = useMemo(
+    () => (redirect && redirect.startsWith("/") && !redirect.startsWith("//") ? redirect : "/"),
+    [redirect],
+  );
+
+  useEffect(() => {
+    router.prefetch(target);
+  }, [router, target]);
 
   const handleSubmit = (formData: FormData) => {
     setError(null);
@@ -22,8 +33,7 @@ export default function LoginForm({ registered, redirect }: LoginFormProps) {
       if (result?.error) {
         setError(result.error);
       } else {
-        const target = redirect && redirect.startsWith("/") && !redirect.startsWith("//") ? redirect : "/";
-        window.location.href = target;
+        router.replace(target);
       }
     });
   };
