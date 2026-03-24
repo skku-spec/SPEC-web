@@ -80,12 +80,58 @@ export async function forgotPassword(formData: FormData): Promise<AuthActionResu
     return { error: "Please enter your email." };
   }
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
   const supabase = await createClient();
-  const { error } = await supabase.auth.resetPasswordForEmail(email);
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${siteUrl}/auth/callback?next=/reset-password`,
+  });
 
   if (error) {
     return { error: error.message };
   }
 
+  return { success: true };
+}
+
+export async function resetPassword(formData: FormData): Promise<AuthActionResult> {
+  const newPassword = readField(formData, "new_password");
+  const confirmPassword = readField(formData, "confirm_password");
+
+  if (!newPassword) {
+    return { error: "Please enter a new password." };
+  }
+
+  if (newPassword.length < 6) {
+    return { error: "Password must be at least 6 characters." };
+  }
+
+  if (newPassword !== confirmPassword) {
+    return { error: "Passwords do not match." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Your session has expired. Please request a new reset link." };
+  }
+
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+
+  if (error) {
+    const msg = error.message.toLowerCase();
+    if (msg.includes("same") || msg.includes("different")) {
+      return { error: "New password must be different from your current password." };
+    }
+    if (msg.includes("weak") || msg.includes("strength")) {
+      return { error: "Password is too weak. Please choose a stronger password." };
+    }
+    return { error: error.message };
+  }
+
+  await supabase.auth.signOut({ scope: "global" });
   return { success: true };
 }
