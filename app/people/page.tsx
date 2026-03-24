@@ -60,6 +60,24 @@ const TEAM_DESCRIPTIONS: TeamDescription[] = [
 const DEFAULT_PHOTO =
   "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=face";
 
+const MEMBER_PHOTOS: Record<string, string> = {
+  "권민재": "/images/member/권민재.png",
+  "김동인": "/images/member/김동인.png",
+  "김주현": "/images/member/김주현.png",
+  "김혜민": "/images/member/김혜민.png",
+  "류영상": "/images/member/류영상.png",
+  "서원준": "/images/member/서원준.png",
+  "신지은": "/images/member/신지은.png",
+  "이송목": "/images/member/이송목.png",
+  "이연서": "/images/member/이연서.png",
+  "임영빈": "/images/member/임영빈.png",
+  "장지민": "/images/member/장지민.png",
+  "전도현": "/images/member/전도현.png",
+  "전선희": "/images/member/전선희.png",
+  "최윤정": "/images/member/최윤정.png",
+  "한지상": "/images/member/한지상.png",
+};
+
 type MemberWithProfileLink = Pick<
   MemberRow,
   "name" | "slug" | "role" | "bio" | "photo_url" | "batch_tags" | "public_profile_id"
@@ -106,7 +124,7 @@ function mapMemberToPerson(
     href: publicHref ?? `/u/${member.slug}`,
     title: getMemberTitle(member),
     bio: member.bio ?? "",
-    photo: member.photo_url ?? DEFAULT_PHOTO,
+    photo: MEMBER_PHOTOS[member.name] ?? member.photo_url ?? DEFAULT_PHOTO,
     isLead: isManagingLead(member),
   };
 }
