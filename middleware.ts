@@ -26,6 +26,10 @@ export function isPrivateProfileRoute(pathname: string) {
   return pathname === "/profile" || pathname === "/profile/edit";
 }
 
+function isResetPasswordRoute(pathname: string) {
+  return pathname === "/reset-password";
+}
+
 const BLOCKED_ROUTES = [
   "/jobs",
   "/demoday",
@@ -100,7 +104,7 @@ export async function middleware(request: NextRequest) {
 
   const needsAdmin = isAdminRoute(pathname);
   const needsWriter = isBlogWriteRoute(pathname) || isBlogEditRoute(pathname);
-  const needsAuth = isPrivateProfileRoute(pathname);
+  const needsAuth = isPrivateProfileRoute(pathname) || isResetPasswordRoute(pathname);
 
   if (!needsAdmin && !needsWriter && !needsAuth) {
     return response;

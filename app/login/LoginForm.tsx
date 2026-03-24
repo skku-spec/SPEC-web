@@ -8,10 +8,12 @@ import { signIn } from "@/lib/actions/auth";
 
 type LoginFormProps = {
   registered: boolean;
+  passwordReset: boolean;
+  authError: boolean;
   redirect?: string;
 };
 
-export default function LoginForm({ registered, redirect }: LoginFormProps) {
+export default function LoginForm({ registered, passwordReset, authError, redirect }: LoginFormProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -41,10 +43,22 @@ export default function LoginForm({ registered, redirect }: LoginFormProps) {
   return (
     <form action={handleSubmit} className="space-y-5">
       {registered ? (
-        <p className="rounded bg-[#fff4e9] px-3 py-2 text-sm text-[#b64a00]">Account created! Please log in.</p>
+        <p className="rounded bg-[#fff4e9] px-3 py-2 font-['Pretendard',sans-serif] text-sm text-[#b64a00]">Account created! Please log in.</p>
       ) : null}
 
-      {error ? <p className="rounded bg-[#fdecec] px-3 py-2 text-sm text-[#b42318]">{error}</p> : null}
+      {passwordReset ? (
+        <p className="rounded bg-[#fff4e9] px-3 py-2 font-['Pretendard',sans-serif] text-sm text-[#b64a00]">
+          Password updated successfully. Please sign in with your new password.
+        </p>
+      ) : null}
+
+      {authError ? (
+        <p className="rounded bg-[#fdecec] px-3 py-2 font-['Pretendard',sans-serif] text-sm text-[#b42318]">
+          Your link has expired or is invalid. Please try again.
+        </p>
+      ) : null}
+
+      {error ? <p className="rounded bg-[#fdecec] px-3 py-2 font-['Pretendard',sans-serif] text-sm text-[#b42318]">{error}</p> : null}
 
       <div className="space-y-1">
         <label htmlFor="email" className="block text-sm font-medium text-[#666]">

@@ -10,3 +10,9 @@ describe("isPrivateProfileRoute", () => {
     expect(isPrivateProfileRoute("/profile/jane-doe/posts")).toBe(false);
   });
 });
+
+describe("middleware auth-required routes", () => {
+  it("reset-password is not covered by isPrivateProfileRoute", () => {
+    expect(isPrivateProfileRoute("/reset-password")).toBe(false);
+  });
+});

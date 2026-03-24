@@ -54,3 +54,33 @@ test("forgot-password page renders reset flow controls", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Send reset link" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Back to Log in" })).toBeVisible();
 });
+
+test("reset-password page redirects unauthenticated users to login", async ({ page }) => {
+  await page.goto("/reset-password");
+
+  await expect(page).toHaveURL(/\/login/);
+});
+
+test("login page shows password reset success message", async ({ page }) => {
+  await page.goto("/login?reset=true");
+
+  await expect(
+    page.getByText("Password updated successfully. Please sign in with your new password."),
+  ).toBeVisible();
+});
+
+test("login page does not show reset message without param", async ({ page }) => {
+  await page.goto("/login");
+
+  await expect(
+    page.getByText("Password updated successfully. Please sign in with your new password."),
+  ).not.toBeVisible();
+});
+
+test("login page shows expired link error when error=auth", async ({ page }) => {
+  await page.goto("/login?error=auth");
+
+  await expect(
+    page.getByText("Your link has expired or is invalid. Please try again."),
+  ).toBeVisible();
+});
