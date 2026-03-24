@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { syncHomeworkSubmissions } from "@/lib/actions/tracker";
 
 type Homework = {
   id: string;
@@ -103,6 +104,41 @@ export function HomeworkClient() {
     fetchHomeworks();
     fetchRunners();
   }, [fetchHomeworks, fetchRunners]);
+
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  // Sync Padlet data with Database when loaded
+  useEffect(() => {
+    const syncAll = async () => {
+      setIsSyncing(true);
+      try {
+        for (const hwId of Object.keys(padletData)) {
+          const pData = padletData[hwId];
+          if (pData && !pData.loading && !pData.error && availableRunners.length > 0) {
+            const hw = homeworks.find(h => h.id === hwId);
+            if (hw) {
+              const rows = buildSubmissionRows(hw);
+              const syncData = availableRunners.map(runner => {
+                const row = rows.find(r => r.label === runner.name);
+                const isCompleted = row ? Object.values(row.sectionStatus).some(v => v === true) : false;
+                return {
+                  user_id: runner.id,
+                  status: isCompleted ? "completed" : "pending"
+                };
+              });
+              await syncHomeworkSubmissions(hwId, syncData);
+            }
+          }
+        }
+      } finally {
+        setIsSyncing(false);
+      }
+    };
+
+    if (Object.keys(padletData).length > 0) {
+      syncAll();
+    }
+  }, [padletData, availableRunners, homeworks]);
 
   const handleFetchTeams = async (homeworkId: string) => {
     if (viewingId === homeworkId) {
@@ -259,6 +295,7 @@ export function HomeworkClient() {
     }
   };
 
+
   const buildSubmissionRows = (hw: Homework): SubmissionRow[] => {
     const pData = padletData[hw.id];
     if (!pData) return [];
@@ -350,9 +387,11 @@ export function HomeworkClient() {
     <div className="space-y-6 pb-20">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-[#16140f]">Homework Management</h1>
-          <p className="text-[#6b6b5e]">과제를 생성하고 유형별 내용을 작성하세요.</p>
+        <div className="space-y-1">
+          <h1 className="text-2xl font-black text-[#16140f]">
+            전체 과제 관리 {isSyncing && <span className="ml-2 inline-flex items-center text-[10px] font-black text-amber-500 animate-pulse uppercase tracking-[2px]">● Synchronizing...</span>}
+          </h1>
+          <p className="text-sm font-medium text-[#a1a196]">과제를 생성하고 유형별 내용을 작성하세요.</p>
         </div>
         <button
           onClick={() => setIsAdding(!isAdding)}

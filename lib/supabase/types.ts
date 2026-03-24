@@ -695,6 +695,84 @@ export type Database = {
         };
         Relationships: [];
       };
+      attendance_sessions: {
+        Row: {
+          id: string;
+          title: string;
+          date: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          date?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          date?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      attendance_logs: {
+        Row: {
+          id: string;
+          session_id: string;
+          user_id: string;
+          status: string;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          session_id: string;
+          user_id: string;
+          status?: string;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          session_id?: string;
+          user_id?: string;
+          status?: string;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      homework_submissions: {
+        Row: {
+          id: string;
+          homework_id: string;
+          user_id: string;
+          status: string;
+          submission_url: string | null;
+          submitted_at: string;
+        };
+        Insert: {
+          id?: string;
+          homework_id: string;
+          user_id: string;
+          status?: string;
+          submission_url?: string | null;
+          submitted_at?: string;
+        };
+        Update: {
+          id?: string;
+          homework_id?: string;
+          user_id?: string;
+          status?: string;
+          submission_url?: string | null;
+          submitted_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;

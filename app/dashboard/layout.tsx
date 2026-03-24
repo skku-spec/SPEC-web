@@ -22,7 +22,7 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
     </div>
     <div>
       <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#6b6b5e]">SPEC</p>
-      <h1 className="text-sm font-semibold text-[#16140f] [font-family:system-ui,-apple-system,sans-serif]">Dashboard</h1>
+      <h1 className="text-sm font-semibold text-[#16140f] [font-family:system-ui,-apple-system,sans-serif]">대시보드</h1>
     </div>
   </div>
   <div className="mt-4 border-b border-[#f0efe6]" />
@@ -43,6 +43,13 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
                 <span className="text-base">📚</span>
                 <span>Homework</span>
               </Link>
+              <Link
+                href="/dashboard/attendance"
+                className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-[#16140f] hover:bg-[#f0efe6] transition-colors"
+              >
+                <span className="text-base">📅</span>
+                <span>출석 현황</span>
+              </Link>
             </nav>
           </div>
         </aside>
@@ -54,7 +61,7 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
               <span className="text-[10px] font-bold text-white">S</span>
             </div>
             <div className="flex items-center gap-2">
-              <h1 className="text-sm font-semibold text-[#16140f] [font-family:system-ui,-apple-system,sans-serif]">Dashboard</h1>
+              <h1 className="text-sm font-semibold text-[#16140f] [font-family:system-ui,-apple-system,sans-serif]">대시보드</h1>
               <span className="text-[#d9d9cc]">·</span>
               <nav className="flex items-center gap-2">
                 <Link href="/dashboard/applications" className="text-sm font-medium text-[#FF6C0F]">

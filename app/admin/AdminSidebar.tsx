@@ -10,11 +10,12 @@ type NavItem = {
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Dashboard", href: "/admin", icon: "📊" },
-  { label: "Users", href: "/admin/users", icon: "👥" },
-  { label: "Applications", href: "/admin/applications", icon: "📋" },
-  { label: "Posts", href: "/admin/posts", icon: "📝" },
-  { label: "Homework", href: "/admin/homework", icon: "📖" },
+  { label: "대시보드", href: "/admin", icon: "📊" },
+  { label: "멤버", href: "/admin/users", icon: "👥" },
+  { label: "지원서", href: "/admin/applications", icon: "📋" },
+  { label: "게시물", href: "/admin/posts", icon: "📝" },
+  { label: "과제", href: "/admin/homework", icon: "📖" },
+  { label: "출석", href: "/admin/attendance", icon: "📅" },
 ];
 
 function isActivePath(pathname: string, href: string): boolean {
@@ -37,7 +38,7 @@ export function AdminSidebar() {
           </div>
           <div>
             <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#6b6b5e]">SPEC</p>
-            <h1 className="text-sm font-semibold text-[#16140f] [font-family:system-ui,-apple-system,sans-serif]">Admin Panel</h1>
+            <h1 className="text-sm font-semibold text-[#16140f] [font-family:system-ui,-apple-system,sans-serif]">관리자 센터</h1>
           </div>
         </div>
         <div className="mt-4 border-b border-[#f0efe6]" />
