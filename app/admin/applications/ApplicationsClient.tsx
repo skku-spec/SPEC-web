@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { updateApplicationStatus } from "@/lib/actions/applications";
 import type { ApplicationStatus } from "@/lib/actions/applications";
@@ -53,46 +54,59 @@ function formatDate(date: string) {
 }
 
 export default function ApplicationsClient({ initialApplications }: ApplicationsClientProps) {
-  const [isPending, startTransition] = useTransition();
-  const [conversionStatus, setConversionStatus] = useState<Record<string, "idle" | "loading" | "done" | "already">>({});
-  const [conversionMsg, setConversionMsg] = useState<Record<string, { type: "success" | "error"; text: string }>>({});
+  const router = useRouter();
+
+  const [statusChangingId, setStatusChangingId] = useState<string | null>(null);
+  const [convertingId, setConvertingId] = useState<string | null>(null);
+  const [conversionStatus, setConversionStatus] = useState<Record<string, "idle" | "done" | "already">>({});
+  const [toast, setToast] = useState<{ id: string; type: "success" | "error"; text: string } | null>(null);
+
+  const showToast = (id: string, type: "success" | "error", text: string) => {
+    setToast({ id, type, text });
+    setTimeout(() => setToast(null), 2500);
+  };
 
   const checkConversionStatuses = useCallback(async () => {
     const accepted = initialApplications.filter((a) => a.status === "accepted");
-    for (const app of accepted) {
-      const result = await getConversionStatus(app.id);
-      if (result.success && result.data?.converted) {
-        setConversionStatus((prev) => ({ ...prev, [app.id]: "already" }));
-      }
+    const results = await Promise.all(
+      accepted.map(async (app) => {
+        const result = await getConversionStatus(app.id);
+        return { id: app.id, converted: result.success && result.data?.converted };
+      }),
+    );
+    const statusMap: Record<string, "already"> = {};
+    for (const r of results) {
+      if (r.converted) statusMap[r.id] = "already";
     }
+    setConversionStatus((prev) => ({ ...prev, ...statusMap }));
   }, [initialApplications]);
 
   useEffect(() => {
     checkConversionStatuses();
   }, [checkConversionStatuses]);
 
-  const handleConvert = (appId: string) => {
-    setConversionStatus((prev) => ({ ...prev, [appId]: "loading" }));
-    startTransition(() => {
-      void (async () => {
-        const result = await convertApplicationToMember(appId);
-        if (result.success) {
-          setConversionStatus((prev) => ({ ...prev, [appId]: "done" }));
-          setConversionMsg((prev) => ({ ...prev, [appId]: { type: "success", text: "멤버 등록 완료" } }));
-        } else {
-          const isAlreadyExists = result.error?.includes("이미 존재합니다");
-          setConversionStatus((prev) => ({ ...prev, [appId]: isAlreadyExists ? "already" : "idle" }));
-          setConversionMsg((prev) => ({ ...prev, [appId]: { type: "error", text: result.error ?? "등록 실패" } }));
-        }
-        setTimeout(() => {
-          setConversionMsg((prev) => {
-            const next = { ...prev };
-            delete next[appId];
-            return next;
-          });
-        }, 3000);
-      })();
-    });
+  const handleConvert = async (appId: string) => {
+    setConvertingId(appId);
+    const result = await convertApplicationToMember(appId);
+    if (result.success) {
+      setConversionStatus((prev) => ({ ...prev, [appId]: "done" }));
+      showToast(appId, "success", "멤버 등록 완료");
+    } else {
+      const isAlready = result.error?.includes("이미 존재합니다");
+      setConversionStatus((prev) => ({ ...prev, [appId]: isAlready ? "already" : "idle" }));
+      showToast(appId, "error", result.error ?? "등록 실패");
+    }
+    setConvertingId(null);
+  };
+
+  const handleStatusChange = async (appId: string, nextStatus: ApplicationStatus) => {
+    setStatusChangingId(appId);
+    const result = await updateApplicationStatus(appId, nextStatus);
+    if (!result.success) {
+      showToast(appId, "error", result.error ?? "상태 변경 실패");
+    }
+    setStatusChangingId(null);
+    router.refresh();
   };
 
   const batches = useMemo(() => {
@@ -109,25 +123,13 @@ export default function ApplicationsClient({ initialApplications }: Applications
     return initialApplications.filter((a) => a.batch === selectedBatch);
   }, [initialApplications, selectedBatch]);
 
-  const handleStatusChange = (appId: string, nextStatus: ApplicationStatus) => {
-    startTransition(() => {
-      void (async () => {
-        const result = await updateApplicationStatus(appId, nextStatus);
-
-        if (!result.success) {
-          window.alert(result.error ?? "상태 변경에 실패했습니다.");
-          return;
-        }
-
-      })();
-    });
-  };
+  const isConverted = (id: string) => conversionStatus[id] === "done" || conversionStatus[id] === "already";
 
   return (
     <section>
       <div className="mx-auto max-w-6xl">
         <h1 className="mb-6 font-[system-ui] text-[clamp(2rem,4vw,2.75rem)] font-black">Applications</h1>
-        <div className="mt-3 flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <CustomSelect
             value={selectedBatch}
             onChange={setSelectedBatch}
@@ -144,96 +146,91 @@ export default function ApplicationsClient({ initialApplications }: Applications
           </p>
         </div>
 
-        <div className="mt-4 hidden rounded-lg border border-[#ddd9cc] bg-white md:block">
+        {toast && (
+          <div className={`mt-3 rounded-md px-3 py-2 font-['Pretendard',sans-serif] text-xs font-semibold ${toast.type === "success" ? "bg-[#E6F9E6] text-[#2f9e44]" : "bg-[#FEE2E2] text-[#b42318]"}`}>
+            {toast.text}
+          </div>
+        )}
+
+        <div className="mt-4 hidden overflow-x-auto rounded-lg border border-[#ddd9cc] bg-white md:block">
           <table className="min-w-full border-collapse">
             <thead className="bg-[#f0efe6] text-left">
               <tr>
                 <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold">지원자</th>
                 <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold">학번</th>
                 <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold">전공</th>
-                <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold">지원 차수</th>
+                <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold">기수</th>
                 <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold">지원일</th>
                 <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold">상태</th>
-                <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold">관리</th>
+                <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-right">관리</th>
               </tr>
             </thead>
             <tbody>
               {filteredApplications.length === 0 ? (
                 <tr className="border-t border-[#ece8db]">
-                  <td
-                    colSpan={7}
-                    className="px-4 py-6 text-center font-['Pretendard',sans-serif] text-sm text-[#6b6b5e]"
-                  >
+                  <td colSpan={7} className="px-4 py-8 text-center font-['Pretendard',sans-serif] text-sm text-[#6b6b5e]">
                     아직 접수된 지원서가 없습니다.
                   </td>
                 </tr>
               ) : (
                 filteredApplications.map((app) => {
                   const initial = app.name.trim().charAt(0).toUpperCase() || "?";
+                  const isThisStatusChanging = statusChangingId === app.id;
+                  const isThisConverting = convertingId === app.id;
 
                   return (
                     <tr key={app.id} className="border-t border-[#ece8db]">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="grid h-9 w-9 place-items-center rounded-full bg-[#e8e6dc] font-['Pretendard',sans-serif] text-sm font-semibold text-[#4a4a40]">
+                          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#e8e6dc] font-['Pretendard',sans-serif] text-sm font-semibold text-[#4a4a40]">
                             {initial}
                           </div>
-                          <div>
-                            <p className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{app.name}</p>
-                            <p className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">{app.email}</p>
+                          <div className="min-w-0">
+                            <p className="truncate font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{app.name}</p>
+                            <p className="truncate font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">{app.email}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3 font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">{app.student_id || "-"}</td>
-                      <td className="px-4 py-3 font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">{app.major || "-"}</td>
-                      <td className="px-4 py-3 font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">{app.batch}기</td>
-                      <td className="px-4 py-3 font-['Pretendard',sans-serif] text-sm text-[#6b6b5e]">{formatDate(app.created_at)}</td>
+                      <td className="whitespace-nowrap px-4 py-3 font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">{app.student_id || "-"}</td>
+                      <td className="whitespace-nowrap px-4 py-3 font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">{app.major || "-"}</td>
+                      <td className="whitespace-nowrap px-4 py-3 font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">{app.batch}기</td>
+                      <td className="whitespace-nowrap px-4 py-3 font-['Pretendard',sans-serif] text-sm text-[#6b6b5e]">{formatDate(app.created_at)}</td>
                       <td className="px-4 py-3">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span
-                            className={`inline-flex rounded-full px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold ${getStatusBadgeClass(app.status)}`}
-                          >
-                            {formatStatusLabel(app.status)}
-                          </span>
-                          <CustomSelect
-                            value={app.status}
-                            onChange={(v) => {
-                              if (isValidApplicationStatus(v)) handleStatusChange(app.id, v);
-                            }}
-                            disabled={isPending}
-                            options={STATUS_OPTIONS.map((s) => ({ value: s, label: formatStatusLabel(s) }))}
-                            className="w-[130px]"
-                          />
-                        </div>
+                        <CustomSelect
+                          value={app.status}
+                          onChange={(v) => {
+                            if (isValidApplicationStatus(v)) handleStatusChange(app.id, v);
+                          }}
+                          disabled={isThisStatusChanging}
+                          options={STATUS_OPTIONS.map((s) => ({ value: s, label: formatStatusLabel(s) }))}
+                          className="w-[110px]"
+                        />
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-end gap-1.5">
                           <Link
                             href={`/admin/applications/${app.id}`}
-                            className="inline-flex h-8 items-center rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f] hover:bg-[#fcfcf8]"
+                            className="inline-flex h-8 items-center whitespace-nowrap rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f] hover:bg-[#fcfcf8] transition-colors"
                           >
                             열람
                           </Link>
                           {app.status === "accepted" && (
-                            conversionStatus[app.id] === "done" || conversionStatus[app.id] === "already" ? (
-                              <span className="inline-flex h-8 items-center font-['Pretendard',sans-serif] text-xs font-semibold text-[#2f9e44]">등록됨</span>
+                            isConverted(app.id) ? (
+                              <span className="inline-flex h-8 items-center whitespace-nowrap px-2 font-['Pretendard',sans-serif] text-xs font-semibold text-[#2f9e44]">
+                                등록됨
+                              </span>
                             ) : (
                               <button
                                 onClick={() => handleConvert(app.id)}
-                                disabled={isPending || conversionStatus[app.id] === "loading"}
-                                className="inline-flex h-8 items-center whitespace-nowrap rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f] hover:bg-[#fcfcf8] disabled:opacity-50"
+                                disabled={isThisConverting}
+                                className="inline-flex h-8 items-center whitespace-nowrap rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f] hover:bg-[#fcfcf8] disabled:opacity-50 transition-colors"
                               >
-                                {conversionStatus[app.id] === "loading" ? "등록 중..." : "멤버 등록"}
+                                {isThisConverting ? "등록 중..." : "멤버 등록"}
                               </button>
                             )
                           )}
                           <DeleteApplicationButton id={app.id} applicantName={app.name} />
                         </div>
-                        {conversionMsg[app.id] && (
-                          <p className={`mt-1 font-['Pretendard',sans-serif] text-xs font-semibold ${conversionMsg[app.id].type === "success" ? "text-[#2f9e44]" : "text-[#b42318]"}`}>
-                            {conversionMsg[app.id].text}
-                          </p>
-                        )}
                       </td>
                     </tr>
                   );
@@ -243,73 +240,68 @@ export default function ApplicationsClient({ initialApplications }: Applications
           </table>
         </div>
 
-        <div className="space-y-3 md:hidden">
+        <div className="mt-4 space-y-3 md:hidden">
           {filteredApplications.length === 0 ? (
-            <div className="rounded-lg border border-[#ddd9cc] bg-white p-4 sm:p-5">
+            <div className="rounded-lg border border-[#ddd9cc] bg-white p-5">
               <p className="font-['Pretendard',sans-serif] text-sm text-[#6b6b5e]">아직 접수된 지원서가 없습니다.</p>
             </div>
           ) : (
-            filteredApplications.map((app) => (
-              <article key={app.id} className="rounded-lg border border-[#ddd9cc] bg-white p-4 sm:p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{app.name}</p>
-                    <p className="truncate font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">{app.email}</p>
+            filteredApplications.map((app) => {
+              const isThisConverting = convertingId === app.id;
+
+              return (
+                <article key={app.id} className="rounded-lg border border-[#ddd9cc] bg-white p-4 sm:p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{app.name}</p>
+                      <p className="truncate font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">{app.email}</p>
+                    </div>
+                    <span className={`inline-flex shrink-0 rounded-full px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold ${getStatusBadgeClass(app.status)}`}>
+                      {formatStatusLabel(app.status)}
+                    </span>
                   </div>
-                  <span
-                    className={`inline-flex shrink-0 rounded-full px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold ${getStatusBadgeClass(app.status)}`}
-                  >
-                    {formatStatusLabel(app.status)}
-                  </span>
-                </div>
 
-                <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 font-['Pretendard',sans-serif] text-xs text-[#4a4a40] sm:text-sm">
-                  <p>학번: {app.student_id || "-"}</p>
-                  <p>전공: {app.major || "-"}</p>
-                  <p>지원 차수: {app.batch}기</p>
-                  <p className="text-[#6b6b5e]">지원일: {formatDate(app.created_at)}</p>
-                </div>
+                  <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1.5 font-['Pretendard',sans-serif] text-xs text-[#4a4a40]">
+                    <p>학번: {app.student_id || "-"}</p>
+                    <p>전공: {app.major || "-"}</p>
+                    <p>기수: {app.batch}기</p>
+                    <p className="text-[#6b6b5e]">{formatDate(app.created_at)}</p>
+                  </div>
 
-                  <div className="mt-4 space-y-3">
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
                     <CustomSelect
                       value={app.status}
                       onChange={(v) => {
                         if (isValidApplicationStatus(v)) handleStatusChange(app.id, v);
                       }}
-                      disabled={isPending}
+                      disabled={statusChangingId === app.id}
                       options={STATUS_OPTIONS.map((s) => ({ value: s, label: formatStatusLabel(s) }))}
-                      className="w-full sm:w-[160px]"
+                      className="w-[130px]"
                     />
-                    <div className="flex items-center gap-2">
-                      <Link
-                        href={`/admin/applications/${app.id}`}
-                        className="inline-flex h-8 items-center rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f] hover:bg-[#fcfcf8]"
-                      >
-                        열람
-                      </Link>
-                      {app.status === "accepted" && (
-                        conversionStatus[app.id] === "done" || conversionStatus[app.id] === "already" ? (
-                          <span className="inline-flex h-8 items-center font-['Pretendard',sans-serif] text-xs font-semibold text-[#2f9e44]">등록됨</span>
-                        ) : (
-                          <button
-                            onClick={() => handleConvert(app.id)}
-                            disabled={isPending || conversionStatus[app.id] === "loading"}
-                            className="inline-flex h-8 items-center whitespace-nowrap rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f] hover:bg-[#fcfcf8] disabled:opacity-50"
-                          >
-                            {conversionStatus[app.id] === "loading" ? "등록 중..." : "멤버 등록"}
-                          </button>
-                        )
-                      )}
-                      <DeleteApplicationButton id={app.id} applicantName={app.name} />
-                    </div>
-                    {conversionMsg[app.id] && (
-                      <p className={`font-['Pretendard',sans-serif] text-xs font-semibold ${conversionMsg[app.id].type === "success" ? "text-[#2f9e44]" : "text-[#b42318]"}`}>
-                        {conversionMsg[app.id].text}
-                      </p>
+                    <Link
+                      href={`/admin/applications/${app.id}`}
+                      className="inline-flex h-8 items-center whitespace-nowrap rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f] hover:bg-[#fcfcf8]"
+                    >
+                      열람
+                    </Link>
+                    {app.status === "accepted" && (
+                      isConverted(app.id) ? (
+                        <span className="inline-flex h-8 items-center font-['Pretendard',sans-serif] text-xs font-semibold text-[#2f9e44]">등록됨</span>
+                      ) : (
+                        <button
+                          onClick={() => handleConvert(app.id)}
+                          disabled={isThisConverting}
+                          className="inline-flex h-8 items-center whitespace-nowrap rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f] hover:bg-[#fcfcf8] disabled:opacity-50"
+                        >
+                          {isThisConverting ? "등록 중..." : "멤버 등록"}
+                        </button>
+                      )
                     )}
+                    <DeleteApplicationButton id={app.id} applicantName={app.name} />
                   </div>
-              </article>
-            ))
+                </article>
+              );
+            })
           )}
         </div>
       </div>
