@@ -25,6 +25,13 @@ function escapeCSV(value: string): string {
   return `"${str}"`;
 }
 
+const ATTENDANCE_STATUS_LABELS: Record<string, string> = {
+  present: "출석",
+  late: "지각",
+  absent: "결석",
+  excused: "공결",
+};
+
 export async function exportApplicationsCSV(batch?: string): Promise<ExportResult> {
   try {
     await requireRole("preneur");
@@ -96,7 +103,7 @@ export async function exportAttendanceCSV(): Promise<ExportResult> {
         profiles?.name ?? "",
         session?.title ?? "",
         session?.date ?? "",
-        log.status,
+        ATTENDANCE_STATUS_LABELS[log.status] ?? log.status,
       ];
     });
 
