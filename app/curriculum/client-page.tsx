@@ -626,10 +626,10 @@ function LearnerTrack({ weeks }: { weeks: any[] }) {
 
 
       <div
-        className="overflow-x-auto rounded-lg border border-[#d9d9cc] bg-white"
+        className="overflow-x-auto rounded-lg border border-[#ddd9cc] bg-white"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
-        <table className="w-full min-w-[720px] border-collapse">
+        <table className="w-full min-w-[540px] border-collapse">
           {/* Header */}
           <thead>
             <tr className="bg-[#16140f]">

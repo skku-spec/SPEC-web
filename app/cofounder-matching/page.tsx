@@ -152,7 +152,7 @@ function ProfileCard({
   profile: (typeof founderProfiles)[number];
 }) {
   return (
-    <div className="flex min-w-[300px] max-w-[340px] flex-col rounded-2xl bg-white p-6 shadow-sm">
+    <div className="flex min-w-[260px] max-w-[340px] flex-col rounded-2xl bg-white p-5 sm:p-6 shadow-sm">
       <p className="mb-4 font-['Pretendard',sans-serif] text-sm font-normal leading-relaxed text-[#16140f]/80">
         {profile.quote}
       </p>

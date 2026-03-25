@@ -252,7 +252,7 @@ export default function FAQPage() {
 
       <div className="mx-auto max-w-[720px]">
         <nav className="mb-10 border-b border-[#d4d4cc]">
-          <ul className="flex flex-wrap gap-0">
+          <ul className="-mb-px flex gap-0 overflow-x-auto">
             {CATEGORIES.map((cat) => (
               <li key={cat.id}>
                 <button

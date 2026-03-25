@@ -945,7 +945,7 @@ export function HomeworkClient() {
 
                       return (
                         <div className="overflow-x-auto">
-                          <table className="w-full text-left border-collapse min-w-[600px]">
+                          <table className="w-full text-left border-collapse min-w-[480px]">
                             <thead className="bg-[#f0efe6] text-left">
                               <tr>
                                 <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold w-1/4">대상</th>

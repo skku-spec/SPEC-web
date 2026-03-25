@@ -84,7 +84,7 @@ export default function SignUpForm() {
     >
       {error ? <p className="rounded bg-[#fdecec] px-3 py-2 text-sm text-[#b42318]">{error}</p> : null}
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-1">
           <label htmlFor="first_name" className="block text-sm font-medium text-[#666]">
             First Name
