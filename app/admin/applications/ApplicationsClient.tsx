@@ -144,7 +144,7 @@ export default function ApplicationsClient({ initialApplications }: Applications
           </p>
         </div>
 
-        <div className="mt-4 hidden rounded-lg border border-[#ddd9cc] bg-white lg:block">
+        <div className="mt-4 hidden rounded-lg border border-[#ddd9cc] bg-white md:block">
           <table className="min-w-full border-collapse">
             <thead className="bg-[#f0efe6] text-left">
               <tr>
@@ -243,7 +243,7 @@ export default function ApplicationsClient({ initialApplications }: Applications
           </table>
         </div>
 
-        <div className="space-y-3 lg:hidden">
+        <div className="space-y-3 md:hidden">
           {filteredApplications.length === 0 ? (
             <div className="rounded-lg border border-[#ddd9cc] bg-white p-4 sm:p-5">
               <p className="font-['Pretendard',sans-serif] text-sm text-[#6b6b5e]">아직 접수된 지원서가 없습니다.</p>

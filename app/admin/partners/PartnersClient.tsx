@@ -295,7 +295,8 @@ export default function PartnersClient({ initialPartners }: PartnersClientProps)
           </p>
         </div>
       ) : partners.length > 0 ? (
-        <div className="overflow-x-auto rounded-lg border border-[#ddd9cc] bg-white">
+        <>
+        <div className="hidden overflow-x-auto rounded-lg border border-[#ddd9cc] bg-white md:block">
           <table className="w-full">
             <thead className="bg-[#f0efe6] text-left">
               <tr>
@@ -382,6 +383,75 @@ export default function PartnersClient({ initialPartners }: PartnersClientProps)
             </tbody>
           </table>
         </div>
+
+        <div className="flex flex-col gap-3 md:hidden">
+          {partners.map((partner) => (
+            <div
+              key={partner.id}
+              className="rounded-lg border border-[#ddd9cc] bg-white p-4"
+            >
+              <div className="mb-3 flex items-center justify-between">
+                <p className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
+                  {partner.name}
+                </p>
+                <span
+                  className={`inline-flex shrink-0 rounded-full px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold ${
+                    partner.is_active
+                      ? "bg-[#E6F9E6] text-[#2f9e44]"
+                      : "bg-[#FEE2E2] text-[#b42318]"
+                  }`}
+                >
+                  {partner.is_active ? "활성" : "비활성"}
+                </span>
+              </div>
+
+              <div className="mb-3 grid grid-cols-2 gap-x-4 gap-y-1.5">
+                <div>
+                  <span className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">웹사이트</span>
+                  <p className="truncate font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">
+                    {partner.website_url ? (
+                      <a
+                        href={partner.website_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[#2563EB] hover:underline"
+                      >
+                        {partner.website_url}
+                      </a>
+                    ) : (
+                      "-"
+                    )}
+                  </p>
+                </div>
+                <div>
+                  <span className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">순서</span>
+                  <p className="font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">{partner.sort_order}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 border-t border-[#ece8db] pt-3">
+                <button
+                  type="button"
+                  onClick={() => openEdit(partner)}
+                  disabled={isPending}
+                  className="flex h-8 items-center gap-1 rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f] transition-colors hover:bg-[#f5f5ee] disabled:opacity-50"
+                >
+                  <Pencil className="h-3.5 w-3.5" strokeWidth={2} />
+                  수정
+                </button>
+                <button
+                  type="button"
+                  onClick={() => confirmDelete(partner)}
+                  disabled={isPending}
+                  className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#b42318] transition-colors hover:underline disabled:opacity-50"
+                >
+                  삭제
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+        </>
       ) : null}
 
       {showDeleteDialog && deletingPartner && (

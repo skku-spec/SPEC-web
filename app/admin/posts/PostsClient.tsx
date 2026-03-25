@@ -58,7 +58,7 @@ export default function PostsClient({ initialPosts }: PostsClientProps) {
           </Link>
         </div>
 
-        <div className="overflow-x-auto rounded-lg border border-[#ddd9cc] bg-white">
+        <div className="hidden overflow-x-auto rounded-lg border border-[#ddd9cc] bg-white md:block">
           <table className="min-w-full border-collapse">
             <thead className="bg-[#f0efe6] text-left">
               <tr>
@@ -130,6 +130,68 @@ export default function PostsClient({ initialPosts }: PostsClientProps) {
               ))}
             </tbody>
           </table>
+        </div>
+
+        <div className="flex flex-col gap-3 md:hidden">
+          {initialPosts.map((post) => (
+            <div
+              key={post.id}
+              className="rounded-lg border border-[#ddd9cc] bg-white p-4"
+            >
+              <div className="mb-3 flex items-start justify-between gap-3">
+                <Link
+                  href={`/blog/${post.slug}`}
+                  className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f] hover:text-[#FF6C0F]"
+                >
+                  {post.title}
+                </Link>
+                <span
+                  className="inline-flex shrink-0 rounded-full px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold capitalize text-white"
+                  style={{ backgroundColor: TYPE_COLORS[post.type] }}
+                >
+                  {post.type}
+                </span>
+              </div>
+
+              <p className="mb-3 font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">
+                {getAuthorName(post)}
+              </p>
+
+              <div className="mb-3 flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={() => runAction(() => togglePublished(post.id))}
+                  className={`inline-flex h-8 items-center justify-center rounded-md px-3 font-['Pretendard',sans-serif] text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 ${
+                    post.published ? "bg-[#2f9e44]" : "bg-[#6b6b5e]"
+                  }`}
+                >
+                  Published {post.published ? "On" : "Off"}
+                </button>
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={() => runAction(() => toggleFeatured(post.id))}
+                  className={`inline-flex h-8 items-center justify-center rounded-md px-3 font-['Pretendard',sans-serif] text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 ${
+                    post.featured ? "bg-[#FF6C0F]" : "bg-[#6b6b5e]"
+                  }`}
+                >
+                  Featured {post.featured ? "On" : "Off"}
+                </button>
+              </div>
+
+              <div className="border-t border-[#ece8db] pt-3">
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={() => handleDelete(post.id)}
+                  className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#b42318] hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
