@@ -25,8 +25,7 @@ interface Person {
   batch?: string;
 }
 
-const DEFAULT_PHOTO =
-  "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=face";
+const DEFAULT_PHOTO = "";
 
 type MemberWithProfileLink = Pick<
   MemberRow,
@@ -196,14 +195,22 @@ export default async function PersonPage({ params }: PageProps) {
         </Link>
 
         <div className="flex flex-col gap-8 md:flex-row md:gap-12">
-          <figure className="h-[200px] w-[200px] shrink-0 overflow-hidden rounded-2xl bg-[#e8e8df] md:h-[260px] md:w-[260px]">
-            <img
-              src={person.photo}
-              alt={person.name}
-              width={260}
-              height={260}
-              className="h-full w-full object-cover"
-            />
+          <figure className="h-[200px] w-[200px] shrink-0 overflow-hidden rounded-lg bg-[#e8e6dc] md:h-[260px] md:w-[260px]">
+            {person.photo ? (
+              <img
+                src={person.photo}
+                alt={person.name}
+                width={260}
+                height={260}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="grid h-full w-full place-items-center">
+                <span className="font-['Pretendard',sans-serif] text-4xl font-bold text-[#4a4a40]">
+                  {person.name.charAt(0)}
+                </span>
+              </div>
+            )}
           </figure>
 
           <div className="flex-1">
@@ -292,15 +299,23 @@ export default async function PersonPage({ params }: PageProps) {
                 href={partner.href}
                 className="group block cursor-pointer rounded-lg p-3 transition-colors hover:bg-[#eceadf]"
               >
-                <figure className="mb-2 aspect-square w-full overflow-hidden rounded-lg bg-[#e8e8df]">
-                  <img
-                    src={partner.photo}
-                    alt={partner.name}
-                    width={160}
-                    height={160}
-                    className="h-full w-full object-cover"
-                    loading="lazy"
-                  />
+                <figure className="mb-2 aspect-square w-full overflow-hidden rounded-lg bg-[#e8e6dc]">
+                  {partner.photo ? (
+                    <img
+                      src={partner.photo}
+                      alt={partner.name}
+                      width={160}
+                      height={160}
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="grid h-full w-full place-items-center">
+                      <span className="font-['Pretendard',sans-serif] text-2xl font-bold text-[#4a4a40]">
+                        {partner.name.charAt(0)}
+                      </span>
+                    </div>
+                  )}
                 </figure>
                 <div className="font-['MaruBuri',serif] text-[0.875rem] font-semibold leading-tight text-[#16140f] transition-colors group-hover:text-[#FF6C0F]">
                   {partner.name}
