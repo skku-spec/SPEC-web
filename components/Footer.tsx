@@ -6,15 +6,12 @@ export default function Footer() {
     programs: [
       { label: "SPEC 프로그램", href: "/about" },
       { label: "커리큘럼", href: "/curriculum" },
-      { label: "채용 정보", href: "/jobs" },
 // { label: "팀원 찾기", href: "/cofounder-matching" },
     ],
     resources: [
       { label: "프로젝트 목록", href: "/companies" },
-// { label: "라이브러리", href: "/library" },
       { label: "파트너", href: "/partners" },
       { label: "데모데이", href: "/demoday" },
-      { label: "런칭 소식", href: "/launches" },
     ],
     company: [
       { label: "블로그", href: "/blog" },

@@ -61,13 +61,6 @@ export default function Navbar() {
   const applyDdayLabel = useMemo(() => getRecruitmentApplyDdayLabel(), []);
 
   const [menuOpen, setMenuOpen] = useState(false);
-  const [showComingSoon, setShowComingSoon] = useState(false);
-
-  const handleComingSoon = useCallback(() => {
-    setShowComingSoon(true);
-    setMenuOpen(false);
-    setTimeout(() => setShowComingSoon(false), 2000);
-  }, []);
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
@@ -162,16 +155,10 @@ export default function Navbar() {
                   <Link href="/founders" className={`dropdown-item block px-4 py-2 ${dropdownText} rounded text-sm font-['Pretendard',sans-serif]`}>
                     팀원 디렉토리
                   </Link>
-                  <button onClick={handleComingSoon} className={`dropdown-item block w-full text-left px-4 py-2 ${dropdownText} rounded text-sm font-['Pretendard',sans-serif]`}>
-                    런칭 소식
-                  </button>
                 </div>
               </div>
             </div>
 
-{/* <Link href="/library" className={`nav-link ${textColor} ${hoverColor} font-['Pretendard',sans-serif] text-sm`}>
-              라이브러리
-            </Link> */}
           </div>
 
           <Link href="/" className="mx-8 shrink-0">
@@ -370,15 +357,9 @@ export default function Navbar() {
                 <Link href="/founders" onClick={() => setMenuOpen(false)} className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}>
                   팀원 디렉토리
                 </Link>
-                <button onClick={handleComingSoon} className={`block w-full text-left rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}>
-                  런칭 소식
-                </button>
               </div>
 
               <div className="mb-6 flex flex-col gap-1">
-{/* <Link href="/library" onClick={() => setMenuOpen(false)} className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}>
-                  라이브러리
-                </Link> */}
                 <Link href="/partners" onClick={() => setMenuOpen(false)} className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}>
                   파트너
                 </Link>
@@ -490,20 +471,6 @@ export default function Navbar() {
         </div>
       </nav>
 
-      <div
-        className={`fixed left-1/2 top-6 z-[100] -translate-x-1/2 transition-all duration-300 ${
-          showComingSoon
-            ? "opacity-100 translate-y-0"
-            : "opacity-0 -translate-y-4 pointer-events-none"
-        }`}
-      >
-        <div className="flex items-center gap-2.5 rounded-full bg-[#16140f] px-5 py-3 shadow-lg">
-          <span className="text-base">🚀</span>
-          <span className="font-['Pretendard',sans-serif] text-sm font-medium text-white">
-            Coming Soon
-          </span>
-        </div>
-      </div>
     </div>
   );
 }

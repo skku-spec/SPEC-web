@@ -514,7 +514,7 @@ export function HomeworkClient() {
                   <h3 className="text-xs font-black uppercase tracking-widest text-[#a1a196] border-b border-[#f0efe6] pb-2">Step 3. Detailed Instructions</h3>
                   
                   {isIndividual && (
-                    <div className="space-y-4 rounded-2xl border border-blue-100 bg-blue-50/30 p-5">
+                    <div className="space-y-4 rounded-lg border border-blue-100 bg-blue-50/30 p-5">
                       <div className="flex items-center justify-between mb-1">
                         <label className="flex items-center gap-2 text-sm font-bold text-blue-600">
                           <User className="h-4 w-4" strokeWidth={2} /> 개인 과제 목록
@@ -557,7 +557,7 @@ export function HomeworkClient() {
                   )}
 
                   {isTeam && (
-                    <div className="space-y-4 rounded-2xl border border-purple-100 bg-purple-50/30 p-5">
+                    <div className="space-y-4 rounded-lg border border-purple-100 bg-purple-50/30 p-5">
                       <div className="flex items-center justify-between mb-1">
                         <label className="flex items-center gap-2 text-sm font-bold text-purple-600">
                           <Users className="h-4 w-4" strokeWidth={2} /> 팀 과제 목록
@@ -603,7 +603,7 @@ export function HomeworkClient() {
             </div>
 
             {/* Right Column: Team Builder */}
-            <div className={`flex flex-col rounded-3xl p-8 border-2 transition-all ${isTeam ? "bg-[#fcfcfb] border-[#d9d9cc]" : "bg-[#f5f5ee] border-transparent opacity-50 grayscale pointer-events-none"}`}>
+            <div className={`flex flex-col rounded-lg p-8 border-2 transition-all ${isTeam ? "bg-[#fcfcfb] border-[#d9d9cc]" : "bg-[#f5f5ee] border-transparent opacity-50 grayscale pointer-events-none"}`}>
               <div className="mb-8">
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="text-lg font-black text-[#16140f] flex items-center gap-2">
@@ -623,7 +623,7 @@ export function HomeworkClient() {
 
               <div className="flex-1 space-y-6 overflow-y-visible">
                 {teams.map((t, idx) => (
-                  <div key={idx} className="group relative rounded-2xl border-2 border-[#f0efe6] bg-white p-5 shadow-sm transition-all hover:border-[#FF6C0F]">
+                  <div key={idx} className="group relative rounded-lg border-2 border-[#f0efe6] bg-white p-5 shadow-sm transition-all hover:border-[#FF6C0F]">
                     <div className="flex items-center justify-between mb-4">
                       <input
                         type="text"
@@ -714,7 +714,7 @@ export function HomeworkClient() {
                   </div>
                 ))}
                 {teams.length === 0 && isTeam && (
-                  <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border-2 border-dashed border-[#d9d9cc]">
+                  <div className="flex flex-col items-center justify-center py-20 bg-white rounded-lg border-2 border-dashed border-[#d9d9cc]">
                     <FolderOpen className="h-10 w-10 mb-4 text-[#a1a196]" strokeWidth={1.5} />
                     <p className="text-sm font-bold text-[#6b6b5e]">배정할 팀을 만들어주세요.</p>
                   </div>
@@ -727,13 +727,13 @@ export function HomeworkClient() {
             <button
               type="button"
               onClick={() => { setIsAdding(false); resetForm(); }}
-              className="rounded-2xl px-8 py-3.5 text-sm font-bold text-[#6b6b5e] hover:bg-[#f5f5ee] transition-all"
+              className="rounded-lg px-8 py-3.5 text-sm font-bold text-[#6b6b5e] hover:bg-[#f5f5ee] transition-all"
             >
               취소 (Cancel)
             </button>
             <button
               type="submit"
-              className="rounded-2xl bg-[#16140f] px-12 py-3.5 text-sm font-black text-white shadow-xl shadow-gray-200 hover:scale-[1.02] active:scale-[0.98] transition-all"
+              className="rounded-lg bg-[#16140f] px-12 py-3.5 text-sm font-black text-white shadow-xl shadow-gray-200 hover:scale-[1.02] active:scale-[0.98] transition-all"
             >
               과제 생성 및 배포
             </button>
@@ -921,7 +921,7 @@ export function HomeworkClient() {
                       const pData = padletData[hw.id];
                       if (!hw.padlet_board_id) {
                         return (
-                          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border-2 border-dashed border-[#d9d9cc]">
+                          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-lg border-2 border-dashed border-[#d9d9cc]">
                             <AlertCircle className="h-10 w-10 mb-4 text-[#a1a196]" strokeWidth={1.5} />
                             <p className="text-sm font-bold text-[#a1a196]">Padlet Board ID가 설정되지 않았습니다.</p>
                           </div>
@@ -935,7 +935,7 @@ export function HomeworkClient() {
                       // Team homework but no team data loaded
                       if (hw.is_team && viewingTeams.length === 0 && rows.length === 0) {
                         return (
-                          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border-2 border-dashed border-[#d9d9cc]">
+                          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-lg border-2 border-dashed border-[#d9d9cc]">
                             <Users className="h-10 w-10 mb-4 text-[#6b6b5e]" strokeWidth={1.5} />
                             <p className="text-sm font-bold text-[#6b6b5e]">팀 배정 정보가 없습니다.</p>
                             <p className="text-xs text-[#a1a196] mt-1">과제를 생성할 때 팀을 배정했는지 확인하세요.</p>

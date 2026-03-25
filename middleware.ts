@@ -31,12 +31,10 @@ function isResetPasswordRoute(pathname: string) {
 }
 
 const BLOCKED_ROUTES = [
-  "/jobs",
   "/demoday",
   "/contact",
   "/cofounder-matching",
   "/faq",
-  "/library",
   "/press",
   "/subscribe",
   "/vcc",
