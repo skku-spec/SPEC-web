@@ -54,7 +54,7 @@ const TEAM_DESCRIPTIONS: TeamDescription[] = [
 
 type MemberWithProfile = Pick<
   MemberRow,
-  "name" | "slug" | "role" | "bio" | "photo_url" | "batch_tags" | "member_type" | "public_profile_id"
+  "name" | "slug" | "role" | "bio" | "photo_url" | "batch_tags" | "member_type" | "public_profile_id" | "parts"
 > & {
   profiles: {
     name: string;
@@ -70,13 +70,17 @@ export const metadata: Metadata = {
   description: "SPEC 창업학회의 Managing Lead, Preneur, Learner를 만나보세요.",
 };
 
-function isManagingLead(member: Pick<MemberRow, "batch_tags">): boolean {
-  return (member.batch_tags ?? []).some(
+function isManagingLead(member: Pick<MemberRow, "batch_tags" | "parts">): boolean {
+  const tags = member.batch_tags ?? [];
+  const parts = member.parts ?? [];
+  const hasLeadTag = tags.some(
     (tag) => tag.includes("회장") || tag.includes("부회장"),
   );
+  const isCommunityLead = tags.some((tag) => tag.includes("커뮤니티")) || parts.includes("커뮤니티");
+  return hasLeadTag && !isCommunityLead;
 }
 
-function getMemberTitle(member: Pick<MemberRow, "role" | "batch_tags" | "member_type">): string {
+function getMemberTitle(member: Pick<MemberRow, "role" | "batch_tags" | "member_type" | "parts">): string {
   if (member.role && member.role.trim()) {
     return member.role;
   }
@@ -219,7 +223,7 @@ export default async function PeoplePage() {
   const { data: memberRows } = await supabase
     .from("members")
     .select(
-      "name, slug, role, bio, photo_url, batch_tags, member_type, public_profile_id, profiles!members_public_profile_id_fkey(name, slug, role, profile_visibility, linkedin_url)",
+      "name, slug, role, bio, photo_url, batch_tags, member_type, parts, public_profile_id, profiles!members_public_profile_id_fkey(name, slug, role, profile_visibility, linkedin_url)",
     )
     .or(`preneur_batch.eq.${CURRENT_BATCH},runner_batch.eq.${CURRENT_BATCH}`)
     .order("name", { ascending: true });
