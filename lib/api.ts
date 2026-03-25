@@ -117,6 +117,7 @@ export interface CompanyDetail {
 }
 
 import { createClient } from "@/lib/supabase/server";
+import { CURRENT_BATCH } from "@/lib/constants";
 import type { Database, MemberType, ProfileRole, ProfileVisibility } from "@/lib/supabase/types";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
@@ -489,7 +490,7 @@ export async function getManagingLeads(): Promise<Person[]> {
   const membersResult = await supabase
     .from("members")
     .select("name,slug,role,bio,photo_url,batch_tags,linkedin_url")
-    .eq("preneur_batch", "4기")
+    .eq("preneur_batch", CURRENT_BATCH)
     .order("name", { ascending: true });
   const members = handleQueryResult(
     membersResult,
@@ -507,7 +508,7 @@ export async function getPreneurs(): Promise<Person[]> {
   const membersResult = await supabase
     .from("members")
     .select("name,slug,role,bio,photo_url,batch_tags,linkedin_url")
-    .eq("preneur_batch", "4기")
+    .eq("preneur_batch", CURRENT_BATCH)
     .order("name", { ascending: true });
   const members = handleQueryResult(
     membersResult,
@@ -540,7 +541,7 @@ export async function getAllPersonSlugs(): Promise<string[]> {
   const membersResult = await supabase
     .from("members")
     .select("slug")
-    .eq("preneur_batch", "4기")
+    .eq("preneur_batch", CURRENT_BATCH)
     .order("name", { ascending: true });
   const members = handleQueryResult(
     membersResult,

@@ -7,6 +7,7 @@ import {
   getDisplayRoleLine,
   getPublicProfileLinks,
 } from "@/lib/public-profile";
+import { CURRENT_BATCH } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 import type { PublicProfile, PublicProfileExperience } from "@/lib/public-profile";
 import type { BlogPost } from "@/lib/api";
@@ -270,7 +271,7 @@ export default async function PublicAuthorPage({
       .from("members")
       .select("slug")
       .eq("slug", slug)
-      .eq("preneur_batch", "4기")
+      .eq("preneur_batch", CURRENT_BATCH)
       .maybeSingle();
 
     if (member) {

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import PageHeader from "@/components/PageHeader";
+import { CURRENT_BATCH } from "@/lib/constants";
 import { getPublicAuthorHref } from "@/lib/public-profile";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
@@ -22,8 +23,6 @@ interface TeamDescription {
   name: string;
   description: string;
 }
-
-const CURRENT_BATCH = "4기";
 
 const TEAM_DESCRIPTIONS: TeamDescription[] = [
   {

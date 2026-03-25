@@ -212,11 +212,16 @@ export async function syncHomeworkSubmissions(homeworkId: string, submissionsDat
  */
 export async function createSession(title: string, date: string) {
   await requireRole("preneur");
+  const trimmedTitle = title?.trim();
+  if (!trimmedTitle) return { success: false, error: "세션 제목을 입력해주세요." };
+  if (trimmedTitle.length > 255) return { success: false, error: "세션 제목이 너무 깁니다." };
+  const trimmedDate = date?.trim();
+  if (!trimmedDate) return { success: false, error: "날짜를 입력해주세요." };
   const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("attendance_sessions")
-    .insert({ title, date })
+    .insert({ title: trimmedTitle, date: trimmedDate })
     .select()
     .single();
 
@@ -232,6 +237,7 @@ export async function createSession(title: string, date: string) {
  */
 export async function deleteSession(id: string) {
   await requireRole("preneur");
+  if (!id?.trim()) return { success: false, error: "세션 ID가 필요합니다." };
   const supabase = await createClient();
 
   const { error } = await supabase
@@ -251,6 +257,7 @@ export async function deleteSession(id: string) {
  */
 export async function markAllPresent(sessionId: string) {
   await requireRole("preneur");
+  if (!sessionId?.trim()) return { success: false, error: "세션 ID가 필요합니다." };
   const supabase = await createClient();
 
   const { data: runners } = await supabase

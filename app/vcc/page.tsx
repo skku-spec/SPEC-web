@@ -45,32 +45,28 @@ const mentors = [
     name: 'Peter Kim',
     role: '전략 컨설턴트',
     company: '前 McKinsey',
-    photo:
-      'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=300&h=300&fit=crop&crop=face',
+    photo: '',
     bio: '맥킨지에서 10년간 전략 컨설팅을 수행한 후, 스타트업 생태계로 전환. 현재 다수의 초기 스타트업에 전략 자문을 제공하고 있습니다.',
   },
   {
     name: 'Sarah Lee',
     role: '스타트업 투자심사역',
     company: '前 알토스벤처스',
-    photo:
-      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&h=300&fit=crop&crop=face',
+    photo: '',
     bio: '알토스벤처스에서 시드~시리즈A 투자심사를 담당. 50+ 스타트업 심사 경험을 바탕으로 IR 전략과 투자 유치 노하우를 전수합니다.',
   },
   {
     name: 'David Park',
     role: '연쇄 창업가',
     company: '2x Exit Founder',
-    photo:
-      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=face',
+    photo: '',
     bio: '2번의 성공적인 엑싯을 경험한 연쇄 창업가. 제품 개발부터 팀 빌딩, 스케일링까지 실전 경험을 공유합니다.',
   },
   {
     name: 'Jimin Choi',
     role: '그로스 해커',
     company: '前 카카오모빌리티',
-    photo:
-      'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=300&h=300&fit=crop&crop=face',
+    photo: '',
     bio: '카카오모빌리티 그로스팀 출신. 데이터 기반 의사결정과 그로스 해킹 전략의 전문가입니다.',
   },
 ];
@@ -160,12 +156,20 @@ export default function VCCPage() {
               key={mentor.name}
               className="flex flex-col items-center text-center"
             >
-              <img
-                src={mentor.photo}
-                alt={mentor.name}
-                loading="lazy"
-                className="h-32 w-32 rounded-full object-cover ring-2 ring-white/10"
-              />
+              {mentor.photo ? (
+                <img
+                  src={mentor.photo}
+                  alt={mentor.name}
+                  loading="lazy"
+                  className="h-32 w-32 rounded-full object-cover ring-2 ring-white/10"
+                />
+              ) : (
+                <div className="grid h-32 w-32 place-items-center rounded-full bg-white/10 ring-2 ring-white/10">
+                  <span className="font-['Pretendard',sans-serif] text-3xl font-semibold text-white/80">
+                    {mentor.name.charAt(0)}
+                  </span>
+                </div>
+              )}
               <h3 className="mt-5 font-['Pretendard',sans-serif] text-base font-semibold text-white">
                 {mentor.name}
               </h3>
