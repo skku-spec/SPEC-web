@@ -79,8 +79,10 @@ export default function ReactionBar({ postId, initialReactions, userId }: Reacti
   };
 
   return (
-    <section className="mt-8" style={{ fontFamily: "'Pretendard', sans-serif" }}>
-      <p className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-[#6b6b5e]">Reactions</p>
+    <section className="mt-8">
+      <p className="mb-3 font-['Pretendard',sans-serif] text-xs font-semibold text-[#6b6b5e]">
+        리액션
+      </p>
       <div className="flex flex-wrap items-center gap-2">
         {reactionEntries.map(({ emoji, count, userIds }) => {
           const isActive = userId != null && userIds.includes(userId);
@@ -91,19 +93,17 @@ export default function ReactionBar({ postId, initialReactions, userId }: Reacti
               key={emoji}
               type="button"
               onClick={() => handleToggle(emoji)}
-              title={userId ? "Toggle reaction" : "로그인 후 반응을 남길 수 있어요"}
-              aria-label={`${emoji} reaction ${count}`}
-              className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[14px] transition-colors disabled:cursor-not-allowed"
-              style={{
-                borderColor: isActive ? "#FF6C0F" : "#ddd9cc",
-                backgroundColor: isActive ? "#fff1e8" : "#f5f5ee",
-                color: isEmpty ? "#6b6b5e" : "#16140f",
-                opacity: isEmpty && !isActive ? 0.65 : 1,
-              }}
+              title={userId ? "리액션 토글" : "로그인 후 반응을 남길 수 있어요"}
+              aria-label={`${emoji} 리액션 ${count}`}
+              className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 font-['Pretendard',sans-serif] text-sm transition-colors disabled:cursor-not-allowed ${
+                isActive
+                  ? "border-[#FF6C0F] bg-[#FFF0E5] text-[#16140f]"
+                  : "border-[#ddd9cc] bg-[#f5f5ee] text-[#16140f]"
+              } ${isEmpty && !isActive ? "opacity-60" : ""}`}
               disabled={isPending}
             >
               <span>{emoji}</span>
-              <span className="min-w-[1ch] text-[13px] font-semibold">{count}</span>
+              <span className="min-w-[1ch] text-xs font-semibold">{count}</span>
             </button>
           );
         })}
