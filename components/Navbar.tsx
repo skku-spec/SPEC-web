@@ -120,16 +120,6 @@ export default function Navbar() {
                   <Link href="/people" className={`dropdown-item block px-4 py-2 ${dropdownText} rounded text-sm font-['Pretendard',sans-serif]`}>
                     멤버
                   </Link>
-                  {isAuthenticated && (
-                    <>
-                      <Link href="/profile" className={`dropdown-item block px-4 py-2 ${dropdownText} rounded text-sm font-['Pretendard',sans-serif]`}>
-                        내 프로필
-                      </Link>
-                      <Link href="/apply/status" className={`dropdown-item block px-4 py-2 ${dropdownText} rounded text-sm font-['Pretendard',sans-serif]`}>
-                        지원 현황 확인
-                      </Link>
-                    </>
-                  )}
 
                 </div>
               </div>
@@ -402,15 +392,6 @@ export default function Navbar() {
                 </Link>
               </div>
 
-              <div className="mb-6">
-                <Link
-                  href="/apply"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex w-full items-center justify-center rounded-full bg-[#FF6C0F] py-3 font-['Source_Serif_4',serif] text-sm font-semibold italic text-white transition-all hover:brightness-[1.08]"
-                >
-                  Apply Now
-                </Link>
-              </div>
 
               {isAuthenticated && (role === "admin" || role === "preneur" || role === "runner") && (
                 <>
@@ -424,13 +405,6 @@ export default function Navbar() {
                       className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}
                     >
                       내 프로필
-                    </Link>
-                    <Link
-                      href="/apply/status"
-                      onClick={() => setMenuOpen(false)}
-                      className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}
-                    >
-                      지원 현황 확인
                     </Link>
                     {role === "admin" && (
                       <Link
