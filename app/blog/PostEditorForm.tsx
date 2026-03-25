@@ -163,17 +163,12 @@ export default function PostEditorForm({ mode, post, initialTags = [] }: PostEdi
       const supabase = createClient();
       void supabase
         .from("tags")
-        .select("slug, label")
+        .select("id, slug, label")
         .then(({ data }) => {
           if (!data) {
             return;
           }
-          setAllTags(
-            data.map((tag) => ({
-              slug: tag.slug,
-              label: tag.label,
-            })),
-          );
+          setAllTags(data);
         });
     }
   }, [initialTags, mode]);
