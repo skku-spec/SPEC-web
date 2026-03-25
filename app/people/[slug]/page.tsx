@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import { CURRENT_BATCH } from "@/lib/constants";
 import { getProfilesForDirectory, getPublicAuthorHref, resolveDirectoryProfileLink } from "@/lib/public-profile";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
@@ -93,7 +94,7 @@ async function getPersonPageData(
     .from("members")
     .select("name, slug, role, bio, photo_url, batch_tags, parts, member_type, linkedin_url, public_profile_id")
     .eq("slug", slug)
-    .or("preneur_batch.eq.4기,learner_batch.eq.4기")
+    .or(`preneur_batch.eq.${CURRENT_BATCH},learner_batch.eq.${CURRENT_BATCH}`)
     .maybeSingle();
 
   if (!member) {
@@ -103,7 +104,7 @@ async function getPersonPageData(
   const { data: relatedMemberRows } = await supabase
     .from("members")
     .select("name, slug, role, bio, photo_url, batch_tags, parts, member_type, linkedin_url, public_profile_id")
-    .or("preneur_batch.eq.4기,learner_batch.eq.4기")
+    .or(`preneur_batch.eq.${CURRENT_BATCH},learner_batch.eq.${CURRENT_BATCH}`)
     .neq("slug", slug)
     .order("name", { ascending: true })
     .limit(4);

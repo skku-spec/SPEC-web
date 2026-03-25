@@ -45,5 +45,9 @@ export async function logAuditEvent(params: {
       entity_id: params.entityId ?? null,
       details: params.details ?? null,
     } as never);
-  } catch {}
+  } catch (error) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("[audit-log] Failed:", error);
+    }
+  }
 }
