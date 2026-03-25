@@ -211,9 +211,15 @@ export interface BlogPost {
   authorProfileVisibility?: ProfileVisibility;
   published?: boolean;
   id?: string;
+  viewCount: number;
+  authorCompany?: string;
+  authorJobTitle?: string;
+  authorBio?: string;
+  authorAvatarUrl?: string;
 }
 
 export interface TagInfo {
+  id: string;
   slug: string;
   label: string;
 }
@@ -299,7 +305,10 @@ async function mapRowsToBlogPosts(rows: PostRow[]): Promise<BlogPost[]> {
   const authorIds = [...new Set(rows.map((row) => row.author_id))];
 
   const [profilesResult, tagsByPostId] = await Promise.all([
-    supabase.from("profiles").select("id,name,slug,role,profile_visibility").in("id", authorIds),
+    supabase
+      .from("profiles")
+      .select("id,name,slug,role,profile_visibility,company,current_role,bio,photo")
+      .in("id", authorIds),
     getTagsByPostIds(rows.map((row) => row.id)),
   ]);
   const profiles = handleQueryResult(
@@ -308,7 +317,13 @@ async function mapRowsToBlogPosts(rows: PostRow[]): Promise<BlogPost[]> {
     []
   );
 
-  const profileById = new Map<string, Pick<ProfileRow, "name" | "slug" | "role" | "profile_visibility">>(
+  const profileById = new Map<
+    string,
+    Pick<
+      ProfileRow,
+      "name" | "slug" | "role" | "profile_visibility" | "company" | "current_role" | "bio" | "photo"
+    >
+  >(
     (profiles ?? []).map((profile) => [profile.id, profile])
   );
 
@@ -331,6 +346,11 @@ async function mapRowsToBlogPosts(rows: PostRow[]): Promise<BlogPost[]> {
       authorId: row.author_id,
       published: row.published,
       id: row.id,
+      viewCount: row.view_count ?? 0,
+      authorCompany: profile?.company || undefined,
+      authorJobTitle: profile?.current_role || undefined,
+      authorBio: profile?.bio || undefined,
+      authorAvatarUrl: profile?.photo || undefined,
     };
   });
 }
@@ -554,10 +574,16 @@ export async function getAllPersonSlugs(): Promise<string[]> {
 // ─── Blog ───────────────────────────────────────────────────────────
 
 export async function getBlogPosts(
-  tag?: string,
-  type?: "news" | "blog"
-): Promise<BlogPost[]> {
+  options?: {
+    tag?: string;
+    type?: "news" | "blog";
+    sort?: "newest" | "views";
+    page?: number;
+    pageSize?: number;
+  }
+): Promise<{ posts: BlogPost[]; totalCount: number }> {
   const supabase = createReadonlySupabaseClient();
+  const { tag, type, sort = "newest", page = 1, pageSize = 20 } = options ?? {};
 
   let postIdsByTag: string[] | null = null;
   if (tag) {
@@ -573,7 +599,7 @@ export async function getBlogPosts(
     );
 
     if (!tagRow) {
-      return [];
+      return { posts: [], totalCount: 0 };
     }
 
     const postTagsResult = await supabase
@@ -588,15 +614,14 @@ export async function getBlogPosts(
 
     postIdsByTag = [...new Set((postTags ?? []).map((postTag) => postTag.post_id))];
     if (postIdsByTag.length === 0) {
-      return [];
+      return { posts: [], totalCount: 0 };
     }
   }
 
   let query = supabase
     .from("posts")
-    .select("*")
-    .eq("published", true)
-    .order("created_at", { ascending: false });
+    .select("*", { count: "exact", head: false })
+    .eq("published", true);
 
   if (type) {
     query = query.eq("type", type);
@@ -606,8 +631,52 @@ export async function getBlogPosts(
     query = query.in("id", postIdsByTag);
   }
 
-  const rowsResult = await query;
+  query =
+    sort === "views"
+      ? query.order("view_count", { ascending: false })
+      : query.order("created_at", { ascending: false });
+
+  const rowsResult = await query.range((page - 1) * pageSize, page * pageSize - 1);
   const rows = handleQueryResult(rowsResult, "Failed to fetch blog posts", []);
+  const totalCount = rowsResult.error ? 0 : (rowsResult.count ?? 0);
+
+  return {
+    posts: await mapRowsToBlogPosts(rows ?? []),
+    totalCount,
+  };
+}
+
+export async function getTrendingPosts(limit = 9): Promise<BlogPost[]> {
+  const supabase = createReadonlySupabaseClient();
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  const result = await supabase
+    .from("posts")
+    .select("*")
+    .eq("published", true)
+    .gte("created_at", sevenDaysAgo)
+    .order("view_count", { ascending: false })
+    .limit(limit);
+
+  const rows = handleQueryResult(result, "Failed to fetch trending posts", []);
+
+  if ((rows?.length ?? 0) < limit) {
+    const existingIds = (rows ?? []).map((r) => r.id);
+    let fillQuery = supabase
+      .from("posts")
+      .select("*")
+      .eq("published", true)
+      .order("created_at", { ascending: false })
+      .limit(limit - (rows?.length ?? 0));
+
+    if (existingIds.length > 0) {
+      fillQuery = fillQuery.not("id", "in", `(${existingIds.join(",")})`);
+    }
+
+    const fillResult = await fillQuery;
+    const fillRows = handleQueryResult(fillResult, "Failed to fetch fill posts", []);
+    return mapRowsToBlogPosts([...(rows ?? []), ...(fillRows ?? [])]);
+  }
 
   return mapRowsToBlogPosts(rows ?? []);
 }
@@ -690,10 +759,11 @@ export async function getBlogPostsByAuthorIdForOwner(authorId: string): Promise<
 
 export async function getBlogTags(): Promise<TagInfo[]> {
   const supabase = createReadonlySupabaseClient();
-  const result = await supabase.from("tags").select("slug,label");
+  const result = await supabase.from("tags").select("id,slug,label");
   const data = handleQueryResult(result, "Failed to fetch blog tags", []);
 
-  return (data ?? []).map((tag: Pick<TagRow, "slug" | "label">) => ({
+  return (data ?? []).map((tag: Pick<TagRow, "id" | "slug" | "label">) => ({
+    id: tag.id,
     slug: tag.slug,
     label: tag.label,
   }));
