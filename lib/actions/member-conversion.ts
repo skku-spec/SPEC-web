@@ -108,6 +108,65 @@ export async function convertApplicationToMember(applicationId: string): Promise
   return { success: true, data: member };
 }
 
+export async function getConversionStatusBatch(
+  applicationIds: string[],
+): Promise<ActionResult<Record<string, ConversionStatus>>> {
+  await requireRole("preneur");
+
+  if (applicationIds.length === 0) {
+    return { success: true, data: {} };
+  }
+
+  const supabase = await createClient();
+
+  const { data: apps, error: appsError } = await supabase
+    .from("applications")
+    .select("id, student_id, user_id")
+    .in("id", applicationIds);
+
+  if (appsError || !apps) {
+    return { error: "지원서 정보를 조회하는 중 오류가 발생했습니다." };
+  }
+
+  const studentIds = apps.map((a) => a.student_id).filter(Boolean) as string[];
+  const userIds = apps.map((a) => a.user_id).filter((uid): uid is string => uid != null && !apps.some((a) => a.student_id && a.user_id === uid));
+
+  const memberMap = new Map<string, { id: string; name: string }>();
+
+  if (studentIds.length > 0) {
+    const { data: byStudent } = await supabase
+      .from("members")
+      .select("id, name, student_id")
+      .in("student_id", studentIds);
+    byStudent?.forEach((m) => {
+      if (m.student_id) memberMap.set(`sid:${m.student_id}`, { id: m.id, name: m.name });
+    });
+  }
+
+  if (userIds.length > 0) {
+    const { data: byUser } = await supabase
+      .from("members")
+      .select("id, name, public_profile_id")
+      .in("public_profile_id", userIds);
+    byUser?.forEach((m) => {
+      if (m.public_profile_id) memberMap.set(`uid:${m.public_profile_id}`, { id: m.id, name: m.name });
+    });
+  }
+
+  const result: Record<string, ConversionStatus> = {};
+  for (const app of apps) {
+    const key = app.student_id ? `sid:${app.student_id}` : app.user_id ? `uid:${app.user_id}` : null;
+    const member = key ? memberMap.get(key) : undefined;
+    result[app.id] = {
+      converted: Boolean(member),
+      memberId: member?.id ?? null,
+      memberName: member?.name ?? null,
+    };
+  }
+
+  return { success: true, data: result };
+}
+
 export async function getConversionStatus(applicationId: string): Promise<ActionResult<ConversionStatus>> {
   await requireRole("preneur");
 
