@@ -793,6 +793,12 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      increment_post_view_count: {
+        Args: {
+          post_id: string;
+        };
+        Returns: undefined;
+      };
       save_public_profile: {
         Args: {
           input_profile_id: string;
