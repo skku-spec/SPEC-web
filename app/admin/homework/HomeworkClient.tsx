@@ -404,7 +404,7 @@ export function HomeworkClient() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="mb-1 font-[system-ui] text-[clamp(2rem,4vw,2.75rem)] font-black">
-            Homework {isSyncing && <span className="ml-2 inline-flex items-center font-['Pretendard',sans-serif] text-[10px] font-semibold text-amber-500 animate-pulse">● Syncing...</span>}
+            Homework {isSyncing && <span className="ml-2 inline-flex items-center font-['Pretendard',sans-serif] text-[10px] font-semibold text-[#FF6C0F] animate-pulse">● Syncing...</span>}
           </h1>
           <p className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e] sm:text-sm">과제를 생성하고 유형별 내용을 작성하세요.</p>
         </div>
@@ -422,15 +422,15 @@ export function HomeworkClient() {
       {isAdding && (
         <form
           onSubmit={handleAddHomework}
-          className="animate-in fade-in slide-in-from-top-4 rounded-lg border border-[#ddd9cc] bg-white p-6 shadow-sm space-y-8"
+          className="animate-in fade-in slide-in-from-top-4 rounded-lg border border-[#ddd9cc] bg-white p-4 sm:p-6 space-y-6 sm:space-y-8"
         >
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
             {/* Left Column: Basic Info & Mode Selection */}
-            <div className="space-y-8">
+            <div className="space-y-6 sm:space-y-8">
               <section className="space-y-4">
-                <h3 className="text-xs font-black uppercase tracking-widest text-[#a1a196] border-b border-[#f0efe6] pb-2">Step 1. Basic Info</h3>
+                <h3 className="text-xs font-semibold text-[#6b6b5e] border-b border-[#f0efe6] pb-2">Step 1. Basic Info</h3>
                 <div>
-                  <label className="block text-sm font-bold text-[#16140f] mb-2">과제 제목 (Main Title)</label>
+                  <label className="block text-sm font-semibold text-[#16140f] mb-2">과제 제목 (Main Title)</label>
                   <input
                     type="text"
                     value={newTitle}
@@ -441,8 +441,8 @@ export function HomeworkClient() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-[#16140f] mb-1 mt-4">Padlet Board ID</label>
-                  <p className="text-[11px] text-[#a1a196] mb-2">Padlet URL에서 숫자 ID를 입력하세요. (예: padlet.com/user/<strong>12345678</strong>)</p>
+                  <label className="block text-sm font-semibold text-[#16140f] mb-1 mt-4">Padlet Board ID</label>
+                  <p className="text-[11px] text-[#6b6b5e] mb-2">Padlet URL에서 숫자 ID를 입력하세요. (예: padlet.com/user/<strong>12345678</strong>)</p>
                   <input
                     type="text"
                     value={padletBoardId}
@@ -452,7 +452,7 @@ export function HomeworkClient() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-[#16140f] mb-2 mt-4">과제 제출 링크 (Submission Link, 러너에게 표시)</label>
+                  <label className="block text-sm font-semibold text-[#16140f] mb-2 mt-4">과제 제출 링크 (Submission Link, 러너에게 표시)</label>
                   <input
                     type="url"
                     value={submissionLink}
@@ -462,7 +462,7 @@ export function HomeworkClient() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-[#16140f] mb-2 mt-4">마감일</label>
+                  <label className="block text-sm font-semibold text-[#16140f] mb-2 mt-4">마감일</label>
                   <input
                     type="datetime-local"
                     value={dueDate}
@@ -481,7 +481,7 @@ export function HomeworkClient() {
                     className={`group flex flex-col items-center justify-center gap-3 rounded-lg border p-6 transition-all ${
                       isIndividual 
                         ? "border-[#FF6C0F] bg-[#FFF0E5] text-[#FF6C0F]" 
-                        : "border-[#ddd9cc] bg-white text-[#a1a196] hover:border-[#FF6C0F]/30"
+                        : "border-[#ddd9cc] bg-white text-[#6b6b5e] hover:border-[#FF6C0F]/30"
                     }`}
                   >
                     <User className={`h-8 w-8 transition-colors ${isIndividual ? "opacity-100" : "opacity-30"}`} strokeWidth={1.5} />
@@ -496,7 +496,7 @@ export function HomeworkClient() {
                     className={`group flex flex-col items-center justify-center gap-3 rounded-lg border p-6 transition-all ${
                       isTeam 
                         ? "border-[#FF6C0F] bg-[#FFF0E5] text-[#FF6C0F]" 
-                        : "border-[#ddd9cc] bg-white text-[#a1a196] hover:border-[#FF6C0F]/30"
+                        : "border-[#ddd9cc] bg-white text-[#6b6b5e] hover:border-[#FF6C0F]/30"
                     }`}
                   >
                     <Users className={`h-8 w-8 transition-colors ${isTeam ? "opacity-100" : "opacity-30"}`} strokeWidth={1.5} />
@@ -514,15 +514,15 @@ export function HomeworkClient() {
                   <h3 className="font-['Pretendard',sans-serif] text-xs font-semibold text-[#6b6b5e] border-b border-[#f0efe6] pb-2">Step 3. Detailed Instructions</h3>
                   
                   {isIndividual && (
-                    <div className="space-y-4 rounded-lg border border-blue-100 bg-blue-50/30 p-5">
+                    <div className="space-y-4 rounded-lg border border-[#ddd9cc] bg-[#f5f5ee] p-5">
                       <div className="flex items-center justify-between mb-1">
-                        <label className="flex items-center gap-2 text-sm font-bold text-blue-600">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-[#2563EB]">
                           <User className="h-4 w-4" strokeWidth={2} /> 개인 과제 목록
                         </label>
                         <button
                           type="button"
                           onClick={() => setIndividualTasks([...individualTasks, ""])}
-                          className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-white text-sm transition-colors hover:bg-blue-700"
+                          className="flex h-6 w-6 items-center justify-center rounded-full bg-[#16140f] text-white text-sm transition-colors hover:bg-[#16140f]/90"
                         >
                           +
                         </button>
@@ -539,13 +539,13 @@ export function HomeworkClient() {
                               }}
                               placeholder={`개인별 수행 과제 #${idx + 1}`}
                               rows={3}
-                              className="w-full rounded-xl border border-blue-100 px-4 py-3 text-sm focus:border-blue-400 focus:outline-none transition-all placeholder:text-blue-200 bg-white shadow-sm"
+                              className="w-full rounded-lg border border-[#ddd9cc] px-4 py-3 text-sm focus:border-[#FF6C0F]/50 focus:outline-none transition-all placeholder:text-[#16140f]/40 bg-white"
                             />
                             {individualTasks.length > 1 && (
                               <button
                                 type="button"
                                 onClick={() => setIndividualTasks(individualTasks.filter((_, i) => i !== idx))}
-                                className="absolute -right-2 -top-2 h-5 w-5 rounded-full bg-red-400 text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="absolute -right-2 -top-2 h-5 w-5 rounded-full bg-[#b42318] text-white text-[10px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity"
                               >
                                 ×
                               </button>
@@ -557,15 +557,15 @@ export function HomeworkClient() {
                   )}
 
                   {isTeam && (
-                    <div className="space-y-4 rounded-lg border border-purple-100 bg-purple-50/30 p-5">
+                    <div className="space-y-4 rounded-lg border border-[#ddd9cc] bg-[#f5f5ee] p-5">
                       <div className="flex items-center justify-between mb-1">
-                        <label className="flex items-center gap-2 text-sm font-bold text-purple-600">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-[#FF6C0F]">
                           <Users className="h-4 w-4" strokeWidth={2} /> 팀 과제 목록
                         </label>
                         <button
                           type="button"
                           onClick={() => setTeamTasks([...teamTasks, ""])}
-                          className="flex h-6 w-6 items-center justify-center rounded-full bg-purple-600 text-white text-sm transition-colors hover:bg-purple-700"
+                          className="flex h-6 w-6 items-center justify-center rounded-full bg-[#16140f] text-white text-sm transition-colors hover:bg-[#16140f]/90"
                         >
                           +
                         </button>
@@ -582,13 +582,13 @@ export function HomeworkClient() {
                               }}
                               placeholder={`팀 단위 협동 과제 #${idx + 1}`}
                               rows={3}
-                              className="w-full rounded-xl border border-purple-100 px-4 py-3 text-sm focus:border-purple-400 focus:outline-none transition-all placeholder:text-purple-200 bg-white shadow-sm"
+                              className="w-full rounded-lg border border-[#ddd9cc] px-4 py-3 text-sm focus:border-[#FF6C0F]/50 focus:outline-none transition-all placeholder:text-[#16140f]/40 bg-white"
                             />
                             {teamTasks.length > 1 && (
                               <button
                                 type="button"
                                 onClick={() => setTeamTasks(teamTasks.filter((_, i) => i !== idx))}
-                                className="absolute -right-2 -top-2 h-5 w-5 rounded-full bg-red-400 text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="absolute -right-2 -top-2 h-5 w-5 rounded-full bg-[#b42318] text-white text-[10px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity"
                               >
                                 ×
                               </button>
@@ -603,10 +603,10 @@ export function HomeworkClient() {
             </div>
 
             {/* Right Column: Team Builder */}
-            <div className={`flex flex-col rounded-lg p-8 border-2 transition-all ${isTeam ? "bg-[#fcfcfb] border-[#d9d9cc]" : "bg-[#f5f5ee] border-transparent opacity-50 grayscale pointer-events-none"}`}>
+            <div className={`flex flex-col rounded-lg p-4 sm:p-6 lg:p-8 border-2 transition-all ${isTeam ? "bg-[#fcfcfb] border-[#ddd9cc]" : "bg-[#f5f5ee] border-transparent opacity-50 grayscale pointer-events-none"}`}>
               <div className="mb-8">
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-lg font-black text-[#16140f] flex items-center gap-2">
+                  <h4 className="text-lg font-semibold text-[#16140f] flex items-center gap-2">
                     <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#16140f] text-white text-sm">4</span>
                     Team Assignment
                   </h4>
@@ -638,9 +638,9 @@ export function HomeworkClient() {
                       <button
                         type="button"
                         onClick={() => removeTeam(idx)}
-                        className="rounded-lg bg-red-50 p-1.5 text-red-400 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-400 hover:text-white"
+                        className="rounded-lg bg-[#FEE2E2] p-1.5 text-[#b42318] opacity-0 group-hover:opacity-100 transition-all hover:bg-[#b42318] hover:text-white"
                       >
-                        <span className="text-[10px] font-bold">삭제</span>
+                        <span className="text-[10px] font-semibold">삭제</span>
                       </button>
                     </div>
 
@@ -649,12 +649,12 @@ export function HomeworkClient() {
                       {t.memberIds.map(mId => {
                         const runner = availableRunners.find(r => r.id === mId);
                         return (
-                          <div key={mId} className="flex items-center gap-2 rounded-lg bg-[#f5f5ee] px-3 py-1.5 text-[11px] font-bold text-[#16140f] border border-[#ddd9cc]">
+                          <div key={mId} className="flex items-center gap-2 rounded-lg bg-[#f5f5ee] px-3 py-1.5 text-[11px] font-semibold text-[#16140f] border border-[#ddd9cc]">
                             {runner?.name}
                             <button 
                               type="button" 
                               onClick={() => toggleMemberInTeam(idx, mId)}
-                              className="text-[#a1a196] hover:text-red-500 transition-colors"
+                              className="text-[#6b6b5e] hover:text-[#b42318] transition-colors"
                             >
                               ×
                             </button>
@@ -662,13 +662,13 @@ export function HomeworkClient() {
                         );
                       })}
                       {t.memberIds.length === 0 && (
-                        <p className="text-[11px] font-medium text-[#a1a196] italic bg-[#fcfcfb] border border-dashed border-[#d9d9cc] rounded-xl px-4 py-2 w-full text-center">배정된 팀원이 없습니다.</p>
+                        <p className="text-[11px] font-medium text-[#6b6b5e] italic bg-[#fcfcfb] border border-dashed border-[#ddd9cc] rounded-lg px-4 py-2 w-full text-center">배정된 팀원이 없습니다.</p>
                       )}
                     </div>
 
                     {/* Member Search - REDESIGNED to prevent clipping */}
                     <div className="space-y-2">
-                       <label className="text-[10px] font-black uppercase tracking-tighter text-[#a1a196]">Add Member</label>
+                       <label className="text-[10px] font-semibold text-[#6b6b5e]">Add Member</label>
                        <div className="flex items-center gap-2">
                          <input
                           type="text"
@@ -679,13 +679,13 @@ export function HomeworkClient() {
                             newQueries[idx] = e.target.value;
                             setTeamSearchQueries(newQueries);
                           }}
-                          className="flex-1 rounded-xl border border-[#f0efe6] bg-[#fcfcfb] px-3 py-2 text-xs focus:border-[#FF6C0F] focus:outline-none transition-all"
+                          className="flex-1 rounded-lg border border-[#f0efe6] bg-[#fcfcfb] px-3 py-2 text-xs focus:border-[#FF6C0F] focus:outline-none transition-all"
                         />
                        </div>
                        
                        {/* Result List - INTEGRATED (not absolute) to prevent clipping */}
                        {teamSearchQueries[idx] && (
-                        <div className="mt-2 space-y-1 max-h-32 overflow-y-auto rounded-xl border border-dashed border-[#d9d9cc] bg-[#fcfcfb] p-2 animate-in fade-in duration-200">
+                         <div className="mt-2 space-y-1 max-h-32 overflow-y-auto rounded-lg border border-dashed border-[#ddd9cc] bg-[#fcfcfb] p-2 animate-in fade-in duration-200">
                           {availableRunners
                             .filter(r => 
                               r.name.toLowerCase().includes(teamSearchQueries[idx].toLowerCase()) &&
@@ -696,7 +696,7 @@ export function HomeworkClient() {
                                 key={runner.id}
                                 type="button"
                                 onClick={() => toggleMemberInTeam(idx, runner.id)}
-                                className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-[11px] font-bold hover:bg-[#FF6C0F] hover:text-white transition-all shadow-sm"
+                                className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-[11px] font-semibold hover:bg-[#FF6C0F] hover:text-white transition-all"
                               >
                                 <span>{runner.name}</span>
                                 <span className="text-[9px] opacity-70">{runner.role}</span>
@@ -706,7 +706,7 @@ export function HomeworkClient() {
                             r.name.toLowerCase().includes(teamSearchQueries[idx].toLowerCase()) &&
                             !teams.some(team => team.memberIds.includes(r.id))
                           ).length === 0 && (
-                            <p className="py-2 text-center text-[10px] text-[#a1a196]">검색 결과가 없습니다.</p>
+                            <p className="py-2 text-center text-[10px] text-[#6b6b5e]">검색 결과가 없습니다.</p>
                           )}
                         </div>
                        )}
@@ -714,26 +714,26 @@ export function HomeworkClient() {
                   </div>
                 ))}
                 {teams.length === 0 && isTeam && (
-                  <div className="flex flex-col items-center justify-center py-20 bg-white rounded-lg border-2 border-dashed border-[#d9d9cc]">
-                    <FolderOpen className="h-10 w-10 mb-4 text-[#a1a196]" strokeWidth={1.5} />
-                    <p className="text-sm font-bold text-[#6b6b5e]">배정할 팀을 만들어주세요.</p>
+                  <div className="flex flex-col items-center justify-center py-20 bg-white rounded-lg border-2 border-dashed border-[#ddd9cc]">
+                    <FolderOpen className="h-10 w-10 mb-4 text-[#6b6b5e]" strokeWidth={1.5} />
+                    <p className="text-sm font-semibold text-[#6b6b5e]">배정할 팀을 만들어주세요.</p>
                   </div>
                 )}
               </div>
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-8 border-t border-[#ece8db]">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-8 border-t border-[#ece8db]">
             <button
               type="button"
               onClick={() => { setIsAdding(false); resetForm(); }}
-              className="rounded-md px-4 py-2.5 text-sm font-bold text-[#6b6b5e] hover:bg-[#f5f5ee] transition-colors"
+              className="w-full sm:w-auto rounded-md px-4 py-2.5 font-['Pretendard',sans-serif] text-sm font-semibold text-[#6b6b5e] hover:bg-[#f5f5ee] transition-colors"
             >
               취소 (Cancel)
             </button>
             <button
               type="submit"
-              className="rounded-md bg-[#16140f] px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#16140f]/80"
+              className="w-full sm:w-auto rounded-md bg-[#16140f] px-6 py-2.5 font-['Pretendard',sans-serif] text-sm font-semibold text-white transition-colors hover:bg-[#16140f]/80"
             >
               과제 생성 및 배포
             </button>
@@ -773,7 +773,7 @@ export function HomeworkClient() {
                         </span>
                       )}
                       {hw.is_team && (
-                        <span className="inline-flex rounded-full bg-[#F3E8FF] px-2.5 py-0.5 font-['Pretendard',sans-serif] text-xs font-semibold text-[#7C3AED]">
+                        <span className="inline-flex rounded-full bg-[#FFF0E5] px-2.5 py-0.5 font-['Pretendard',sans-serif] text-xs font-semibold text-[#FF6C0F]">
                           팀과제
                         </span>
                       )}
@@ -843,7 +843,7 @@ export function HomeworkClient() {
                       }`}
                     >
                       <BarChart3 className="mr-1 inline h-3.5 w-3.5" strokeWidth={2} /> 제출 현황
-                      {!hw.padlet_board_id && <span className="ml-1 text-[9px] text-red-400">(Board ID 없음)</span>}
+                      {!hw.padlet_board_id && <span className="ml-1 text-[9px] text-[#b42318]">(Board ID 없음)</span>}
                     </button>
                   </div>
 
@@ -854,8 +854,8 @@ export function HomeworkClient() {
                         <div className="lg:col-span-12 xl:col-span-8 space-y-10">
                           {hw.is_individual && hw.individual_content && (
                             <div className="space-y-4">
-                              <h4 className="flex items-center gap-2.5 text-sm font-black text-blue-600 uppercase tracking-widest">
-                                <span className="h-2 w-2 rounded-full bg-blue-600" /> 개인 과제 목록
+                              <h4 className="flex items-center gap-2.5 text-sm font-semibold text-[#2563EB]">
+                                <span className="h-2 w-2 rounded-full bg-[#16140f]" /> 개인 과제 목록
                               </h4>
                               <div className="space-y-4">
                                 {(Array.isArray(hw.individual_content) ? hw.individual_content : [hw.individual_content]).map((task: string, tIdx: number) => (
@@ -868,13 +868,13 @@ export function HomeworkClient() {
                           )}
                           {hw.is_team && hw.team_content && (
                             <div className="space-y-4">
-                              <h4 className="flex items-center gap-2.5 text-sm font-black text-purple-600 uppercase tracking-widest">
-                                <span className="h-2 w-2 rounded-full bg-purple-600" /> 팀 협동 과제 목록
+                              <h4 className="flex items-center gap-2.5 text-sm font-semibold text-[#FF6C0F]">
+                                <span className="h-2 w-2 rounded-full bg-[#16140f]" /> 팀 협동 과제 목록
                               </h4>
                               <div className="space-y-4">
                                 {(Array.isArray(hw.team_content) ? hw.team_content : [hw.team_content]).map((task: string, tIdx: number) => (
                                   <div key={tIdx} className="rounded-lg bg-white p-4 border border-[#ece8db] whitespace-pre-wrap font-['Pretendard',sans-serif] text-sm text-[#4a4a40] leading-[1.8]">
-                                    <span className="text-[#7C3AED] font-semibold mr-2">#{tIdx + 1}</span> {task}
+                                    <span className="text-[#FF6C0F] font-semibold mr-2">#{tIdx + 1}</span> {task}
                                   </div>
                                 ))}
                               </div>
@@ -884,15 +884,15 @@ export function HomeworkClient() {
                         {hw.is_team && viewingTeams.length > 0 && (
                           <div className="lg:col-span-12 xl:col-span-4 mt-4 xl:mt-0">
                             <div className="sticky top-10 space-y-6">
-                              <h4 className="flex items-center gap-2.5 text-sm font-black text-[#FF6C0F] uppercase tracking-widest">
+                              <h4 className="flex items-center gap-2.5 text-sm font-semibold text-[#FF6C0F]">
                                 <span className="h-2 w-2 rounded-full bg-[#FF6C0F]" /> 팀 빌딩 현황
                               </h4>
                               <div className="space-y-5 rounded-lg bg-white p-5 border border-[#ddd9cc]">
                                 {Array.from(new Set(viewingTeams.map(vt => vt.team_name))).map(teamName => (
                                   <div key={teamName} className="group/item">
-                                    <p className="text-sm font-black text-[#FF6C0F] mb-3 flex items-center justify-between">
+                                    <p className="text-sm font-semibold text-[#FF6C0F] mb-3 flex items-center justify-between">
                                       {teamName}
-                                      <span className="text-[10px] font-bold text-[#a1a196] bg-[#f5f5ee] px-2 py-0.5 rounded-lg">
+                                      <span className="text-[10px] font-semibold text-[#6b6b5e] bg-[#f5f5ee] px-2 py-0.5 rounded-lg">
                                         {viewingTeams.filter(vt => vt.team_name === teamName).length} 명
                                       </span>
                                     </p>
@@ -900,7 +900,7 @@ export function HomeworkClient() {
                                       {viewingTeams.filter(vt => vt.team_name === teamName).map((member) => {
                                         const runner = availableRunners.find(r => r.id === member.user_id);
                                         return (
-                                          <span key={member.user_id} className="inline-flex items-center rounded-xl bg-[#f5f5ee] px-3 py-1.5 text-[11px] font-bold text-[#16140f] border border-transparent transition-all group-hover/item:border-[#FF6C0F] group-hover/item:bg-white">
+                                          <span key={member.user_id} className="inline-flex items-center rounded-lg bg-[#f5f5ee] px-3 py-1.5 text-[11px] font-semibold text-[#16140f] border border-transparent transition-all group-hover/item:border-[#FF6C0F] group-hover/item:bg-white">
                                             {runner?.name || 'Unknown'}
                                           </span>
                                         );
@@ -921,68 +921,107 @@ export function HomeworkClient() {
                       const pData = padletData[hw.id];
                       if (!hw.padlet_board_id) {
                         return (
-                          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-lg border-2 border-dashed border-[#d9d9cc]">
-                            <AlertCircle className="h-10 w-10 mb-4 text-[#a1a196]" strokeWidth={1.5} />
-                            <p className="text-sm font-bold text-[#a1a196]">Padlet Board ID가 설정되지 않았습니다.</p>
+                          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-lg border-2 border-dashed border-[#ddd9cc]">
+                            <AlertCircle className="h-10 w-10 mb-4 text-[#6b6b5e]" strokeWidth={1.5} />
+                            <p className="text-sm font-semibold text-[#6b6b5e]">Padlet Board ID가 설정되지 않았습니다.</p>
                           </div>
                         );
                       }
-                      if (pData?.loading) return <div className="text-center py-20 text-xs font-black text-[#a1a196] animate-pulse">PADLET 부르는 중...</div>;
-                      if (pData?.error) return <div className="text-center py-20 text-red-400 text-xs font-bold">{pData.error}</div>;
+                      if (pData?.loading) return <div className="text-center py-20 text-xs font-semibold text-[#6b6b5e] animate-pulse">PADLET 부르는 중...</div>;
+                      if (pData?.error) return <div className="text-center py-20 text-[#b42318] text-xs font-semibold">{pData.error}</div>;
 
                       const rows = buildSubmissionRows(hw);
 
                       // Team homework but no team data loaded
                       if (hw.is_team && viewingTeams.length === 0 && rows.length === 0) {
                         return (
-                          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-lg border-2 border-dashed border-[#d9d9cc]">
+                          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-lg border-2 border-dashed border-[#ddd9cc]">
                             <Users className="h-10 w-10 mb-4 text-[#6b6b5e]" strokeWidth={1.5} />
-                            <p className="text-sm font-bold text-[#6b6b5e]">팀 배정 정보가 없습니다.</p>
-                            <p className="text-xs text-[#a1a196] mt-1">과제를 생성할 때 팀을 배정했는지 확인하세요.</p>
+                            <p className="text-sm font-semibold text-[#6b6b5e]">팀 배정 정보가 없습니다.</p>
+                            <p className="text-xs text-[#6b6b5e] mt-1">과제를 생성할 때 팀을 배정했는지 확인하세요.</p>
                           </div>
                         );
                       }
 
                       return (
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-left border-collapse min-w-[480px]">
-                            <thead className="bg-[#f0efe6] text-left">
-                              <tr>
-                                <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold w-1/4">대상</th>
-                                {pData.sections.length > 0 ? pData.sections.map(s => (
-                                  <th key={s.id} className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-center">
-                                    {s.title}
-                                  </th>
-                                )) : (
-                                  <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-center">전체</th>
-                                )}
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {rows.map((row, rIdx) => (
-                                <tr key={rIdx} className="border-t border-[#ece8db] hover:bg-[#fcfcf8] transition-colors">
-                                  <td className="px-4 py-3">
+                        <>
+                          <div className="hidden md:block overflow-x-auto">
+                            <table className="w-full text-left border-collapse min-w-[480px]">
+                              <thead className="bg-[#f0efe6] text-left">
+                                <tr>
+                                  <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold w-1/4">대상</th>
+                                  {pData.sections.length > 0 ? pData.sections.map(s => (
+                                    <th key={s.id} className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-center">
+                                      {s.title}
+                                    </th>
+                                  )) : (
+                                    <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-center">전체</th>
+                                  )}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {rows.map((row, rIdx) => (
+                                  <tr key={rIdx} className="border-t border-[#ece8db] hover:bg-[#fcfcf8] transition-colors">
+                                    <td className="px-4 py-3">
+                                      <p className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{row.label}</p>
+                                      {row.teamLabel && (
+                                        <span className="inline-block mt-0.5 text-[10px] font-semibold text-[#FF6C0F] bg-[#FFF0E5] px-2 py-0.5 rounded-lg">
+                                          {row.teamLabel}
+                                        </span>
+                                      )}
+                                    </td>
+                                    {Object.keys(row.sectionStatus).map(sId => (
+                                      <td key={sId} className="px-4 py-3 text-center">
+                                        {row.sectionStatus[sId] ? (
+                                          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#E6F9E6] text-[#2f9e44] ring-2 ring-[#2f9e44]/20"><Check className="h-4 w-4" strokeWidth={3} /></span>
+                                        ) : (
+                                          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#FEE2E2] text-[#b42318]/40 ring-1 ring-[#b42318]/10 opacity-40"><X className="h-4 w-4" strokeWidth={3} /></span>
+                                        )}
+                                      </td>
+                                    ))}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+
+                          <div className="md:hidden space-y-3">
+                            {rows.map((row, rIdx) => (
+                              <div key={rIdx} className="rounded-lg border border-[#ddd9cc] bg-white p-4">
+                                <div className="flex items-center gap-2 mb-3">
+                                  <div className="grid h-9 w-9 place-items-center rounded-full bg-[#e8e6dc]">
+                                    <span className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#4a4a40]">
+                                      {row.label.charAt(0)}
+                                    </span>
+                                  </div>
+                                  <div>
                                     <p className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{row.label}</p>
                                     {row.teamLabel && (
-                                      <span className="inline-block mt-0.5 text-[10px] font-bold text-[#FF6C0F] bg-orange-50 px-2 py-0.5 rounded-lg">
+                                      <span className="inline-block mt-0.5 rounded-full bg-[#FFF0E5] px-2 py-0.5 font-['Pretendard',sans-serif] text-[10px] font-semibold text-[#FF6C0F]">
                                         {row.teamLabel}
                                       </span>
                                     )}
-                                  </td>
-                                  {Object.keys(row.sectionStatus).map(sId => (
-                                    <td key={sId} className="px-4 py-3 text-center">
-                                      {row.sectionStatus[sId] ? (
-                                        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-green-50 text-green-600 ring-2 ring-green-100"><Check className="h-4 w-4" strokeWidth={3} /></span>
-                                      ) : (
-                                        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-red-50 text-red-200 ring-1 ring-red-50 opacity-40"><X className="h-4 w-4" strokeWidth={3} /></span>
-                                      )}
-                                    </td>
-                                  ))}
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
+                                  </div>
+                                </div>
+                                <div className="space-y-2">
+                                  {(pData.sections.length > 0 ? pData.sections : [{ id: '__none__', title: '전체' }]).map(s => {
+                                    const submitted = row.sectionStatus[s.id] ?? false;
+                                    return (
+                                      <div key={s.id} className="flex items-center justify-between rounded-lg bg-[#f5f5ee] px-3 py-2">
+                                        <span className="font-['Pretendard',sans-serif] text-xs text-[#4a4a40]">{s.title}</span>
+                                        {submitted ? (
+                                          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#E6F9E6] text-[#2f9e44]"><Check className="h-3.5 w-3.5" strokeWidth={3} /></span>
+                                        ) : (
+                                          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#FEE2E2] text-[#b42318]/40 opacity-40"><X className="h-3.5 w-3.5" strokeWidth={3} /></span>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </>
                       );
                     })()}
                   </div>

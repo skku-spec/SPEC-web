@@ -24,9 +24,9 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-const items = [
-  { label: "대시보드", href: "/admin", icon: LayoutDashboard },
-  { label: "멤버", href: "/admin/users", icon: Users },
+const items: ComponentProps<typeof DesktopAdminNav>["items"] = [
+  { label: "대시보드", href: "/admin", icon: LayoutDashboard, group: "primary" },
+  { label: "멤버", href: "/admin/users", icon: Users, group: "primary" },
 ];
 
 describe("DesktopAdminNav", () => {

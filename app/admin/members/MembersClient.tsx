@@ -338,8 +338,8 @@ export default function MembersClient({ initialMembers }: MembersClientProps) {
           </div>
         </div>
 
-        <div className="mb-4 flex flex-wrap items-center gap-3">
-          <div className="relative w-full max-w-sm">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+          <div className="relative w-full sm:max-w-sm">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b6b5e]" strokeWidth={2} />
             <input
               type="text"
@@ -350,35 +350,37 @@ export default function MembersClient({ initialMembers }: MembersClientProps) {
             />
           </div>
 
-          <div className="relative">
-            <select
-              value={selectedBatch}
-              onChange={(e) => setSelectedBatch(e.target.value)}
-              className="h-10 appearance-none rounded-lg border border-[#ddd9cc] bg-white py-2.5 pl-4 pr-9 font-['Pretendard',sans-serif] text-sm text-[#16140f] outline-none transition-colors focus:border-[#FF6C0F]/50 focus:ring-2 focus:ring-[#FF6C0F]/10"
-            >
-              <option value="">기수 전체</option>
-              {batches.map((b) => (
-                <option key={b} value={b}>
-                  {b}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b6b5e]" strokeWidth={2} />
-          </div>
+          <div className="flex gap-3">
+            <div className="relative">
+              <select
+                value={selectedBatch}
+                onChange={(e) => setSelectedBatch(e.target.value)}
+                className="h-10 appearance-none rounded-lg border border-[#ddd9cc] bg-white py-2.5 pl-4 pr-9 font-['Pretendard',sans-serif] text-sm text-[#16140f] outline-none transition-colors focus:border-[#FF6C0F]/50 focus:ring-2 focus:ring-[#FF6C0F]/10"
+              >
+                <option value="">기수 전체</option>
+                {batches.map((b) => (
+                  <option key={b} value={b}>
+                    {b}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b6b5e]" strokeWidth={2} />
+            </div>
 
-          <div className="relative">
-            <select
-              value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value)}
-              className="h-10 appearance-none rounded-lg border border-[#ddd9cc] bg-white py-2.5 pl-4 pr-9 font-['Pretendard',sans-serif] text-sm text-[#16140f] outline-none transition-colors focus:border-[#FF6C0F]/50 focus:ring-2 focus:ring-[#FF6C0F]/10"
-            >
-              {MEMBER_TYPE_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b6b5e]" strokeWidth={2} />
+            <div className="relative">
+              <select
+                value={selectedType}
+                onChange={(e) => setSelectedType(e.target.value)}
+                className="h-10 appearance-none rounded-lg border border-[#ddd9cc] bg-white py-2.5 pl-4 pr-9 font-['Pretendard',sans-serif] text-sm text-[#16140f] outline-none transition-colors focus:border-[#FF6C0F]/50 focus:ring-2 focus:ring-[#FF6C0F]/10"
+              >
+                {MEMBER_TYPE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b6b5e]" strokeWidth={2} />
+            </div>
           </div>
 
           <p className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">

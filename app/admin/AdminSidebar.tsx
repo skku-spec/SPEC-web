@@ -1,47 +1,7 @@
 "use client";
 
-import {
-  LayoutDashboard,
-  Users,
-  UserCog,
-  ClipboardList,
-  Settings,
-  FileText,
-  Tag,
-  BookOpen,
-  CalendarDays,
-  Cog,
-  FormInput,
-  GraduationCap,
-  HelpCircle,
-  Handshake,
-  type LucideIcon,
-} from "lucide-react";
-
 import { DesktopAdminNav } from "./AdminNav";
-
-type NavItem = {
-  label: string;
-  href: string;
-  icon: LucideIcon;
-};
-
-const NAV_ITEMS: NavItem[] = [
-  { label: "대시보드", href: "/admin", icon: LayoutDashboard },
-  { label: "멤버 관리", href: "/admin/members", icon: Users },
-  { label: "사용자 계정", href: "/admin/users", icon: UserCog },
-  { label: "지원서", href: "/admin/applications", icon: ClipboardList },
-  { label: "모집 설정", href: "/admin/recruitment", icon: Settings },
-  { label: "게시물", href: "/admin/posts", icon: FileText },
-  { label: "태그 관리", href: "/admin/tags", icon: Tag },
-  { label: "과제", href: "/admin/homework", icon: BookOpen },
-  { label: "출석", href: "/admin/attendance", icon: CalendarDays },
-  { label: "폼 빌더", href: "/admin/form-builder", icon: FormInput },
-  { label: "커리큘럼", href: "/admin/curriculum", icon: GraduationCap },
-  { label: "FAQ", href: "/admin/faq", icon: HelpCircle },
-  { label: "파트너", href: "/admin/partners", icon: Handshake },
-  { label: "설정", href: "/admin/settings", icon: Cog },
-];
+import { ADMIN_NAV_ITEMS } from "./nav-items";
 
 export function AdminSidebar() {
   return (
@@ -52,7 +12,7 @@ export function AdminSidebar() {
         <div className="mt-4 border-b border-[#f0efe6]" />
       </div>
 
-      <DesktopAdminNav items={NAV_ITEMS} />
+      <DesktopAdminNav items={ADMIN_NAV_ITEMS} />
     </div>
   );
 }

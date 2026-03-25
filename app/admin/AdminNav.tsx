@@ -3,46 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import {
-  LayoutDashboard,
-  Users,
-  UserCog,
-  ClipboardList,
-  Settings,
-  FileText,
-  BookOpen,
-  CalendarDays,
-  Cog,
-  FormInput,
-  GraduationCap,
-  HelpCircle,
-  Handshake,
-  type LucideIcon,
-} from "lucide-react";
 
-export type AdminNavItem = {
-  label: string;
-  href: string;
-  icon: LucideIcon;
-};
-
-const NAV_ITEMS: AdminNavItem[] = [
-  { label: "대시보드", href: "/admin", icon: LayoutDashboard },
-  { label: "멤버 관리", href: "/admin/members", icon: Users },
-  { label: "사용자 계정", href: "/admin/users", icon: UserCog },
-  { label: "지원서", href: "/admin/applications", icon: ClipboardList },
-  { label: "모집 설정", href: "/admin/recruitment", icon: Settings },
-  { label: "게시물", href: "/admin/posts", icon: FileText },
-  { label: "과제", href: "/admin/homework", icon: BookOpen },
-  { label: "출석", href: "/admin/attendance", icon: CalendarDays },
-  { label: "폼 빌더", href: "/admin/form-builder", icon: FormInput },
-  { label: "커리큘럼", href: "/admin/curriculum", icon: GraduationCap },
-  { label: "FAQ", href: "/admin/faq", icon: HelpCircle },
-  { label: "파트너", href: "/admin/partners", icon: Handshake },
-  { label: "설정", href: "/admin/settings", icon: Cog },
-];
-
-const NAV_GROUP_BREAKS = new Set(["/admin/recruitment", "/admin/attendance", "/admin/faq"]);
+import { ADMIN_NAV_ITEMS, NAV_GROUP_BREAKS, type AdminNavItem } from "./nav-items";
 
 function isActivePath(pathname: string, href: string): boolean {
   if (href === "/admin") {
@@ -115,7 +77,7 @@ export function DesktopAdminNav({ items }: DesktopAdminNavProps) {
 }
 
 export function MobileAdminNav() {
-  const items = NAV_ITEMS;
+  const items = ADMIN_NAV_ITEMS;
   const pathname = usePathname();
   const router = useRouter();
   const [pendingHref, setPendingHref] = useState<string | null>(null);

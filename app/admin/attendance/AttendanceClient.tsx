@@ -194,7 +194,31 @@ export function AttendanceClient({
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-lg border border-[#ddd9cc] bg-white">
+      {isAdminOrPreneur && sessions.length > 0 && (
+        <div className="flex flex-wrap gap-2 md:hidden">
+          {sessions.map(s => (
+            <div key={s.id} className="flex items-center gap-1.5 rounded-md border border-[#ddd9cc] bg-white px-3 py-1.5">
+              <span className="font-['Pretendard',sans-serif] text-xs font-semibold text-[#16140f]">{s.title}</span>
+              <button
+                onClick={() => handleMarkAllPresent(s.id)}
+                disabled={isPending}
+                className="font-['Pretendard',sans-serif] text-xs font-semibold text-[#FF6C0F] hover:underline disabled:opacity-50"
+              >
+                전원 출석
+              </button>
+              <button
+                onClick={() => handleDeleteSession(s.id)}
+                disabled={isPending}
+                className="font-['Pretendard',sans-serif] text-xs font-semibold text-[#b42318] hover:underline disabled:opacity-50"
+              >
+                삭제
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="hidden overflow-x-auto rounded-lg border border-[#ddd9cc] bg-white md:block">
         <table className="w-full border-collapse text-left">
           <thead className="bg-[#f0efe6] text-left">
             <tr>
@@ -302,6 +326,81 @@ export function AttendanceClient({
             })}
           </tbody>
         </table>
+      </div>
+
+      <div className="space-y-3 md:hidden">
+        {runners.map(runner => {
+          const stats = calculateStats(runner.id);
+          return (
+            <div key={runner.id} className="rounded-lg border border-[#ddd9cc] bg-white p-4">
+              <div className="mb-3 flex items-center gap-3">
+                <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#e8e6dc] font-['Pretendard',sans-serif] text-sm font-semibold text-[#4a4a40]">
+                  {runner.name.charAt(0)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{runner.name}</p>
+                  <div className="flex gap-2 font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">
+                    <span className="text-[#2f9e44]">출 {stats.present}</span>
+                    <span className="text-[#FF6C0F]">지 {stats.late}</span>
+                    <span className="text-[#b42318]">결 {stats.absent}</span>
+                    <span className="text-[#2563EB]">공 {stats.excused}</span>
+                    {!hideHomework && <span className="text-[#2563EB]">과제 {stats.homework}/{homeworks.length}</span>}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                {sessions.map(session => {
+                  const currentStatus = getAttendanceStatus(runner.id, session.id);
+                  return (
+                    <div key={session.id} className="flex items-center justify-between rounded-md bg-[#f5f5ee] px-3 py-2">
+                      <span className="font-['Pretendard',sans-serif] text-xs font-medium text-[#4a4a40]">{session.title}</span>
+                      <div className="flex items-center gap-1.5">
+                        {STATUS_OPTS.map(opt => {
+                          const isActive = currentStatus === opt.key;
+                          return (
+                            <button
+                              key={opt.key}
+                              onClick={() => handleUpdateStatus(runner.id, session.id, opt.key)}
+                              disabled={!isAdminOrPreneur || isPending}
+                              className={`flex h-10 w-10 items-center justify-center rounded-md font-['Pretendard',sans-serif] text-sm font-semibold transition-all border ${
+                                isActive
+                                  ? `${opt.active} ${opt.text} ${opt.color.replace('bg-', 'border-')}`
+                                  : `bg-white text-[#ddd9cc] border-[#ece8db] ${opt.hover}`
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {!hideHomework && homeworks.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  {homeworks.map((homework, i) => {
+                    const isCompleted = getHomeworkStatus(runner.id, homework.id);
+                    return (
+                      <div key={homework.id} className="flex items-center justify-between rounded-md bg-[#f5f5ee] px-3 py-2">
+                        <span className="font-['Pretendard',sans-serif] text-xs font-medium text-[#4a4a40]">{i + 1}주차 과제</span>
+                        <div
+                          className={`flex h-10 w-10 items-center justify-center rounded-md font-['Pretendard',sans-serif] text-sm font-semibold ${
+                            isCompleted ? "bg-[#2563EB] text-white" : "bg-white text-[#ddd9cc] border border-[#ece8db]"
+                          }`}
+                        >
+                          {isCompleted ? "✓" : "-"}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       <div className="flex items-center gap-4 font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">

@@ -39,6 +39,7 @@ function getInitials(name: string) {
 export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
+  if (pathname.startsWith("/admin")) return null;
   const { user, profile, role, isAuthenticated } = useUser();
   const isHome = pathname === "/";
 
