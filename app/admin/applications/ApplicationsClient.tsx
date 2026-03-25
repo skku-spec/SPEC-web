@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { updateApplicationStatus } from "@/lib/actions/applications";
 import type { ApplicationStatus } from "@/lib/actions/applications";
-import { convertApplicationToMember, getConversionStatus } from "@/lib/actions/member-conversion";
+import { convertApplicationToMember, getConversionStatusBatch } from "@/lib/actions/member-conversion";
 import CustomSelect from "@/components/ui/CustomSelect";
 import DeleteApplicationButton from "@/components/dashboard/DeleteApplicationButton";
 import type { Database } from "@/lib/supabase/types";
@@ -67,16 +67,17 @@ export default function ApplicationsClient({ initialApplications }: Applications
   };
 
   const checkConversionStatuses = useCallback(async () => {
-    const accepted = initialApplications.filter((a) => a.status === "accepted");
-    const results = await Promise.all(
-      accepted.map(async (app) => {
-        const result = await getConversionStatus(app.id);
-        return { id: app.id, converted: result.success && result.data?.converted };
-      }),
-    );
+    const acceptedIds = initialApplications
+      .filter((a) => a.status === "accepted")
+      .map((a) => a.id);
+    if (acceptedIds.length === 0) return;
+
+    const result = await getConversionStatusBatch(acceptedIds);
+    if (!result.success || !result.data) return;
+
     const statusMap: Record<string, "already"> = {};
-    for (const r of results) {
-      if (r.converted) statusMap[r.id] = "already";
+    for (const [id, status] of Object.entries(result.data)) {
+      if (status.converted) statusMap[id] = "already";
     }
     setConversionStatus((prev) => ({ ...prev, ...statusMap }));
   }, [initialApplications]);
