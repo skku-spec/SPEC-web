@@ -1,19 +1,24 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Eye } from "lucide-react";
 
 import "./blog-post-content.css";
 
 import { getCurrentUser } from "@/lib/auth";
 import { getCommentsByPost } from "@/lib/actions/comments";
 import { getReactionsByPost } from "@/lib/actions/reactions";
+import { incrementViewCount } from "@/lib/actions/views";
 import {
   getBlogPostBySlug,
+  getBlogPostsByAuthorId,
   getBlogTags,
   getRelatedPosts,
 } from "@/lib/api";
 import { getPublicAuthorHref } from "@/lib/public-profile";
 
+import AuthorBio from "@/components/blog/AuthorBio";
+import CopyLinkButton from "./CopyLinkButton";
 import InteractiveSection from "./InteractiveSection";
 import PostAuthorActions from "./PostAuthorActions";
 
@@ -98,6 +103,14 @@ export default async function BlogPostPage({
     notFound();
   }
 
+  incrementViewCount(post.id).catch(() => {});
+
+  const otherArticles = post.authorId
+    ? (await getBlogPostsByAuthorId(post.authorId))
+        .filter((p) => p.slug !== post.slug)
+        .slice(0, 3)
+    : [];
+
   let comments: Awaited<ReturnType<typeof getCommentsByPost>> = [];
   let reactions: Awaited<ReturnType<typeof getReactionsByPost>> = [];
   try {
@@ -138,11 +151,33 @@ export default async function BlogPostPage({
 
         <article>
           <header className="mb-8">
-            <h1 className="mb-4 font-[system-ui] text-[clamp(2rem,4vw,3rem)] font-black leading-[1.15] tracking-tight text-[#16140f]">
+            {post.tags.length > 0 && (
+              <div className="mb-3 flex flex-wrap gap-x-3 gap-y-1">
+                {post.tags.map((tagSlug) => (
+                  <Link
+                    key={tagSlug}
+                    href={`/blog/tag/${tagSlug}`}
+                    className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#FF6C0F] hover:underline"
+                  >
+                    # {tagLabelBySlug.get(tagSlug) ?? tagSlug}
+                  </Link>
+                ))}
+              </div>
+            )}
+
+            <h1 className="font-[system-ui] text-[clamp(2rem,4vw,3rem)] font-black leading-[1.15] tracking-tight text-[#16140f]">
               {post.title}
             </h1>
 
-            <div className="flex items-center gap-3">
+            <div className="mt-4 flex items-center gap-4 font-['Pretendard',sans-serif] text-[13px] text-[#6b6b5e]">
+              <span>{post.date}</span>
+              <span className="flex items-center gap-1">
+                <Eye className="h-4 w-4" strokeWidth={1.5} />
+                {new Intl.NumberFormat("ko-KR").format(post.viewCount)}
+              </span>
+            </div>
+
+            <div className="mt-4 flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#FF6C0F] font-['Pretendard',sans-serif] text-[14px] font-semibold text-white">
                 {authorInitials}
               </div>
@@ -159,9 +194,6 @@ export default async function BlogPostPage({
                     {authorName}
                   </p>
                 )}
-                <p className="font-['Pretendard',sans-serif] text-[13px] text-[#6b6b5e]">
-                  {post.date}
-                </p>
               </div>
             </div>
 
@@ -186,22 +218,37 @@ export default async function BlogPostPage({
             dangerouslySetInnerHTML={{ __html: sanitizedContent }}
           />
 
-          <div className="mb-10 border-t border-[#ddd9cc] pt-6">
-            <p className="mb-3 font-['Pretendard',sans-serif] text-[13px] font-semibold uppercase tracking-wider text-[#6b6b5e]">
-              Tags
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {(post.tags ?? []).map((tag) => (
-                <Link
-                  key={tag}
-                  href={`/blog/tag/${tag}`}
-                  className="rounded-full bg-[#e8e6dc] px-3.5 py-1 font-['Pretendard',sans-serif] text-[13px] font-medium text-[#4a4a40] transition-colors hover:bg-[#FF6C0F] hover:text-white"
-                >
-                  {tagLabelBySlug.get(tag) ?? tag}
-                </Link>
-              ))}
-            </div>
+          <div className="flex items-center gap-3 mt-8">
+            <CopyLinkButton />
           </div>
+
+          <AuthorBio
+            name={authorName}
+            company={post.authorCompany}
+            jobTitle={post.authorJobTitle}
+            bio={post.authorBio}
+            avatarUrl={post.authorAvatarUrl}
+            profileHref={post.authorSlug ? `/founders/${post.authorSlug}` : undefined}
+          />
+
+          {otherArticles.length > 0 && (
+            <div className="mt-6 mb-8">
+              <h3 className="mb-3 font-['Pretendard',sans-serif] text-base font-semibold text-[#16140f]">
+                {authorName} 님이 작성한 다른 아티클
+              </h3>
+              <div className="space-y-1">
+                {otherArticles.map((article) => (
+                  <Link
+                    key={article.slug}
+                    href={`/blog/${article.slug}`}
+                    className="block py-1 font-['Pretendard',sans-serif] text-sm text-[#4a4a40] transition-colors hover:text-[#FF6C0F]"
+                  >
+                    {article.title}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
 
           <InteractiveSection
             postId={post.id}
@@ -214,24 +261,26 @@ export default async function BlogPostPage({
 
       {related.length > 0 && (
         <div className="border-t border-[#ddd9cc]">
-          <div className="mx-auto max-w-[720px] px-4 pt-10 md:px-8">
+          <div className="mx-auto max-w-[960px] px-4 pt-10 md:px-8">
             <h3 className="mb-6 font-[system-ui] text-[22px] font-black text-[#16140f]">
               더 많은 SPEC 소식 보기
             </h3>
-            <div className="space-y-0 divide-y divide-[#ddd9cc]">
+            <div className="grid gap-5 md:grid-cols-3">
               {related.map((relatedPost) => (
-                <article key={relatedPost.slug} className="py-6 first:pt-0">
+                <article
+                  key={relatedPost.slug}
+                  className="rounded-lg border border-[#ddd9cc] bg-white p-5"
+                >
                   <Link
                     href={`/blog/${relatedPost.slug}`}
-                    className="mb-1 block font-[system-ui] text-[18px] font-black leading-snug text-[#16140f] transition-colors hover:text-[#FF6C0F]"
+                    className="mb-1 block font-[system-ui] text-[16px] font-black leading-snug text-[#16140f] transition-colors hover:text-[#FF6C0F]"
                   >
                     {relatedPost.title}
                   </Link>
                   <p className="mb-2 font-['Pretendard',sans-serif] text-[13px] text-[#6b6b5e]">
-                    by <span className="text-[#16140f]">{relatedPost.author}</span> &middot;{" "}
-                    {relatedPost.date}
+                    {relatedPost.author} &middot; {relatedPost.date}
                   </p>
-                  <p className="mb-3 font-['Pretendard',sans-serif] text-[14px] font-normal leading-relaxed text-[#4a4a40] line-clamp-2">
+                  <p className="mb-3 font-['Pretendard',sans-serif] text-[13px] font-normal leading-relaxed text-[#4a4a40] line-clamp-2">
                     {relatedPost.excerpt}
                   </p>
                   <Link
