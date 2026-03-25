@@ -24,17 +24,6 @@ const publicPages: PublicPageCase[] = [
     path: "/blog",
     heading: /SPEC Stories/i,
   },
-  // NOTE: /jobs redirects to / in CI (requires live Supabase data)
-  // {
-  //   name: "jobs page",
-  //   path: "/jobs",
-  //   heading: /Find the best startup jobs/i,
-  // },
-  {
-    name: "launches page",
-    path: "/launches",
-    heading: /Launch SPEC/i,
-  },
 ];
 
 for (const pageCase of publicPages) {

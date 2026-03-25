@@ -12,9 +12,6 @@ import {
   FileText,
   BookOpen,
   CalendarDays,
-  Briefcase,
-  Rocket,
-  Library,
   Cog,
   FormInput,
   GraduationCap,
@@ -41,12 +38,11 @@ const NAV_ITEMS: AdminNavItem[] = [
   { label: "폼 빌더", href: "/admin/form-builder", icon: FormInput },
   { label: "커리큘럼", href: "/admin/curriculum", icon: GraduationCap },
   { label: "FAQ", href: "/admin/faq", icon: HelpCircle },
-  { label: "채용", href: "/admin/jobs", icon: Briefcase },
-  { label: "런칭", href: "/admin/launches", icon: Rocket },
-  { label: "자료실", href: "/admin/library", icon: Library },
   { label: "파트너", href: "/admin/partners", icon: Handshake },
   { label: "설정", href: "/admin/settings", icon: Cog },
 ];
+
+const NAV_GROUP_BREAKS = new Set(["/admin/recruitment", "/admin/attendance", "/admin/faq"]);
 
 function isActivePath(pathname: string, href: string): boolean {
   if (href === "/admin") {
@@ -135,34 +131,37 @@ export function MobileAdminNav() {
   const activePath = useMemo(() => pendingHref ?? pathname, [pathname, pendingHref]);
 
   return (
-    <nav className="flex items-center gap-1.5 overflow-x-auto">
-      {items.map((item) => {
+    <nav className="flex items-center gap-1 overflow-x-auto">
+      {items.map((item, idx) => {
         const active = isActivePath(activePath, item.href);
         const pending = pendingHref === item.href && pathname !== item.href;
         const Icon = item.icon;
+        const showDivider = idx > 0 && NAV_GROUP_BREAKS.has(item.href);
 
         return (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={(event) => {
-              if (isModifiedEvent(event)) {
-                return;
-              }
+          <div key={item.href} className="flex shrink-0 items-center">
+            {showDivider && <div className="mx-1 h-4 w-px bg-[#ddd9cc]" />}
+            <Link
+              href={item.href}
+              onClick={(event) => {
+                if (isModifiedEvent(event)) {
+                  return;
+                }
 
-              setPendingHref(item.href);
-            }}
-            className={`flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
-              active
-                ? "bg-[#FFF0E5] text-[#FF6C0F]"
-                : "text-[#4a4a40] hover:bg-[#f0efe6]"
-            }`}
-            aria-current={active ? "page" : undefined}
-          >
-            <Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={active ? 2.5 : 2} />
-            <span>{item.label}</span>
-            {pending ? <PendingDot /> : null}
-          </Link>
+                setPendingHref(item.href);
+              }}
+              className={`flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                active
+                  ? "bg-[#FFF0E5] text-[#FF6C0F]"
+                  : "text-[#4a4a40] hover:bg-[#f0efe6]"
+              }`}
+              aria-current={active ? "page" : undefined}
+            >
+              <Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={active ? 2.5 : 2} />
+              <span>{item.label}</span>
+              {pending ? <PendingDot /> : null}
+            </Link>
+          </div>
         );
       })}
     </nav>

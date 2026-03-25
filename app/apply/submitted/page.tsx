@@ -113,7 +113,7 @@ export default async function SubmittedApplicationPage() {
               </h1>
               <p className="mt-1.5 text-base text-[#4a4a40] sm:mt-2 sm:text-lg break-words [overflow-wrap:anywhere]">{app.major || "-"}</p>
             </div>
-            <div className="grid grid-cols-3 gap-4 text-sm text-[#6b6b5e] md:text-right">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 text-sm text-[#6b6b5e] md:text-right">
               <div>
                 <p className="text-xs font-semibold text-[#16140f] sm:text-sm">학번</p>
                 <p className="text-xs sm:text-sm break-all">{app.student_id || "-"}</p>

@@ -51,7 +51,7 @@ export default function Knowledge() {
               {videoArticles.map((article, index) => (
                 <Link
                   key={index}
-                  href="/library"
+                  href="/blog"
                   className="group flex flex-col gap-3"
                 >
                   <div className="aspect-video overflow-hidden rounded-xl border border-white/10">
@@ -69,7 +69,7 @@ export default function Knowledge() {
               ))}
             </div>
 
-            <Link href="/library" className="group flex flex-col gap-6 sm:flex-row">
+            <Link href="/blog" className="group flex flex-col gap-6 sm:flex-row">
               <div className="aspect-video overflow-hidden rounded-xl sm:w-1/2 border border-white/10">
                 <img
                   src="https://bookface-static.ycombinator.com/assets/ycdc/knowledge/contrarian-bets-thumbnail-7338837a6c93d5ad4e5132173591a960a893ee96d2ba82617be6cab60aa20898.jpg"
@@ -134,7 +134,7 @@ export default function Knowledge() {
                  {essayTopics.map((essay, index) => (
                    <Link
                      key={index}
-                     href="/library"
+                      href="/blog"
                      className="group flex items-center justify-between font-['Pretendard',sans-serif] text-sm font-light text-white/80 transition-colors hover:text-[#FF6C0F]"
                    >
                      <span>{essay}</span>

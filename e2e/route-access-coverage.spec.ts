@@ -1,12 +1,10 @@
 import { expect, test } from "@playwright/test";
 
 const blockedRoutes = [
-  "/jobs",
   "/demoday",
   "/contact",
   "/cofounder-matching",
   "/faq",
-  "/library",
   "/press",
   "/subscribe",
   "/vcc",

@@ -144,7 +144,7 @@ export default function ApplicationsClient({ initialApplications }: Applications
           </p>
         </div>
 
-        <div className="mt-4 hidden rounded-lg border border-[#ddd9cc] bg-white lg:block">
+        <div className="mt-4 hidden rounded-lg border border-[#ddd9cc] bg-white md:block">
           <table className="min-w-full border-collapse">
             <thead className="bg-[#f0efe6] text-left">
               <tr>
@@ -210,30 +210,30 @@ export default function ApplicationsClient({ initialApplications }: Applications
                         <div className="flex items-center gap-2">
                           <Link
                             href={`/admin/applications/${app.id}`}
-                            className="inline-flex h-8 items-center rounded-md border border-[#ddd9cc] px-3 text-xs font-medium text-[#16140f] hover:bg-[#fcfcf8]"
+                            className="inline-flex h-8 items-center rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f] hover:bg-[#fcfcf8]"
                           >
-                            열람하기
+                            열람
                           </Link>
                           {app.status === "accepted" && (
                             conversionStatus[app.id] === "done" || conversionStatus[app.id] === "already" ? (
-                              <span className="font-['Pretendard',sans-serif] text-xs font-semibold text-[#2f9e44]">등록됨</span>
+                              <span className="inline-flex h-8 items-center font-['Pretendard',sans-serif] text-xs font-semibold text-[#2f9e44]">등록됨</span>
                             ) : (
                               <button
                                 onClick={() => handleConvert(app.id)}
                                 disabled={isPending || conversionStatus[app.id] === "loading"}
-                                className="inline-flex h-8 items-center rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f] hover:bg-[#fcfcf8] disabled:opacity-50"
+                                className="inline-flex h-8 items-center whitespace-nowrap rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f] hover:bg-[#fcfcf8] disabled:opacity-50"
                               >
                                 {conversionStatus[app.id] === "loading" ? "등록 중..." : "멤버 등록"}
                               </button>
                             )
                           )}
-                          {conversionMsg[app.id] && (
-                            <span className={`font-['Pretendard',sans-serif] text-xs font-semibold ${conversionMsg[app.id].type === "success" ? "text-[#2f9e44]" : "text-[#b42318]"}`}>
-                              {conversionMsg[app.id].text}
-                            </span>
-                          )}
                           <DeleteApplicationButton id={app.id} applicantName={app.name} />
                         </div>
+                        {conversionMsg[app.id] && (
+                          <p className={`mt-1 font-['Pretendard',sans-serif] text-xs font-semibold ${conversionMsg[app.id].type === "success" ? "text-[#2f9e44]" : "text-[#b42318]"}`}>
+                            {conversionMsg[app.id].text}
+                          </p>
+                        )}
                       </td>
                     </tr>
                   );
@@ -243,7 +243,7 @@ export default function ApplicationsClient({ initialApplications }: Applications
           </table>
         </div>
 
-        <div className="space-y-3 lg:hidden">
+        <div className="space-y-3 md:hidden">
           {filteredApplications.length === 0 ? (
             <div className="rounded-lg border border-[#ddd9cc] bg-white p-4 sm:p-5">
               <p className="font-['Pretendard',sans-serif] text-sm text-[#6b6b5e]">아직 접수된 지원서가 없습니다.</p>
@@ -270,7 +270,7 @@ export default function ApplicationsClient({ initialApplications }: Applications
                   <p className="text-[#6b6b5e]">지원일: {formatDate(app.created_at)}</p>
                 </div>
 
-                  <div className="mt-4 space-y-2">
+                  <div className="mt-4 space-y-3">
                     <CustomSelect
                       value={app.status}
                       onChange={(v) => {
@@ -280,33 +280,33 @@ export default function ApplicationsClient({ initialApplications }: Applications
                       options={STATUS_OPTIONS.map((s) => ({ value: s, label: formatStatusLabel(s) }))}
                       className="w-full sm:w-[160px]"
                     />
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-2">
                       <Link
                         href={`/admin/applications/${app.id}`}
-                        className="inline-flex h-8 items-center rounded-md border border-[#ddd9cc] px-3 text-xs font-medium text-[#16140f] hover:bg-[#fcfcf8]"
+                        className="inline-flex h-8 items-center rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f] hover:bg-[#fcfcf8]"
                       >
-                        열람하기
+                        열람
                       </Link>
                       {app.status === "accepted" && (
                         conversionStatus[app.id] === "done" || conversionStatus[app.id] === "already" ? (
-                          <span className="font-['Pretendard',sans-serif] text-xs font-semibold text-[#2f9e44]">등록됨</span>
+                          <span className="inline-flex h-8 items-center font-['Pretendard',sans-serif] text-xs font-semibold text-[#2f9e44]">등록됨</span>
                         ) : (
                           <button
                             onClick={() => handleConvert(app.id)}
                             disabled={isPending || conversionStatus[app.id] === "loading"}
-                            className="inline-flex h-8 items-center rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f] hover:bg-[#fcfcf8] disabled:opacity-50"
+                            className="inline-flex h-8 items-center whitespace-nowrap rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f] hover:bg-[#fcfcf8] disabled:opacity-50"
                           >
                             {conversionStatus[app.id] === "loading" ? "등록 중..." : "멤버 등록"}
                           </button>
                         )
                       )}
-                      {conversionMsg[app.id] && (
-                        <span className={`font-['Pretendard',sans-serif] text-xs font-semibold ${conversionMsg[app.id].type === "success" ? "text-[#2f9e44]" : "text-[#b42318]"}`}>
-                          {conversionMsg[app.id].text}
-                        </span>
-                      )}
                       <DeleteApplicationButton id={app.id} applicantName={app.name} />
                     </div>
+                    {conversionMsg[app.id] && (
+                      <p className={`font-['Pretendard',sans-serif] text-xs font-semibold ${conversionMsg[app.id].type === "success" ? "text-[#2f9e44]" : "text-[#b42318]"}`}>
+                        {conversionMsg[app.id].text}
+                      </p>
+                    )}
                   </div>
               </article>
             ))

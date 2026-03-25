@@ -3,7 +3,7 @@ type SkeletonProps = {
 };
 
 function Skeleton({ className }: SkeletonProps) {
-  return <div className={`animate-pulse rounded-[18px] bg-[#16140f]/8 ${className}`} />;
+  return <div className={`animate-pulse rounded-lg bg-[#16140f]/8 ${className}`} />;
 }
 
 export function ListPageLoading({ cardCount = 6 }: { cardCount?: number }) {
@@ -18,8 +18,8 @@ export function ListPageLoading({ cardCount = 6 }: { cardCount?: number }) {
 
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: cardCount }).map((_, index) => (
-            <div key={index} className="rounded-[28px] border border-[#16140f]/8 bg-white/80 p-6 shadow-sm">
-              <Skeleton className="mb-5 h-12 w-12 rounded-2xl" />
+            <div key={index} className="rounded-lg border border-[#16140f]/8 bg-white/80 p-6 shadow-sm">
+              <Skeleton className="mb-5 h-12 w-12 rounded-lg" />
               <Skeleton className="mb-3 h-7 w-2/3" />
               <Skeleton className="mb-2 h-4 w-full" />
               <Skeleton className="mb-6 h-4 w-4/5" />
@@ -52,7 +52,7 @@ export function DetailPageLoading({ sidebar = false }: { sidebar?: boolean }) {
                 <Skeleton className="h-7 w-16 rounded-full" />
               </div>
             </div>
-            <Skeleton className="h-[280px] w-full rounded-[28px]" />
+            <Skeleton className="h-[280px] w-full rounded-lg" />
             <div className="space-y-3">
               <Skeleton className="h-5 w-40" />
               <Skeleton className="h-4 w-full" />
@@ -61,14 +61,14 @@ export function DetailPageLoading({ sidebar = false }: { sidebar?: boolean }) {
             </div>
             <div className="space-y-4">
               <Skeleton className="h-5 w-28" />
-              <Skeleton className="h-24 w-full rounded-[24px]" />
-              <Skeleton className="h-24 w-full rounded-[24px]" />
+              <Skeleton className="h-24 w-full rounded-lg" />
+              <Skeleton className="h-24 w-full rounded-lg" />
             </div>
           </div>
           {sidebar ? (
             <div className="w-full shrink-0 space-y-5 lg:w-[300px]">
-              <Skeleton className="h-[220px] w-full rounded-[28px]" />
-              <Skeleton className="h-[180px] w-full rounded-[28px]" />
+              <Skeleton className="h-[220px] w-full rounded-lg" />
+              <Skeleton className="h-[180px] w-full rounded-lg" />
             </div>
           ) : null}
         </div>
@@ -94,12 +94,12 @@ export function FormPageLoading() {
           <Skeleton className="h-2 flex-1 rounded-full" />
         </div>
 
-        <div className="rounded-[32px] border border-[#16140f]/8 bg-white/80 p-6 shadow-sm md:p-8">
+        <div className="rounded-lg border border-[#16140f]/8 bg-white/80 p-6 shadow-sm md:p-8">
           <div className="space-y-5">
             <Skeleton className="h-12 w-full" />
             <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-28 w-full rounded-[24px]" />
-            <Skeleton className="h-28 w-full rounded-[24px]" />
+            <Skeleton className="h-28 w-full rounded-lg" />
+            <Skeleton className="h-28 w-full rounded-lg" />
             <div className="flex gap-3 pt-2">
               <Skeleton className="h-14 flex-1 rounded-full" />
               <Skeleton className="h-14 flex-1 rounded-full" />
@@ -121,12 +121,12 @@ export function DashboardPageLoading() {
         </div>
 
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          <Skeleton className="h-40 w-full rounded-[28px]" />
-          <Skeleton className="h-40 w-full rounded-[28px]" />
-          <Skeleton className="h-40 w-full rounded-[28px]" />
+          <Skeleton className="h-40 w-full rounded-lg" />
+          <Skeleton className="h-40 w-full rounded-lg" />
+          <Skeleton className="h-40 w-full rounded-lg" />
         </div>
 
-        <Skeleton className="h-[360px] w-full rounded-[32px]" />
+        <Skeleton className="h-[360px] w-full rounded-lg" />
       </div>
     </div>
   );

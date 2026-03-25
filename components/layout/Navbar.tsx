@@ -5,9 +5,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 import { useUser } from "@/hooks/useUser";
-import {
-  RECRUITMENT_BATCH,
-} from "@/lib/recruitment-schedule";
 import { createClient } from "@/lib/supabase/client";
 
 import ApplyButton from "@/components/ui/ApplyButton";
@@ -18,40 +15,6 @@ const ROLE_LABEL: Record<string, string> = {
   preneur: "프러너",
   admin: "관리자",
 };
-
-const APPLY_DEADLINE = {
-  year: 2026,
-  month: 3,
-  day: 12,
-} as const;
-
-function getApplyDdayLabel() {
-  const now = new Date();
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(now);
-
-  const year = Number(parts.find((part) => part.type === "year")?.value);
-  const month = Number(parts.find((part) => part.type === "month")?.value);
-  const day = Number(parts.find((part) => part.type === "day")?.value);
-
-  const todayUtc = Date.UTC(year, month - 1, day);
-  const deadlineUtc = Date.UTC(APPLY_DEADLINE.year, APPLY_DEADLINE.month - 1, APPLY_DEADLINE.day);
-  const diffDays = Math.floor((deadlineUtc - todayUtc) / (1000 * 60 * 60 * 24));
-
-  if (diffDays > 0) {
-    return `D-${diffDays}`;
-  }
-
-  if (diffDays === 0) {
-    return "D-DAY";
-  }
-
-  return "마감";
-}
 
 function getInitials(name: string) {
   const trimmed = name.trim();
@@ -91,8 +54,6 @@ export default function Navbar() {
   );
   const roleLabel = useMemo(() => ROLE_LABEL[role] ?? "외부", [role]);
   const initials = useMemo(() => getInitials(displayName), [displayName]);
-  const applyDdayLabel = useMemo(() => getApplyDdayLabel(), []);
-
   const [menuOpen, setMenuOpen] = useState(false);
   const [showComingSoon, setShowComingSoon] = useState(false);
 
@@ -225,16 +186,10 @@ export default function Navbar() {
                   <Link href="/founders" className={`dropdown-item block px-4 py-2 ${dropdownText} rounded text-sm font-['Pretendard',sans-serif]`}>
                     팀원 디렉토리
                   </Link>
-                  <button onClick={handleComingSoon} className={`dropdown-item block w-full text-left px-4 py-2 ${dropdownText} rounded text-sm font-['Pretendard',sans-serif]`}>
-                    런칭 소식
-                  </button>
                 </div>
               </div>
             </div>
 
-{/* <Link href="/library" className={`nav-link ${textColor} ${hoverColor} font-['Pretendard',sans-serif] text-sm`}>
-              라이브러리
-            </Link> */}
           </div>
 
           <Link href="/" className="mx-8 shrink-0">
@@ -458,15 +413,9 @@ export default function Navbar() {
                 <Link href="/founders" onClick={() => setMenuOpen(false)} className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}>
                   팀원 디렉토리
                 </Link>
-                <button onClick={handleComingSoon} className={`block w-full text-left rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}>
-                  런칭 소식
-                </button>
               </div>
 
               <div className="mb-6 flex flex-col gap-1">
-{/* <Link href="/library" onClick={() => setMenuOpen(false)} className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}>
-                  라이브러리
-                </Link> */}
                 <Link href="/partners" onClick={() => setMenuOpen(false)} className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}>
                   파트너
                 </Link>

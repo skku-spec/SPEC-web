@@ -90,8 +90,8 @@ export function RunnerHomeworkClient() {
             <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#FF6C0F] border-t-transparent" />
           </div>
         ) : homeworks.length === 0 ? (
-          <div className="rounded-[32px] border-2 border-dashed border-[#d9d9cc] bg-white p-20 text-center">
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-[#f5f5ee]">
+          <div className="rounded-lg border-2 border-dashed border-[#d9d9cc] bg-white p-20 text-center">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-lg bg-[#f5f5ee]">
               <span role="img" aria-label="책" className="text-4xl">📚</span>
             </div>
             <h3 className="text-xl font-bold text-[#16140f]">등록된 과제가 없습니다</h3>
@@ -102,10 +102,10 @@ export function RunnerHomeworkClient() {
             const myTeam = myAssignments[hw.id];
             
             return (
-              <div key={hw.id} className="group overflow-hidden rounded-[24px] border border-[#d9d9cc] bg-white transition-all hover:border-[#FF6C0F] hover:shadow-lg">
+              <div key={hw.id} className="group overflow-hidden rounded-lg border border-[#d9d9cc] bg-white transition-all hover:border-[#FF6C0F] hover:shadow-lg">
                 <div className="flex flex-wrap items-center justify-between px-8 py-5 gap-4">
                   <div className="flex items-center gap-5">
-                    <span role="img" aria-label="책" className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f5f5ee] text-2xl transition-transform group-hover:scale-110">📖</span>
+                    <span role="img" aria-label="책" className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#f5f5ee] text-2xl transition-transform group-hover:scale-110">📖</span>
                     <div>
                       <h3 className="text-lg font-black text-[#16140f]">{hw.title}</h3>
                       <div className="flex flex-wrap gap-2 mt-1">
@@ -170,13 +170,13 @@ export function RunnerHomeworkClient() {
                             <div className="space-y-3">
                               {hw.individual_content && hw.individual_content.length > 0 ? (
                                 hw.individual_content.map((task, idx) => (
-                                  <div key={`indiv-task-${hw.id}-${idx}`} className="rounded-2xl bg-white p-5 border border-blue-50 shadow-sm text-sm text-[#4a4a40] leading-relaxed relative overflow-hidden group/task">
+                                  <div key={`indiv-task-${hw.id}-${idx}`} className="rounded-lg bg-white p-5 border border-blue-50 shadow-sm text-sm text-[#4a4a40] leading-relaxed relative overflow-hidden group/task">
                                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-100 group-hover/task:bg-blue-400 transition-colors" />
                                     <span className="font-black text-blue-400 mr-2 italic">#{idx + 1}</span> {task}
                                   </div>
                                 ))
                               ) : (
-                                <p className="text-xs text-[#a1a196] italic p-4 bg-white rounded-2xl border border-dashed">등록된 개인 과제가 없습니다.</p>
+                                <p className="text-xs text-[#a1a196] italic p-4 bg-white rounded-lg border border-dashed">등록된 개인 과제가 없습니다.</p>
                               )}
                             </div>
                           </div>
@@ -191,13 +191,13 @@ export function RunnerHomeworkClient() {
                             <div className="space-y-3">
                               {hw.team_content && hw.team_content.length > 0 ? (
                                 hw.team_content.map((task, idx) => (
-                                  <div key={`team-task-${hw.id}-${idx}`} className="rounded-2xl bg-white p-5 border border-purple-50 shadow-sm text-sm text-[#4a4a40] leading-relaxed relative overflow-hidden group/task">
+                                  <div key={`team-task-${hw.id}-${idx}`} className="rounded-lg bg-white p-5 border border-purple-50 shadow-sm text-sm text-[#4a4a40] leading-relaxed relative overflow-hidden group/task">
                                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-purple-100 group-hover/task:bg-purple-400 transition-colors" />
                                     <span className="font-black text-purple-400 mr-2 italic">#{idx + 1}</span> {task}
                                   </div>
                                 ))
                               ) : (
-                                <p className="text-xs text-[#a1a196] italic p-4 bg-white rounded-2xl border border-dashed">등록된 팀 과제가 없습니다.</p>
+                                <p className="text-xs text-[#a1a196] italic p-4 bg-white rounded-lg border border-dashed">등록된 팀 과제가 없습니다.</p>
                               )}
                             </div>
                           </div>
@@ -206,7 +206,7 @@ export function RunnerHomeworkClient() {
                       
                       <div className="lg:col-span-4 space-y-6">
                         {hw.is_team && (
-                          <div className="rounded-[24px] border-2 border-[#f0efe6] bg-white p-6 shadow-sm">
+                          <div className="rounded-lg border-2 border-[#f0efe6] bg-white p-6 shadow-sm">
                             <h4 className="text-[10px] font-black uppercase tracking-widest text-[#a1a196] mb-4 flex items-center gap-2 italic">
                               <span className="h-1.5 w-1.5 rounded-full bg-[#FF6C0F]" /> My Team Info
                             </h4>
@@ -240,7 +240,7 @@ export function RunnerHomeworkClient() {
                           </div>
                         )}
 
-                        <div className="rounded-[24px] border-2 border-dashed border-[#d9d9cc] p-6 flex flex-col items-center justify-center gap-4 text-center">
+                        <div className="rounded-lg border-2 border-dashed border-[#d9d9cc] p-6 flex flex-col items-center justify-center gap-4 text-center">
                           <div className="h-12 w-12 rounded-full bg-[#FF6C0F]/10 flex items-center justify-center">
                             <span role="img" aria-label="로켓" className="text-xl">🚀</span>
                           </div>

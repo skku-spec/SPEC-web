@@ -20,15 +20,6 @@
  *   }
  */
 
-// ─── Re-export Types ────────────────────────────────────────────────
-export type { RoleCategory, LocationOption } from "../app/jobs/jobsData";
-export type {
-  LibraryItem,
-  ContentType,
-  Category,
-} from "../app/library/library-data";
-export type Launch = Database["public"]["Tables"]["launches"]["Row"];
-
 export interface Company {
   name: string;
   slug: string;
@@ -129,20 +120,8 @@ import { createClient } from "@/lib/supabase/server";
 import type { Database, MemberType, ProfileRole, ProfileVisibility } from "@/lib/supabase/types";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
-import {
-  roleCategories,
-  locationOptions,
-  getRoleLabel as _getRoleLabel,
-  getLocationLabel as _getLocationLabel,
-} from "../app/jobs/jobsData";
-type Job = Database["public"]["Tables"]["jobs"]["Row"];
 export type MemberRow = Database["public"]["Tables"]["members"]["Row"];
 export type ProjectRow = Database["public"]["Tables"]["projects"]["Row"];
-
-import {
-  categories as _categories,
-} from "../app/library/library-data";
-import type { LibraryItem, Category, ContentType } from "../app/library/library-data";
 
 function handleQueryResult<T>(
   result: { data: T | null; error: { message: string; code?: string } | null },
@@ -856,141 +835,6 @@ export async function getRelatedPosts(
   return mapRowsToBlogPosts(rows ?? []);
 }
 
-// ─── Jobs ───────────────────────────────────────────────────────────
-
-export async function getJobs(filters?: {
-  role?: string;
-  location?: string;
-  query?: string;
-}): Promise<Job[]> {
-  const supabase = await createClient();
-
-  let query = supabase.from("jobs").select("*").eq("active", true);
-
-  if (filters?.role && filters.role !== "all") {
-    query = query.eq("role_slug", filters.role);
-  }
-
-  if (filters?.location && filters.location !== "all") {
-    query = query.eq("location_slug", filters.location);
-  }
-
-  if (filters?.query) {
-    const q = filters.query.trim();
-    if (q) {
-      query = query.or(`title.ilike.%${q}%,company.ilike.%${q}%`);
-    }
-  }
-
-  const rowsResult = await query;
-  const rows = handleQueryResult(rowsResult, "Failed to fetch jobs", []);
-
-  return rows ?? [];
-}
-
-export async function getRoleCategories() {
-  return roleCategories;
-}
-
-export async function getLocationOptions() {
-  return locationOptions;
-}
-
-export async function getRoleLabel(slug: string): Promise<string> {
-  return _getRoleLabel(slug);
-}
-
-export async function getLocationLabel(slug: string): Promise<string> {
-  return _getLocationLabel(slug);
-}
-
-// ─── Library ────────────────────────────────────────────────────────
-
-export async function getLibraryItems(filters?: {
-  category?: Category;
-  type?: string;
-  query?: string;
-}): Promise<LibraryItem[]> {
-  const supabase = await createClient();
-  let query = supabase.from("library_items").select("*");
-
-  if (filters?.category) {
-    query = query.contains("categories", [filters.category]);
-  }
-
-  if (filters?.type) {
-    query = query.eq("type", filters.type);
-  }
-
-  if (filters?.query) {
-    const q = filters.query.trim();
-    if (q) {
-      query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%`);
-    }
-  }
-
-  const rowsResult = await query;
-  const rows = handleQueryResult(rowsResult, "Failed to fetch library items", []);
-
-  return (rows ?? []).map((row) => ({
-    slug: row.slug,
-    title: row.title,
-    author: row.author,
-    authorRole: row.author_role,
-    type: row.type as ContentType,
-    categories: row.categories as Category[],
-    description: row.description,
-    body: row.body,
-    date: row.date,
-    views: String(row.views),
-    duration: row.duration,
-    youtubeId: row.youtube_id,
-    featured: row.featured,
-    thumbnailColor: row.thumbnail_color,
-  }));
-}
-
-export async function getLibraryItemBySlug(
-  slug: string
-): Promise<LibraryItem | undefined> {
-  const supabase = await createClient();
-  const rowResult = await supabase
-    .from("library_items")
-    .select("*")
-    .eq("slug", slug)
-    .maybeSingle();
-  const row = handleQueryResult(
-    rowResult,
-    `Failed to fetch library item by slug: ${slug}`,
-    null
-  );
-
-  if (!row) {
-    return undefined;
-  }
-
-  return {
-    slug: row.slug,
-    title: row.title,
-    author: row.author,
-    authorRole: row.author_role,
-    type: row.type as ContentType,
-    categories: row.categories as Category[],
-    description: row.description,
-    body: row.body,
-    date: row.date,
-    views: String(row.views),
-    duration: row.duration,
-    youtubeId: row.youtube_id,
-    featured: row.featured,
-    thumbnailColor: row.thumbnail_color,
-  };
-}
-
-export async function getLibraryCategories(): Promise<Category[]> {
-  return _categories;
-}
-
 // ─── Member Directory ───────────────────────────────────────────────
 
 export async function getFounderDirectory(filters?: {
@@ -1136,38 +980,6 @@ export async function getFounderDirectoryFilterOptions() {
     memberTypes,
     projects: projectOptions,
   };
-}
-
-// ─── Launches ───────────────────────────────────────────────────────
-
-const LAUNCH_CATEGORIES = [
-  { emoji: "all", label: "전체" },
-  { emoji: "📚", label: "에듀테크" },
-  { emoji: "🍽️", label: "푸드테크" },
-  { emoji: "🏥", label: "헬스케어" },
-  { emoji: "💰", label: "핀테크" },
-  { emoji: "🛒", label: "커머스" },
-  { emoji: "💬", label: "소셜" },
-  { emoji: "🖥️", label: "SaaS" },
-  { emoji: "🚚", label: "물류" },
-  { emoji: "🤖", label: "AI/ML" },
-  { emoji: "📦", label: "기타" },
-] as const;
-
-export async function getLaunches(): Promise<Launch[]> {
-  const supabase = await createClient();
-  const rowsResult = await supabase
-    .from("launches")
-    .select("*")
-    .eq("active", true)
-    .order("created_at", { ascending: false });
-  const rows = handleQueryResult(rowsResult, "Failed to fetch launches", []);
-
-  return rows ?? [];
-}
-
-export async function getLaunchCategories() {
-  return LAUNCH_CATEGORIES;
 }
 
 // ─── Company Details ────────────────────────────────────────────────

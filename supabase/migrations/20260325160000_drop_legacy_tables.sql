@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS public.jobs CASCADE;
+DROP TABLE IF EXISTS public.launches CASCADE;
+DROP TABLE IF EXISTS public.library_items CASCADE;
