@@ -229,6 +229,7 @@ function formatBlogDate(dateString: string): string {
   return new Date(dateString).toLocaleDateString("ko-KR", {
     year: "numeric",
     month: "long",
+    day: "numeric",
   });
 }
 
@@ -317,7 +318,7 @@ async function mapRowsToBlogPosts(rows: PostRow[]): Promise<BlogPost[]> {
       authorSlug: profile?.slug ?? "",
       authorRole: profile?.role,
       authorProfileVisibility: profile?.profile_visibility,
-      date: formatBlogDate(row.created_at),
+      date: row.created_at,
       tags: tagsByPostId.get(row.id) ?? [],
       featured: row.featured,
       imageUrl: row.image_url,

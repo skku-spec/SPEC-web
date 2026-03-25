@@ -194,6 +194,9 @@ export default async function BlogPostPage({
                     {authorName}
                   </p>
                 )}
+                <p className="font-['Pretendard',sans-serif] text-[13px] text-[#6b6b5e]">
+                  {new Date(post.date).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" })}
+                </p>
               </div>
             </div>
 
