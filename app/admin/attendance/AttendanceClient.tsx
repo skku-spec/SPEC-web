@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useTransition } from "react";
-import { markAttendance, createSession, deleteSession, markAllPresent } from "@/lib/actions/tracker";
+import { markAttendance, deleteAttendance, createSession, deleteSession, markAllPresent } from "@/lib/actions/tracker";
 
 type Profile = {
   id: string;
@@ -47,10 +47,10 @@ type Props = {
 }
 
 const STATUS_OPTS: { key: Status; label: string; color: string; text: string; hover: string; active: string }[] = [
-  { key: "present", label: "출", color: "bg-green-500", text: "text-green-500", hover: "hover:bg-green-100", active: "bg-green-50" },
-  { key: "late", label: "지", color: "bg-amber-500", text: "text-amber-500", hover: "hover:bg-amber-100", active: "bg-amber-50" },
-  { key: "absent", label: "결", color: "bg-red-500", text: "text-red-500", hover: "hover:bg-red-100", active: "bg-red-50" },
-  { key: "excused", label: "공", color: "bg-blue-500", text: "text-blue-500", hover: "hover:bg-blue-100", active: "bg-blue-50" },
+  { key: "present", label: "출", color: "bg-[#2f9e44]", text: "text-[#2f9e44]", hover: "hover:bg-[#2f9e44]/10", active: "bg-[#2f9e44]/5" },
+  { key: "late", label: "지", color: "bg-[#FF6C0F]", text: "text-[#FF6C0F]", hover: "hover:bg-[#FF6C0F]/10", active: "bg-[#FF6C0F]/5" },
+  { key: "absent", label: "결", color: "bg-[#b42318]", text: "text-[#b42318]", hover: "hover:bg-[#b42318]/10", active: "bg-[#b42318]/5" },
+  { key: "excused", label: "공", color: "bg-[#2563EB]", text: "text-[#2563EB]", hover: "hover:bg-[#2563EB]/10", active: "bg-[#2563EB]/5" },
 ];
 
 const STATUS_LABELS: Record<Status, string> = {
@@ -90,37 +90,53 @@ export function AttendanceClient({
       present: userLogs.filter(l => l.status === "present").length,
       late: userLogs.filter(l => l.status === "late").length,
       absent: userLogs.filter(l => l.status === "absent").length,
+      excused: userLogs.filter(l => l.status === "excused").length,
       homework: userSubmissions.length,
     };
   };
 
   const handleUpdateStatus = async (userId: string, sessionId: string, status: Status) => {
     if (!isAdminOrPreneur) return;
+    const current = logs.find(l => l.user_id === userId && l.session_id === sessionId);
+    const isToggleOff = current?.status === status;
+
     startTransition(async () => {
-      await markAttendance(userId, sessionId, status);
-      setLogs(prev => {
-        const filtered = prev.filter(l => !(l.user_id === userId && l.session_id === sessionId));
-        const current = prev.find(l => l.user_id === userId && l.session_id === sessionId);
-        if (current?.status === status) return filtered;
-        return [...filtered, { id: Math.random().toString(), user_id: userId, session_id: sessionId, status }];
-      });
+      try {
+        if (isToggleOff) {
+          await deleteAttendance(userId, sessionId);
+          setLogs(prev => prev.filter(l => !(l.user_id === userId && l.session_id === sessionId)));
+        } else {
+          await markAttendance(userId, sessionId, status);
+          setLogs(prev => {
+            const filtered = prev.filter(l => !(l.user_id === userId && l.session_id === sessionId));
+            return [...filtered, { id: crypto.randomUUID(), user_id: userId, session_id: sessionId, status }];
+          });
+        }
+      } catch (e) {
+        alert(e instanceof Error ? e.message : "출석 상태 변경 중 오류가 발생했습니다.");
+      }
     });
   };
 
   const handleMarkAllPresent = async (sessionId: string) => {
     if (!isAdminOrPreneur) return;
+    if (!confirm("전원 출석으로 변경하시겠습니까?")) return;
     startTransition(async () => {
-      await markAllPresent(sessionId);
-      setLogs(prev => {
-        const filtered = prev.filter(l => l.session_id !== sessionId);
-        const newLogs = runners.map(r => ({
-          id: Math.random().toString(),
-          user_id: r.id,
-          session_id: sessionId,
-          status: "present"
-        }));
-        return [...filtered, ...newLogs];
-      });
+      try {
+        await markAllPresent(sessionId);
+        setLogs(prev => {
+          const filtered = prev.filter(l => l.session_id !== sessionId);
+          const newLogs = runners.map(r => ({
+            id: crypto.randomUUID(),
+            user_id: r.id,
+            session_id: sessionId,
+            status: "present"
+          }));
+          return [...filtered, ...newLogs];
+        });
+      } catch (e) {
+        alert(e instanceof Error ? e.message : "전원 출석 처리 중 오류가 발생했습니다.");
+      }
     });
   };
 
@@ -128,17 +144,32 @@ export function AttendanceClient({
     const title = newSessionTitle.trim() || `${sessions.length + 1}주차`;
     const date = new Date().toISOString().split('T')[0];
     startTransition(async () => {
-      await createSession(title, date);
-      setSessions(prev => [...prev, { id: Math.random().toString(), title, date }]);
-      setNewSessionTitle("");
+      try {
+        const result = await createSession(title, date);
+        if (result.session) {
+          setSessions(prev => [...prev, {
+            id: result.session.id,
+            title: result.session.title,
+            date: result.session.date
+          }]);
+        }
+        setNewSessionTitle("");
+      } catch (e) {
+        alert(e instanceof Error ? e.message : "세션 추가 중 오류가 발생했습니다.");
+      }
     });
   };
 
   const handleDeleteSession = (id: string) => {
     if (!confirm("삭제하시겠습니까?")) return;
     startTransition(async () => {
-      await deleteSession(id);
-      setSessions(prev => prev.filter(s => s.id !== id));
+      try {
+        await deleteSession(id);
+        setSessions(prev => prev.filter(s => s.id !== id));
+        setLogs(prev => prev.filter(l => l.session_id !== id));
+      } catch (e) {
+        alert(e instanceof Error ? e.message : "세션 삭제 중 오류가 발생했습니다.");
+      }
     });
   };
 
@@ -156,7 +187,7 @@ export function AttendanceClient({
           <button
             onClick={handleAddSession}
             disabled={isPending}
-            className="inline-flex h-[42px] items-center rounded-lg bg-[#16140f] px-4 font-['Pretendard',sans-serif] text-xs font-semibold text-white transition-colors hover:bg-[#16140f]/80 disabled:opacity-50"
+            className="inline-flex h-8 items-center rounded-md bg-[#16140f] px-3 font-['Pretendard',sans-serif] text-xs font-semibold text-white transition-colors hover:bg-[#16140f]/80 disabled:opacity-50"
           >
             세션 추가
           </button>
@@ -175,12 +206,22 @@ export function AttendanceClient({
                 <th key={s.id} className="px-3 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-center min-w-[110px]">
                   <div>{s.title}</div>
                   {isAdminOrPreneur && (
-                    <button
-                      onClick={() => handleMarkAllPresent(s.id)}
-                      className="mt-1 font-['Pretendard',sans-serif] text-[10px] font-semibold text-[#FF6C0F] hover:underline"
-                    >
-                      전원 출석
-                    </button>
+                    <div className="mt-1 flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => handleMarkAllPresent(s.id)}
+                        disabled={isPending}
+                        className="font-['Pretendard',sans-serif] text-xs font-semibold text-[#FF6C0F] hover:underline disabled:opacity-50"
+                      >
+                        전원 출석
+                      </button>
+                      <button
+                        onClick={() => handleDeleteSession(s.id)}
+                        disabled={isPending}
+                        className="font-['Pretendard',sans-serif] text-xs font-semibold text-[#b42318] hover:underline disabled:opacity-50"
+                      >
+                        삭제
+                      </button>
+                    </div>
                   )}
                 </th>
               ))}
@@ -204,11 +245,12 @@ export function AttendanceClient({
                       </div>
                       <div>
                         <p className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{runner.name}</p>
-                        <div className="flex gap-2 font-['Pretendard',sans-serif] text-[10px] text-[#6b6b5e]">
-                          <span className="text-green-600">출 {stats.present}</span>
-                          <span className="text-amber-600">지 {stats.late}</span>
-                          <span className="text-red-600">결 {stats.absent}</span>
-                          {!hideHomework && <span className="text-blue-600">과제 {stats.homework}/{homeworks.length}</span>}
+                        <div className="flex gap-2 font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">
+                          <span className="text-[#2f9e44]">출 {stats.present}</span>
+                          <span className="text-[#FF6C0F]">지 {stats.late}</span>
+                          <span className="text-[#b42318]">결 {stats.absent}</span>
+                          <span className="text-[#2563EB]">공 {stats.excused}</span>
+                          {!hideHomework && <span className="text-[#2563EB]">과제 {stats.homework}/{homeworks.length}</span>}
                         </div>
                       </div>
                     </div>
@@ -226,7 +268,7 @@ export function AttendanceClient({
                                 key={opt.key}
                                 onClick={() => handleUpdateStatus(runner.id, session.id, opt.key)}
                                 disabled={!isAdminOrPreneur || isPending}
-                                className={`flex h-7 w-7 items-center justify-center rounded-md font-['Pretendard',sans-serif] text-[10px] font-semibold transition-all border ${
+                                className={`flex h-7 w-7 items-center justify-center rounded-md font-['Pretendard',sans-serif] text-xs font-semibold transition-all border ${
                                   isActive
                                     ? `${opt.active} ${opt.text} ${opt.color.replace('bg-', 'border-')}`
                                     : `bg-white text-[#ddd9cc] border-[#ece8db] ${opt.hover}`
@@ -246,8 +288,8 @@ export function AttendanceClient({
                     return (
                       <td key={homework.id} className="px-2 py-3">
                         <div
-                          className={`mx-auto flex h-7 w-7 items-center justify-center rounded-md font-['Pretendard',sans-serif] text-[11px] font-semibold ${
-                            isCompleted ? "bg-blue-600 text-white" : "bg-[#f0efe6] text-[#ddd9cc]"
+                          className={`mx-auto flex h-7 w-7 items-center justify-center rounded-md font-['Pretendard',sans-serif] text-xs font-semibold ${
+                            isCompleted ? "bg-[#2563EB] text-white" : "bg-[#f0efe6] text-[#ddd9cc]"
                           }`}
                         >
                           {isCompleted ? "✓" : "-"}
@@ -271,7 +313,7 @@ export function AttendanceClient({
         ))}
         {!hideHomework && (
           <div className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-blue-600" />
+            <span className="h-2 w-2 rounded-full bg-[#2563EB]" />
             <span>과제 완료</span>
           </div>
         )}

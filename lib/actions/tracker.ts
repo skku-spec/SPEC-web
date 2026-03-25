@@ -90,6 +90,26 @@ export async function markAttendance(
 
   if (error) throw new Error(`Failed to mark attendance: ${error.message}`);
   revalidatePath("/admin/attendance");
+  revalidatePath("/dashboard/attendance");
+  return { success: true };
+}
+
+/**
+ * Remove attendance log for a user in a session (toggle-off).
+ */
+export async function deleteAttendance(userId: string, sessionId: string) {
+  await requireRole("preneur");
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("attendance_logs")
+    .delete()
+    .eq("user_id", userId)
+    .eq("session_id", sessionId);
+
+  if (error) throw new Error(`Failed to delete attendance: ${error.message}`);
+  revalidatePath("/admin/attendance");
+  revalidatePath("/dashboard/attendance");
   return { success: true };
 }
 
@@ -194,14 +214,17 @@ export async function createSession(title: string, date: string) {
   await requireRole("preneur");
   const supabase = await createClient();
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("attendance_sessions")
-    .insert({ title, date });
+    .insert({ title, date })
+    .select()
+    .single();
 
   if (error) throw new Error(`Failed to create session: ${error.message}`);
   revalidatePath("/admin/attendance");
   revalidatePath("/admin");
-  return { success: true };
+  revalidatePath("/dashboard/attendance");
+  return { success: true, session: data as { id: string; title: string; date: string; created_at: string } };
 }
 
 /**
@@ -219,6 +242,7 @@ export async function deleteSession(id: string) {
   if (error) throw new Error(`Failed to delete session: ${error.message}`);
   revalidatePath("/admin/attendance");
   revalidatePath("/admin");
+  revalidatePath("/dashboard/attendance");
   return { success: true };
 }
 
@@ -249,5 +273,6 @@ export async function markAllPresent(sessionId: string) {
   if (error) throw new Error(`Failed to batch mark attendance: ${error.message}`);
   revalidatePath("/admin/attendance");
   revalidatePath("/admin");
+  revalidatePath("/dashboard/attendance");
   return { success: true };
 }
