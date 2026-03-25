@@ -83,7 +83,7 @@ export async function convertApplicationToMember(applicationId: string): Promise
       phone: app.phone || null,
       email: app.email || null,
       major: app.major || null,
-      runner_batch: app.batch ? `${app.batch}기` : null,
+      learner_batch: app.batch ? `${app.batch}기` : null,
       member_type: "러너",
       public_profile_id: app.user_id || null,
     })

@@ -419,7 +419,7 @@ UNIQUE: `(post_id, user_id, emoji)` — 같은 유저가 같은 글에 같은 �
 | `phone` | text | NULL | — | 🔒 admin-only |
 | `email` | text | NULL | — | 🔒 admin-only |
 | `major` | text | NULL | — | |
-| `runner_batch` | text | NULL | — | 러너 기수 (1기, 2기...) |
+| `learner_batch` | text | NULL | — | 러너 기수 (1기, 2기...) |
 | `preneur_batch` | text | NULL | — | 프러너 기수 |
 | `batch_tags` | text[] | NOT NULL | `'{}'` | e.g. `['1기 러너', '3기 프러너']` |
 | `member_type` | text | NOT NULL | `'runner'` | CHECK: `러너`, `프러너`, `alumni` |
@@ -550,7 +550,7 @@ PK: `(member_id, project_id)` — composite
 | library_items | `idx_library_items_featured_created_at` | `featured, created_at DESC` |
 | launches | `idx_launches_active_created_at` | `active, created_at DESC` |
 | launches | `idx_launches_votes` | `votes DESC` |
-| members | `idx_members_runner_batch` | `runner_batch` |
+| members | `idx_members_learner_batch` | `learner_batch` |
 | members | `idx_members_member_type` | `member_type` |
 | members | `idx_members_slug` | `slug` |
 | projects | `idx_projects_slug` | `slug` |

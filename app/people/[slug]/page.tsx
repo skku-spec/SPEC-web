@@ -28,42 +28,34 @@ interface Person {
 const DEFAULT_PHOTO =
   "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=face";
 
-const MEMBER_PHOTOS: Record<string, string> = {
-  "권민재": "/images/member/권민재.png",
-  "김동인": "/images/member/김동인.png",
-  "김주현": "/images/member/김주현.png",
-  "김혜민": "/images/member/김혜민.png",
-  "류영상": "/images/member/류영상.png",
-  "서원준": "/images/member/서원준.png",
-  "신지은": "/images/member/신지은.png",
-  "이송목": "/images/member/이송목.png",
-  "이연서": "/images/member/이연서.png",
-  "임영빈": "/images/member/임영빈.png",
-  "장지민": "/images/member/장지민.png",
-  "전도현": "/images/member/전도현.png",
-  "전선희": "/images/member/전선희.png",
-  "최윤정": "/images/member/최윤정.png",
-  "한지상": "/images/member/한지상.png",
-};
-
 type MemberWithProfileLink = Pick<
   MemberRow,
-  "name" | "slug" | "role" | "bio" | "photo_url" | "batch_tags" | "linkedin_url" | "public_profile_id"
+  | "name"
+  | "slug"
+  | "role"
+  | "bio"
+  | "photo_url"
+  | "batch_tags"
+  | "parts"
+  | "member_type"
+  | "linkedin_url"
+  | "public_profile_id"
 >;
 
-function isManagingLead(member: Pick<MemberRow, "name" | "batch_tags">): boolean {
-  if (member.name === "전도현" || member.name === "한지상") {
-    return true;
-  }
-
-  return (member.batch_tags ?? []).some(
-    (tag) => tag.includes("4기 회장") || tag.includes("4기 부회장"),
-  );
+function isManagingLead(member: Pick<MemberRow, "batch_tags" | "parts">): boolean {
+  const tags = member.batch_tags ?? [];
+  const parts = member.parts ?? [];
+  const hasLeadTag = tags.some((tag) => tag.includes("회장") || tag.includes("부회장"));
+  const isCommunityLead = tags.some((tag) => tag.includes("커뮤니티")) || parts.includes("커뮤니티");
+  return hasLeadTag && !isCommunityLead;
 }
 
-function getMemberTitle(member: Pick<MemberRow, "role" | "name" | "batch_tags">): string {
+function getMemberTitle(member: Pick<MemberRow, "role" | "member_type" | "batch_tags" | "parts">): string {
   if (member.role && member.role.trim()) {
     return member.role;
+  }
+  if (member.member_type === "러너") {
+    return "Learner";
   }
   if (isManagingLead(member)) {
     return "Managing Lead";
@@ -87,7 +79,7 @@ function mapMemberToPerson(
     href: publicHref ?? `/people/${member.slug}`,
     title: getMemberTitle(member),
     bio: member.bio ?? "",
-    photo: MEMBER_PHOTOS[member.name] ?? member.photo_url ?? DEFAULT_PHOTO,
+    photo: member.photo_url ?? DEFAULT_PHOTO,
     isLead: isManagingLead(member),
     linkedin: member.linkedin_url ?? undefined,
   };
@@ -100,9 +92,9 @@ async function getPersonPageData(
 
   const { data: member } = await supabase
     .from("members")
-    .select("name, slug, role, bio, photo_url, batch_tags, linkedin_url, public_profile_id")
+    .select("name, slug, role, bio, photo_url, batch_tags, parts, member_type, linkedin_url, public_profile_id")
     .eq("slug", slug)
-    .eq("preneur_batch", "4기")
+    .or("preneur_batch.eq.4기,learner_batch.eq.4기")
     .maybeSingle();
 
   if (!member) {
@@ -111,8 +103,8 @@ async function getPersonPageData(
 
   const { data: relatedMemberRows } = await supabase
     .from("members")
-    .select("name, slug, role, bio, photo_url, batch_tags, linkedin_url, public_profile_id")
-    .eq("preneur_batch", "4기")
+    .select("name, slug, role, bio, photo_url, batch_tags, parts, member_type, linkedin_url, public_profile_id")
+    .or("preneur_batch.eq.4기,learner_batch.eq.4기")
     .neq("slug", slug)
     .order("name", { ascending: true })
     .limit(4);
