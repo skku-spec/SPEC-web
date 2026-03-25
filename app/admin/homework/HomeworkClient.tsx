@@ -473,7 +473,7 @@ export function HomeworkClient() {
               </section>
 
               <section className="space-y-4">
-                <h3 className="text-xs font-black uppercase tracking-widest text-[#a1a196] border-b border-[#f0efe6] pb-2">Step 2. Select Homework Modes</h3>
+                <h3 className="font-['Pretendard',sans-serif] text-xs font-semibold text-[#6b6b5e] border-b border-[#f0efe6] pb-2">Step 2. Select Homework Modes</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <button
                     type="button"
@@ -484,7 +484,7 @@ export function HomeworkClient() {
                         : "border-[#ddd9cc] bg-white text-[#a1a196] hover:border-[#FF6C0F]/30"
                     }`}
                   >
-                    <User className={`h-8 w-8 transition-transform group-hover:scale-110 ${isIndividual ? "opacity-100" : "opacity-30"}`} strokeWidth={1.5} />
+                    <User className={`h-8 w-8 transition-colors ${isIndividual ? "opacity-100" : "opacity-30"}`} strokeWidth={1.5} />
                     <div className="text-center">
                       <p className="font-['Pretendard',sans-serif] text-sm font-semibold">개인 과제 활성화</p>
                       <p className="font-['Pretendard',sans-serif] text-[10px] text-[#6b6b5e] mt-0.5">개별 가이드라인 작성</p>
@@ -499,7 +499,7 @@ export function HomeworkClient() {
                         : "border-[#ddd9cc] bg-white text-[#a1a196] hover:border-[#FF6C0F]/30"
                     }`}
                   >
-                    <Users className={`h-8 w-8 transition-transform group-hover:scale-110 ${isTeam ? "opacity-100" : "opacity-30"}`} strokeWidth={1.5} />
+                    <Users className={`h-8 w-8 transition-colors ${isTeam ? "opacity-100" : "opacity-30"}`} strokeWidth={1.5} />
                     <div className="text-center">
                       <p className="font-['Pretendard',sans-serif] text-sm font-semibold">팀 과제 활성화</p>
                       <p className="font-['Pretendard',sans-serif] text-[10px] text-[#6b6b5e] mt-0.5">협동 가이드라인 작성</p>
@@ -511,7 +511,7 @@ export function HomeworkClient() {
               {/* Mode-specific Content Sections */}
               {(isIndividual || isTeam) && (
                 <section className="space-y-6 animate-in slide-in-from-left-4">
-                  <h3 className="text-xs font-black uppercase tracking-widest text-[#a1a196] border-b border-[#f0efe6] pb-2">Step 3. Detailed Instructions</h3>
+                  <h3 className="font-['Pretendard',sans-serif] text-xs font-semibold text-[#6b6b5e] border-b border-[#f0efe6] pb-2">Step 3. Detailed Instructions</h3>
                   
                   {isIndividual && (
                     <div className="space-y-4 rounded-lg border border-blue-100 bg-blue-50/30 p-5">
@@ -522,7 +522,7 @@ export function HomeworkClient() {
                         <button
                           type="button"
                           onClick={() => setIndividualTasks([...individualTasks, ""])}
-                          className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-white text-sm hover:scale-110 active:scale-95 transition-all shadow-sm shadow-blue-200"
+                          className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-white text-sm transition-colors hover:bg-blue-700"
                         >
                           +
                         </button>
@@ -545,7 +545,7 @@ export function HomeworkClient() {
                               <button
                                 type="button"
                                 onClick={() => setIndividualTasks(individualTasks.filter((_, i) => i !== idx))}
-                                className="absolute -right-2 -top-2 h-5 w-5 rounded-full bg-red-400 text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                                className="absolute -right-2 -top-2 h-5 w-5 rounded-full bg-red-400 text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity"
                               >
                                 ×
                               </button>
@@ -565,7 +565,7 @@ export function HomeworkClient() {
                         <button
                           type="button"
                           onClick={() => setTeamTasks([...teamTasks, ""])}
-                          className="flex h-6 w-6 items-center justify-center rounded-full bg-purple-600 text-white text-sm hover:scale-110 active:scale-95 transition-all shadow-sm shadow-purple-200"
+                          className="flex h-6 w-6 items-center justify-center rounded-full bg-purple-600 text-white text-sm transition-colors hover:bg-purple-700"
                         >
                           +
                         </button>
@@ -588,7 +588,7 @@ export function HomeworkClient() {
                               <button
                                 type="button"
                                 onClick={() => setTeamTasks(teamTasks.filter((_, i) => i !== idx))}
-                                className="absolute -right-2 -top-2 h-5 w-5 rounded-full bg-red-400 text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                                className="absolute -right-2 -top-2 h-5 w-5 rounded-full bg-red-400 text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity"
                               >
                                 ×
                               </button>
@@ -613,7 +613,7 @@ export function HomeworkClient() {
                   <button
                     type="button"
                     onClick={addTeam}
-                    className="flex items-center gap-1.5 rounded-xl bg-[#FF6C0F] px-4 py-2 text-xs font-black text-white shadow-lg shadow-orange-100 hover:scale-105 active:scale-95 transition-all"
+                    className="flex items-center gap-1.5 rounded-md bg-[#FF6C0F] px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#FF6C0F]/90"
                   >
                     <span>+</span> 새 팀 생성
                   </button>
@@ -623,7 +623,7 @@ export function HomeworkClient() {
 
               <div className="flex-1 space-y-6 overflow-y-visible">
                 {teams.map((t, idx) => (
-                  <div key={idx} className="group relative rounded-lg border-2 border-[#f0efe6] bg-white p-5 shadow-sm transition-all hover:border-[#FF6C0F]">
+                  <div key={idx} className="group relative rounded-lg border border-[#ddd9cc] bg-white p-5 transition-colors hover:border-[#FF6C0F]">
                     <div className="flex items-center justify-between mb-4">
                       <input
                         type="text"
@@ -633,7 +633,7 @@ export function HomeworkClient() {
                           newTeams[idx].teamName = e.target.value;
                           setTeams(newTeams);
                         }}
-                        className="text-sm font-black text-[#FF6C0F] bg-transparent border-none p-0 focus:ring-0 w-2/3"
+                        className="text-sm font-semibold text-[#FF6C0F] bg-transparent border-none p-0 focus:ring-0 w-2/3"
                       />
                       <button
                         type="button"
@@ -649,7 +649,7 @@ export function HomeworkClient() {
                       {t.memberIds.map(mId => {
                         const runner = availableRunners.find(r => r.id === mId);
                         return (
-                          <div key={mId} className="flex items-center gap-2 rounded-xl bg-[#f5f5ee] px-3 py-1.5 text-[11px] font-bold text-[#16140f] border border-[#d9d9cc]">
+                          <div key={mId} className="flex items-center gap-2 rounded-lg bg-[#f5f5ee] px-3 py-1.5 text-[11px] font-bold text-[#16140f] border border-[#ddd9cc]">
                             {runner?.name}
                             <button 
                               type="button" 
@@ -723,17 +723,17 @@ export function HomeworkClient() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-8 border-t-2 border-[#f0efe6]">
+          <div className="flex justify-end gap-3 pt-8 border-t border-[#ece8db]">
             <button
               type="button"
               onClick={() => { setIsAdding(false); resetForm(); }}
-              className="rounded-lg px-8 py-3.5 text-sm font-bold text-[#6b6b5e] hover:bg-[#f5f5ee] transition-all"
+              className="rounded-md px-4 py-2.5 text-sm font-bold text-[#6b6b5e] hover:bg-[#f5f5ee] transition-colors"
             >
               취소 (Cancel)
             </button>
             <button
               type="submit"
-              className="rounded-lg bg-[#16140f] px-12 py-3.5 text-sm font-black text-white shadow-xl shadow-gray-200 hover:scale-[1.02] active:scale-[0.98] transition-all"
+              className="rounded-md bg-[#16140f] px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#16140f]/80"
             >
               과제 생성 및 배포
             </button>
@@ -746,7 +746,7 @@ export function HomeworkClient() {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-32 gap-4">
             <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#FF6C0F] border-t-transparent" />
-            <p className="text-sm font-black text-[#a1a196] uppercase tracking-widest">Synchronizing...</p>
+            <p className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#6b6b5e]">Synchronizing...</p>
           </div>
         ) : homeworks.length === 0 ? (
           <div className="rounded-lg border border-[#ddd9cc] bg-white p-16 text-center">
@@ -758,7 +758,7 @@ export function HomeworkClient() {
           </div>
         ) : (
           homeworks.map((hw: Homework) => (
-            <div key={hw.id} className="group overflow-hidden rounded-lg border border-[#ddd9cc] bg-white transition-all hover:border-[#FF6C0F]/50 hover:shadow-md">
+            <div key={hw.id} className="group overflow-hidden rounded-lg border border-[#ddd9cc] bg-white transition-colors hover:border-[#FF6C0F]/50">
               <div className="flex flex-wrap items-center justify-between px-4 py-4 sm:px-6 gap-4">
                 <div className="flex items-center gap-4">
                   <div className="grid h-10 w-10 place-items-center rounded-full bg-[#e8e6dc]">
