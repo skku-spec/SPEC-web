@@ -172,14 +172,14 @@ export default function BlogPageClient({ posts, tags }: BlogPageClientProps) {
                 </div>
                 <Link
                   href={`/blog/${featuredPost.slug}`}
-                  className="group mb-3 block font-['Pretendard',sans-serif] text-[30px] font-semibold leading-[1.2] tracking-tight text-[#000000] transition-colors hover:text-[#FF6C0F]"
+                  className="group mb-3 block font-['Pretendard',sans-serif] text-xl sm:text-[26px] md:text-[30px] font-semibold leading-[1.2] tracking-tight text-[#000000] transition-colors hover:text-[#FF6C0F]"
                 >
                   {featuredPost.title}
                 </Link>
                 <p className="sr-only font-['Pretendard',sans-serif] text-[14px] text-[#5a6270]">
                   {featuredPost.author}
                 </p>
-                <p className="mb-5 font-['MaruBuri',serif] text-[18px] font-normal leading-relaxed text-[#000000]">
+                <p className="mb-5 font-['MaruBuri',serif] text-base sm:text-[18px] font-normal leading-relaxed text-[#000000]">
                   {featuredPost.excerpt}
                 </p>
                 <Link

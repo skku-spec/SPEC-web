@@ -128,7 +128,7 @@ export default function CurriculumRoadmap() {
           </p>
 
           {/* Week count strip */}
-          <div className="mx-auto mt-8 grid max-w-lg grid-cols-4 divide-x divide-white/10 rounded-full border border-white/10 bg-white/[0.02]">
+          <div className="mx-auto mt-8 grid max-w-lg grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-0 sm:divide-x sm:divide-white/10 sm:rounded-full sm:border sm:border-white/10 sm:bg-white/[0.02]">
             {[
               { label: 'W1–10', text: 'Bootcamp' },
               { label: 'W11–20', text: 'Build & Grow' },

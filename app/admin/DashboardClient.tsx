@@ -181,7 +181,7 @@ export function DashboardClient({
           </div>
         </div>
         
-        <table className="w-full text-left border-collapse">
+        <table className="hidden md:table w-full text-left border-collapse">
           <thead className="bg-[#f0efe6] text-left">
             <tr>
               <th className="sticky left-0 z-10 bg-[#f0efe6] px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold min-w-[180px]">이름</th>
@@ -263,6 +263,44 @@ export function DashboardClient({
             })}
           </tbody>
         </table>
+        <div className="md:hidden space-y-3 p-4">
+          {runnerStats.map(runner => {
+            const totalScore = Math.round((runner.attRate + runner.hwRate) / 2);
+            return (
+              <div key={runner.id} className="rounded-lg border border-[#ddd9cc] bg-white p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="grid h-9 w-9 place-items-center rounded-full bg-[#e8e6dc] font-['Pretendard',sans-serif] text-sm font-semibold text-[#4a4a40]">
+                      {runner.name.charAt(0)}
+                    </div>
+                    <span className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{runner.name}</span>
+                  </div>
+                  <span className={`inline-flex rounded-full px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold ${
+                    totalScore >= 80 ? "bg-[#E6F9E6] text-[#2f9e44]" :
+                    totalScore >= 50 ? "bg-[#FFF0E5] text-[#FF6C0F]" :
+                    "bg-[#FEE2E2] text-[#b42318]"
+                  }`}>
+                    {totalScore}%
+                  </span>
+                </div>
+                <div className="mt-3 h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-500 ${
+                      totalScore >= 80 ? "bg-[#2f9e44]" :
+                      totalScore >= 50 ? "bg-[#FF6C0F]" :
+                      "bg-[#b42318]"
+                    }`}
+                    style={{ width: `${totalScore}%` }}
+                  />
+                </div>
+                <div className="mt-2 flex gap-4 font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">
+                  <span>출석 {runner.attRate}%</span>
+                  <span>과제 {runner.hwRate}%</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
         {!safeSessions.length && !safeHomeworks.length && (
           <div className="px-4 py-8 text-center font-['Pretendard',sans-serif] text-sm text-[#6b6b5e]">
              아직 생성된 출석 세션이나 과제가 없습니다.
@@ -277,7 +315,7 @@ export function DashboardClient({
             <h2 className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">지원서 통계</h2>
             <p className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e] mt-0.5">기수별 지원 현황을 확인하세요.</p>
           </div>
-          <table className="w-full text-left border-collapse">
+          <table className="hidden md:table w-full text-left border-collapse">
             <thead className="bg-[#f0efe6] text-left">
               <tr>
                 <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold">기수</th>
@@ -319,6 +357,36 @@ export function DashboardClient({
                 ))}
             </tbody>
           </table>
+          <div className="md:hidden space-y-3 p-4">
+            {Object.entries(applicationStats)
+              .sort(([a], [b]) => b.localeCompare(a, undefined, { numeric: true }))
+              .map(([batch, stats]) => (
+                <div key={batch} className="rounded-lg border border-[#ddd9cc] bg-white p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{batch}기</span>
+                    <span className="font-['Pretendard',sans-serif] text-lg font-semibold text-[#16140f]">{stats.total}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">대기</span>
+                      <span className="inline-flex rounded-full px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold bg-[#FFF0E5] text-[#FF6C0F]">{stats.pending}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">검토중</span>
+                      <span className="inline-flex rounded-full px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold bg-[#E8F0FE] text-[#2563EB]">{stats.under_review}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">합격</span>
+                      <span className="inline-flex rounded-full px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold bg-[#E6F9E6] text-[#2f9e44]">{stats.accepted}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">불합격</span>
+                      <span className="inline-flex rounded-full px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold bg-[#FEE2E2] text-[#b42318]">{stats.rejected}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+          </div>
         </div>
       )}
 

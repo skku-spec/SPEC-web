@@ -129,7 +129,7 @@ export default function UsersClient({ initialProfiles }: UsersClientProps) {
           </p>
         </div>
 
-        <div className="overflow-x-auto rounded-lg border border-[#ddd9cc] bg-white">
+        <div className="hidden overflow-x-auto rounded-lg border border-[#ddd9cc] bg-white md:block">
           <table className="min-w-full border-collapse">
             <thead className="bg-[#f0efe6] text-left">
               <tr>
@@ -207,6 +207,80 @@ export default function UsersClient({ initialProfiles }: UsersClientProps) {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile card view */}
+        <div className="flex flex-col gap-3 md:hidden">
+          {filteredProfiles.map((profile) => {
+            const initial = profile.name.trim().charAt(0).toUpperCase() || "?";
+
+            return (
+              <div
+                key={profile.id}
+                className="rounded-lg border border-[#ddd9cc] bg-white p-4"
+              >
+                <div className="mb-3 flex items-center gap-3">
+                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#e8e6dc] font-['Pretendard',sans-serif] text-sm font-semibold text-[#4a4a40]">
+                    {initial}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
+                      {profile.name || "Unknown"}
+                    </p>
+                    <p className="truncate font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">
+                      {profile.slug}
+                    </p>
+                  </div>
+                  <span
+                    className="inline-flex shrink-0 rounded-full px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold text-white"
+                    style={{ backgroundColor: ROLE_COLORS[(profile.role as UserRole | null) ?? "outsider"] }}
+                  >
+                    {formatRoleLabel((profile.role as UserRole | null) ?? "outsider")}
+                  </span>
+                </div>
+
+                <div className="mb-3 grid grid-cols-2 gap-x-4 gap-y-1.5">
+                  <div>
+                    <span className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">Batch</span>
+                    <p className="font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">{profile.batch || "-"}</p>
+                  </div>
+                  <div>
+                    <span className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">Company</span>
+                    <p className="font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">{profile.company || "-"}</p>
+                  </div>
+                  <div>
+                    <span className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">Joined</span>
+                    <p className="font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">{formatJoinedDate(profile.created_at)}</p>
+                  </div>
+                </div>
+
+                <div className="border-t border-[#ece8db] pt-3">
+                  <span className="mb-1 block font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">Change Role</span>
+                  <CustomSelect
+                    value={(profile.role as UserRole | null) ?? "outsider"}
+                    onChange={(nextRole) => {
+                      if (isProfileRole(nextRole)) {
+                        handleRoleChange(profile.id, nextRole);
+                      }
+                    }}
+                    disabled={isPending}
+                    options={ROLE_OPTIONS.map((role) => ({
+                      value: role,
+                      label: formatRoleLabel(role),
+                    }))}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+            );
+          })}
+          {filteredProfiles.length === 0 && (
+            <div className="rounded-lg border border-[#ddd9cc] bg-white py-8 text-center">
+              <p className="font-['Pretendard',sans-serif] text-sm text-[#6b6b5e]">
+                {search.trim() ? "검색 결과가 없습니다." : "등록된 유저가 없습니다."}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </section>

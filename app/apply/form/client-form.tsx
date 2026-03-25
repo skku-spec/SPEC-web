@@ -139,7 +139,7 @@ export default function ApplicationFormClient({ dbFields }: ApplicationFormClien
   if (submitted) {
     return (
       <div className="mx-auto max-w-[800px] px-6 py-24 text-center animate-in fade-in zoom-in duration-700">
-        <div className="rounded-[10px] border border-[#ddd9cc] bg-white p-12 md:p-20 shadow-xl">
+        <div className="rounded-[10px] border border-[#ddd9cc] bg-white p-5 sm:p-8 md:p-12 lg:p-20 shadow-xl">
           <div className="mb-8 flex justify-center">
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#fcfcf8] border-2 border-[#FF6C0F] text-4xl shadow-inner">
               ✨
@@ -232,7 +232,7 @@ export default function ApplicationFormClient({ dbFields }: ApplicationFormClien
         {/* ── Step 0: 기본 정보 ──────────────────────────────── */}
         {step === 0 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="rounded-[10px] border border-[#ddd9cc] bg-white p-8 space-y-7 shadow-sm">
+            <div className="rounded-[10px] border border-[#ddd9cc] bg-white p-5 sm:p-8 space-y-7 shadow-sm">
               <div className="border-b border-[#f0efe6] pb-4">
                 <p className="text-xs font-medium text-[#FF6C0F] mb-1">Step {step + 1} of 4</p>
                 <h2 className="text-2xl font-bold text-[#16140f] [font-family:system-ui,-apple-system,sans-serif]">
@@ -373,7 +373,7 @@ export default function ApplicationFormClient({ dbFields }: ApplicationFormClien
         {/* ── Step 1: Q1-Q3 지원 질문 ──────────────────────── */}
         {step === 1 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="rounded-[10px] border border-[#ddd9cc] bg-white p-8 space-y-10 shadow-sm">
+            <div className="rounded-[10px] border border-[#ddd9cc] bg-white p-5 sm:p-8 space-y-10 shadow-sm">
               <div className="border-b border-[#f0efe6] pb-4">
                 <p className="text-xs font-medium text-[#FF6C0F] mb-1">Step {step + 1} of 4</p>
                 <h2 className="text-2xl font-bold text-[#16140f] [font-family:system-ui,-apple-system,sans-serif]">
@@ -463,7 +463,7 @@ export default function ApplicationFormClient({ dbFields }: ApplicationFormClien
         {/* ── Step 2: Q4-Q6 지원 질문 ──────────────────────── */}
         {step === 2 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="rounded-[10px] border border-[#ddd9cc] bg-white p-8 space-y-10 shadow-sm">
+            <div className="rounded-[10px] border border-[#ddd9cc] bg-white p-5 sm:p-8 space-y-10 shadow-sm">
               <div className="border-b border-[#f0efe6] pb-4">
                 <p className="text-xs font-medium text-[#FF6C0F] mb-1">Step {step + 1} of 4</p>
                 <h2 className="text-2xl font-bold text-[#16140f] [font-family:system-ui,-apple-system,sans-serif]">
@@ -568,7 +568,7 @@ export default function ApplicationFormClient({ dbFields }: ApplicationFormClien
         {/* ── Step 3: 동의 확인 ──────────────────────────────── */}
         {step === 3 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="rounded-[10px] border border-[#ddd9cc] bg-white p-8 space-y-7 shadow-sm">
+            <div className="rounded-[10px] border border-[#ddd9cc] bg-white p-5 sm:p-8 space-y-7 shadow-sm">
               <div className="border-b border-[#f0efe6] pb-4">
                 <p className="text-xs font-medium text-[#FF6C0F] mb-1">Step {step + 1} of 4</p>
                 <h2 className="text-2xl font-bold text-[#16140f] [font-family:system-ui,-apple-system,sans-serif]">
@@ -596,7 +596,7 @@ export default function ApplicationFormClient({ dbFields }: ApplicationFormClien
                   checked={acceptedConsent}
                   onChange={(e) => setAcceptedConsent(e.target.checked)}
                   required
-                  className="mt-1 h-5 w-5 rounded border-[#ddd9cc] text-[#FF6C0F] focus:ring-[#FF6C0F]"
+                  className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer rounded border-[#ddd9cc] text-[#FF6C0F] focus:ring-[#FF6C0F] sm:h-5 sm:w-5"
                 />
                 <label htmlFor="consent-checkbox" className="text-sm font-medium text-[#16140f] select-none cursor-pointer">
                   개인정보 수집 및 이용에 동의합니다. (필수)
