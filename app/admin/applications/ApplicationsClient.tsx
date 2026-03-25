@@ -57,7 +57,7 @@ export default function ApplicationsClient({ initialApplications }: Applications
   const router = useRouter();
 
   const [statusChangingId, setStatusChangingId] = useState<string | null>(null);
-  const [convertingId, setConvertingId] = useState<string | null>(null);
+  const [convertingIds, setConvertingIds] = useState<Set<string>>(new Set());
   const [conversionStatus, setConversionStatus] = useState<Record<string, "idle" | "done" | "already">>({});
   const [toast, setToast] = useState<{ id: string; type: "success" | "error"; text: string } | null>(null);
 
@@ -86,7 +86,7 @@ export default function ApplicationsClient({ initialApplications }: Applications
   }, [checkConversionStatuses]);
 
   const handleConvert = async (appId: string) => {
-    setConvertingId(appId);
+    setConvertingIds((prev) => new Set(prev).add(appId));
     const result = await convertApplicationToMember(appId);
     if (result.success) {
       setConversionStatus((prev) => ({ ...prev, [appId]: "done" }));
@@ -96,7 +96,11 @@ export default function ApplicationsClient({ initialApplications }: Applications
       setConversionStatus((prev) => ({ ...prev, [appId]: isAlready ? "already" : "idle" }));
       showToast(appId, "error", result.error ?? "등록 실패");
     }
-    setConvertingId(null);
+    setConvertingIds((prev) => {
+      const next = new Set(prev);
+      next.delete(appId);
+      return next;
+    });
   };
 
   const handleStatusChange = async (appId: string, nextStatus: ApplicationStatus) => {
@@ -176,7 +180,7 @@ export default function ApplicationsClient({ initialApplications }: Applications
                 filteredApplications.map((app) => {
                   const initial = app.name.trim().charAt(0).toUpperCase() || "?";
                   const isThisStatusChanging = statusChangingId === app.id;
-                  const isThisConverting = convertingId === app.id;
+                  const isThisConverting = convertingIds.has(app.id);
 
                   return (
                     <tr key={app.id} className="border-t border-[#ece8db]">
@@ -247,7 +251,7 @@ export default function ApplicationsClient({ initialApplications }: Applications
             </div>
           ) : (
             filteredApplications.map((app) => {
-              const isThisConverting = convertingId === app.id;
+              const isThisConverting = convertingIds.has(app.id);
 
               return (
                 <article key={app.id} className="rounded-lg border border-[#ddd9cc] bg-white p-4 sm:p-5">
