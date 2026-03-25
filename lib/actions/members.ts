@@ -16,7 +16,7 @@ export type MemberWithProfile = {
   phone: string | null;
   email: string | null;
   major: string | null;
-  runner_batch: string | null;
+  learner_batch: string | null;
   preneur_batch: string | null;
   batch_tags: string[];
   member_type: MemberType;
@@ -56,7 +56,7 @@ type CreateMemberInput = {
   phone?: string | null;
   email?: string | null;
   major?: string | null;
-  runner_batch?: string | null;
+  learner_batch?: string | null;
   preneur_batch?: string | null;
   batch_tags?: string[];
   member_type?: MemberType;
@@ -110,7 +110,7 @@ function toMemberWithProfile(
     phone: row.phone,
     email: row.email,
     major: row.major,
-    runner_batch: row.runner_batch,
+    learner_batch: row.learner_batch,
     preneur_batch: row.preneur_batch,
     batch_tags: row.batch_tags,
     member_type: row.member_type,
@@ -145,7 +145,7 @@ export async function getAllMembers(
 
     if (filters?.batch) {
       query = query.or(
-        `runner_batch.eq.${filters.batch},preneur_batch.eq.${filters.batch}`,
+        `learner_batch.eq.${filters.batch},preneur_batch.eq.${filters.batch}`,
       );
     }
 
@@ -247,7 +247,7 @@ export async function createMember(
       phone: input.phone ?? null,
       email: input.email ?? null,
       major: input.major ?? null,
-      runner_batch: input.runner_batch ?? null,
+      learner_batch: input.learner_batch ?? null,
       preneur_batch: input.preneur_batch ?? null,
       department: input.department ?? null,
       role: input.role ?? null,
@@ -315,7 +315,7 @@ export async function updateMember(
     if (input.phone !== undefined) updatePayload.phone = input.phone ?? null;
     if (input.email !== undefined) updatePayload.email = input.email ?? null;
     if (input.major !== undefined) updatePayload.major = input.major ?? null;
-    if (input.runner_batch !== undefined) updatePayload.runner_batch = input.runner_batch ?? null;
+    if (input.learner_batch !== undefined) updatePayload.learner_batch = input.learner_batch ?? null;
     if (input.preneur_batch !== undefined) updatePayload.preneur_batch = input.preneur_batch ?? null;
     if (input.batch_tags !== undefined) updatePayload.batch_tags = input.batch_tags;
     if (input.member_type !== undefined) updatePayload.member_type = input.member_type;
@@ -492,7 +492,7 @@ const CSV_HEADERS = [
   "phone",
   "email",
   "major",
-  "runner_batch",
+  "learner_batch",
   "preneur_batch",
   "batch_tags",
   "member_type",

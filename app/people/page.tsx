@@ -225,7 +225,7 @@ export default async function PeoplePage() {
     .select(
       "name, slug, role, bio, photo_url, batch_tags, member_type, parts, public_profile_id, profiles!members_public_profile_id_fkey(name, slug, role, profile_visibility, linkedin_url)",
     )
-    .or(`preneur_batch.eq.${CURRENT_BATCH},runner_batch.eq.${CURRENT_BATCH}`)
+    .or(`preneur_batch.eq.${CURRENT_BATCH},learner_batch.eq.${CURRENT_BATCH}`)
     .order("name", { ascending: true });
 
   const members = (memberRows ?? []) as unknown as MemberWithProfile[];
@@ -247,10 +247,10 @@ export default async function PeoplePage() {
       <div className="mx-auto max-w-[1100px]">
         <PageHeader title="People" />
 
-        <section className="mb-12">
-          <h2 className="mb-2 border-b border-[#16140f]/10 pb-3 font-['Pretendard',sans-serif] text-[0.8125rem] font-semibold uppercase tracking-[0.1em] text-[#16140f]/50">
-            Managing Lead
-          </h2>
+         <section className="mb-12">
+           <h2 className="mb-2 border-b border-[#16140f]/10 pb-3 font-['Pretendard',sans-serif] text-[0.8125rem] font-semibold uppercase tracking-[0.1em] text-[#16140f]/50">
+             {`Managing Lead — ${CURRENT_BATCH}`}
+           </h2>
           <ul>
             {managingLeads.map((person) => (
               <LeadCard key={person.slug} person={person} />
@@ -258,10 +258,10 @@ export default async function PeoplePage() {
           </ul>
         </section>
 
-        <section className="mb-12">
-          <h2 className="mb-2 border-b border-[#16140f]/10 pb-3 font-['Pretendard',sans-serif] text-[0.8125rem] font-semibold uppercase tracking-[0.1em] text-[#16140f]/50">
-            Preneur
-          </h2>
+         <section className="mb-12">
+           <h2 className="mb-2 border-b border-[#16140f]/10 pb-3 font-['Pretendard',sans-serif] text-[0.8125rem] font-semibold uppercase tracking-[0.1em] text-[#16140f]/50">
+             {`Preneur — ${CURRENT_BATCH}`}
+           </h2>
           <ul className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
             {preneurs.map((person) => (
               <PreneurCard key={person.slug} person={person} />
@@ -280,10 +280,10 @@ export default async function PeoplePage() {
           </div>
         </section>
 
-        <section className="mb-12">
-          <h2 className="mb-2 border-b border-[#16140f]/10 pb-3 font-['Pretendard',sans-serif] text-[0.8125rem] font-semibold uppercase tracking-[0.1em] text-[#16140f]/50">
-            Learner
-          </h2>
+         <section className="mb-12">
+           <h2 className="mb-2 border-b border-[#16140f]/10 pb-3 font-['Pretendard',sans-serif] text-[0.8125rem] font-semibold uppercase tracking-[0.1em] text-[#16140f]/50">
+             {`Learner — ${CURRENT_BATCH}`}
+           </h2>
           {learners.length > 0 ? (
             <ul className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
               {learners.map((person) => (

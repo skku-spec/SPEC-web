@@ -279,7 +279,7 @@ export type Database = {
           phone: string | null;
           email: string | null;
           major: string | null;
-          runner_batch: string | null;
+          learner_batch: string | null;
           preneur_batch: string | null;
           batch_tags: string[];
           member_type: MemberType;
@@ -302,7 +302,7 @@ export type Database = {
           phone?: string | null;
           email?: string | null;
           major?: string | null;
-          runner_batch?: string | null;
+          learner_batch?: string | null;
           preneur_batch?: string | null;
           batch_tags?: string[];
           member_type?: MemberType;
@@ -325,7 +325,7 @@ export type Database = {
           phone?: string | null;
           email?: string | null;
           major?: string | null;
-          runner_batch?: string | null;
+          learner_batch?: string | null;
           preneur_batch?: string | null;
           batch_tags?: string[];
           member_type?: MemberType;

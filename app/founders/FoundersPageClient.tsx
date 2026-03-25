@@ -11,7 +11,7 @@ export interface Member {
   name: string;
   slug: string;
   major: string | null;
-  runnerBatch: string | null;
+  learnerBatch: string | null;
   preneurBatch: string | null;
   batchTags: string[];
   memberType: "러너" | "프러너" | "alumni";

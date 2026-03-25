@@ -44,7 +44,7 @@ export default async function FoundersPage() {
       supabase
         .from("members")
         .select(
-          "id, name, slug, major, runner_batch, preneur_batch, batch_tags, member_type, photo_url, bio",
+          "id, name, slug, major, learner_batch, preneur_batch, batch_tags, member_type, photo_url, bio",
         )
         .order("name", { ascending: true }),
       supabase
@@ -82,7 +82,7 @@ export default async function FoundersPage() {
     | "name"
     | "slug"
     | "major"
-    | "runner_batch"
+    | "learner_batch"
     | "preneur_batch"
     | "batch_tags"
     | "member_type"
@@ -94,7 +94,7 @@ export default async function FoundersPage() {
       name: member.name,
       slug: member.slug,
       major: member.major,
-      runnerBatch: member.runner_batch,
+      learnerBatch: member.learner_batch,
       preneurBatch: member.preneur_batch,
       batchTags: member.batch_tags ?? [],
       memberType: normalizeMemberType(member.member_type),
@@ -106,8 +106,8 @@ export default async function FoundersPage() {
 
   const batchOptions = Array.from(
     new Set(
-      ((memberRows ?? []) as Pick<MemberRow, "runner_batch">[])
-        .map((member) => member.runner_batch)
+      ((memberRows ?? []) as Pick<MemberRow, "learner_batch">[])
+        .map((member) => member.learner_batch)
         .filter((batch): batch is string => Boolean(batch)),
     ),
   ).sort(sortBatch);

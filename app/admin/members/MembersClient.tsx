@@ -45,7 +45,7 @@ function memberTypeLabel(t: string): string {
 function extractBatches(members: MemberWithProfile[]): string[] {
   const set = new Set<string>();
   for (const m of members) {
-    if (m.runner_batch) set.add(m.runner_batch);
+    if (m.learner_batch) set.add(m.learner_batch);
     if (m.preneur_batch) set.add(m.preneur_batch);
   }
   return Array.from(set).sort((a, b) => {
@@ -62,7 +62,7 @@ type MemberForm = {
   phone: string;
   email: string;
   major: string;
-  runner_batch: string;
+  learner_batch: string;
   preneur_batch: string;
   member_type: MemberType;
   batch_tags: string;
@@ -76,7 +76,7 @@ const EMPTY_FORM: MemberForm = {
   phone: "",
   email: "",
   major: "",
-  runner_batch: "",
+  learner_batch: "",
   preneur_batch: "",
   member_type: "러너",
   batch_tags: "",
@@ -91,7 +91,7 @@ function memberToForm(m: MemberWithProfile): MemberForm {
     phone: m.phone ?? "",
     email: m.email ?? "",
     major: m.major ?? "",
-    runner_batch: m.runner_batch ?? "",
+    learner_batch: m.learner_batch ?? "",
     preneur_batch: m.preneur_batch ?? "",
     member_type: m.member_type as MemberType,
     batch_tags: (m.batch_tags ?? []).join(", "),
@@ -127,7 +127,7 @@ export default function MembersClient({ initialMembers }: MembersClientProps) {
   const filtered = members.filter((m) => {
     if (selectedType && m.member_type !== selectedType) return false;
     if (selectedBatch) {
-      if (m.runner_batch !== selectedBatch && m.preneur_batch !== selectedBatch) return false;
+      if (m.learner_batch !== selectedBatch && m.preneur_batch !== selectedBatch) return false;
     }
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
@@ -199,7 +199,7 @@ export default function MembersClient({ initialMembers }: MembersClientProps) {
         phone: form.phone || null,
         email: form.email || null,
         major: form.major || null,
-        runner_batch: form.runner_batch || null,
+        learner_batch: form.learner_batch || null,
         preneur_batch: form.preneur_batch || null,
         batch_tags: tags,
         bio: form.bio || null,
@@ -404,7 +404,7 @@ export default function MembersClient({ initialMembers }: MembersClientProps) {
             <tbody>
               {filtered.map((m) => {
                 const initial = m.name.trim().charAt(0).toUpperCase() || "?";
-                const batch = m.runner_batch || m.preneur_batch || "-";
+                const batch = m.learner_batch || m.preneur_batch || "-";
                 const typeStyle = MEMBER_TYPE_STYLE[m.member_type as MemberType] ?? MEMBER_TYPE_STYLE.alumni;
 
                 return (
@@ -496,7 +496,7 @@ export default function MembersClient({ initialMembers }: MembersClientProps) {
         <div className="flex flex-col gap-3 md:hidden">
           {filtered.map((m) => {
             const initial = m.name.trim().charAt(0).toUpperCase() || "?";
-            const batch = m.runner_batch || m.preneur_batch || "-";
+            const batch = m.learner_batch || m.preneur_batch || "-";
             const typeStyle = MEMBER_TYPE_STYLE[m.member_type as MemberType] ?? MEMBER_TYPE_STYLE.alumni;
 
             return (
@@ -596,7 +596,7 @@ export default function MembersClient({ initialMembers }: MembersClientProps) {
               <FieldInput label="전화번호" value={form.phone} onChange={(v) => handleChange("phone", v)} placeholder="010-1234-5678" />
               <FieldInput label="이메일" value={form.email} onChange={(v) => handleChange("email", v)} placeholder="email@example.com" />
               <FieldInput label="전공" value={form.major} onChange={(v) => handleChange("major", v)} placeholder="컴퓨터공학과" />
-              <FieldInput label="러너 기수" value={form.runner_batch} onChange={(v) => handleChange("runner_batch", v)} placeholder="4기" />
+              <FieldInput label="러너 기수" value={form.learner_batch} onChange={(v) => handleChange("learner_batch", v)} placeholder="4기" />
               <FieldInput label="프러너 기수" value={form.preneur_batch} onChange={(v) => handleChange("preneur_batch", v)} placeholder="2기" />
 
               <div>

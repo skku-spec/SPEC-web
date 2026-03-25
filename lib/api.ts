@@ -64,7 +64,7 @@ export interface FounderDirectory {
   name: string;
   slug: string;
   major: string | null;
-  runnerBatch: string | null;
+  learnerBatch: string | null;
   preneurBatch: string | null;
   batchTags: string[];
   memberType: "러너" | "프러너" | "alumni";
@@ -850,7 +850,7 @@ export async function getFounderDirectory(filters?: {
     supabase
       .from("members")
       .select(
-        "id, name, slug, major, runner_batch, preneur_batch, batch_tags, member_type, photo_url, bio",
+        "id, name, slug, major, learner_batch, preneur_batch, batch_tags, member_type, photo_url, bio",
       ),
     supabase.from("member_projects").select("member_id,project_id"),
     supabase.from("projects").select("id,slug"),
@@ -894,7 +894,7 @@ export async function getFounderDirectory(filters?: {
       name: member.name,
       slug: member.slug,
       major: member.major,
-      runnerBatch: member.runner_batch,
+      learnerBatch: member.learner_batch,
       preneurBatch: member.preneur_batch,
       batchTags: member.batch_tags ?? [],
       memberType:
@@ -940,7 +940,7 @@ export async function getFounderDirectory(filters?: {
 export async function getFounderDirectoryFilterOptions() {
   const supabase = await createClient();
   const [membersResult, projectsResult] = await Promise.all([
-    supabase.from("members").select("runner_batch,member_type"),
+    supabase.from("members").select("learner_batch,member_type"),
     supabase.from("projects").select("slug,name"),
   ]);
   const members = handleQueryResult(
@@ -957,7 +957,7 @@ export async function getFounderDirectoryFilterOptions() {
   const batches = Array.from(
     new Set(
       (members ?? [])
-        .map((member) => member.runner_batch)
+        .map((member) => member.learner_batch)
         .filter((batch): batch is string => Boolean(batch)),
     ),
   ).sort((a, b) => Number.parseInt(a, 10) - Number.parseInt(b, 10));
@@ -1155,7 +1155,7 @@ export async function getMembers(filters?: {
   let query = supabase.from("members").select("*");
 
   if (filters?.batch) {
-    query = query.or(`runner_batch.eq.${filters.batch},preneur_batch.eq.${filters.batch}`);
+    query = query.or(`learner_batch.eq.${filters.batch},preneur_batch.eq.${filters.batch}`);
   }
 
   if (filters?.memberType) {

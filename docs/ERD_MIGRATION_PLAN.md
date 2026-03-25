@@ -322,7 +322,7 @@ CREATE TABLE public.member_profiles (
   major           text,
   student_id      text,
   phone           text,
-  runner_batch    text,
+  learner_batch   text,
   preneur_batch   text,
   graduation_year integer,
   joined_at       date        NOT NULL DEFAULT CURRENT_DATE,
@@ -1328,7 +1328,7 @@ DROP FUNCTION public.backfill_application_profile_ids();
 -- profile_id가 연결된 members 레코드만 이전
 INSERT INTO public.member_profiles (
   profile_id, department, major, student_id,
-  phone, runner_batch, preneur_batch, notes, created_at
+  phone, learner_batch, preneur_batch, notes, created_at
 )
 SELECT
   m.profile_id,
@@ -1336,7 +1336,7 @@ SELECT
   m.major,
   m.student_id,
   m.phone,
-  m.runner_batch,
+  m.learner_batch,
   m.preneur_batch,
   m.notes,
   m.created_at
