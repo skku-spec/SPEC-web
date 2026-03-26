@@ -26,7 +26,7 @@ export async function signIn(formData: FormData): Promise<AuthActionResult> {
   const password = readField(formData, "password");
 
   if (!email || !password) {
-    return { error: "Please enter your email and password." };
+    return { error: "이메일과 비밀번호를 입력해주세요." };
   }
 
   const supabase = await createClient();
@@ -55,11 +55,11 @@ export async function signUp(formData: FormData): Promise<AuthActionResult> {
   let linkedin_url = readField(formData, "linkedin_url");
 
   if (!first_name || !last_name || !email || !username || !password) {
-    return { error: "Please complete all required fields." };
+    return { error: "모든 필수 항목을 입력해주세요." };
   }
 
   if (password.length < 6) {
-    return { error: "Password must be at least 6 characters." };
+    return { error: "비밀번호는 6자 이상이어야 합니다." };
   }
 
   if (linkedin_url) {
@@ -101,7 +101,7 @@ export async function forgotPassword(formData: FormData): Promise<AuthActionResu
   const email = readField(formData, "email").toLowerCase();
 
   if (!email) {
-    return { error: "Please enter your email." };
+    return { error: "이메일을 입력해주세요." };
   }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
@@ -123,15 +123,15 @@ export async function resetPassword(formData: FormData): Promise<AuthActionResul
   const confirmPassword = readField(formData, "confirm_password");
 
   if (!newPassword) {
-    return { error: "Please enter a new password." };
+    return { error: "새 비밀번호를 입력해주세요." };
   }
 
   if (newPassword.length < 6) {
-    return { error: "Password must be at least 6 characters." };
+    return { error: "비밀번호는 6자 이상이어야 합니다." };
   }
 
   if (newPassword !== confirmPassword) {
-    return { error: "Passwords do not match." };
+    return { error: "비밀번호가 일치하지 않습니다." };
   }
 
   const supabase = await createClient();
@@ -140,7 +140,7 @@ export async function resetPassword(formData: FormData): Promise<AuthActionResul
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { error: "Your session has expired. Please request a new reset link." };
+    return { error: "세션이 만료되었습니다. 비밀번호 재설정 링크를 다시 요청해주세요." };
   }
 
   const { error } = await supabase.auth.updateUser({ password: newPassword });
@@ -148,10 +148,10 @@ export async function resetPassword(formData: FormData): Promise<AuthActionResul
   if (error) {
     const msg = error.message.toLowerCase();
     if (msg.includes("same") || msg.includes("different")) {
-      return { error: "New password must be different from your current password." };
+      return { error: "새 비밀번호는 현재 비밀번호와 달라야 합니다." };
     }
     if (msg.includes("weak") || msg.includes("strength")) {
-      return { error: "Password is too weak. Please choose a stronger password." };
+      return { error: "비밀번호가 너무 약합니다. 더 강한 비밀번호를 선택해주세요." };
     }
     return { error: error.message };
   }

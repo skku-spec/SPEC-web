@@ -25,11 +25,11 @@ function isValidRole(role: string): role is UserRole {
 export async function updateUserRole(userId: string, newRole: UserRole): Promise<AdminActionResult> {
   try {
     if (!userId) {
-      throw new Error("Target user is required.");
+      throw new Error("대상 사용자가 필요합니다.");
     }
 
     if (!isValidRole(newRole)) {
-      throw new Error("Invalid role provided.");
+      throw new Error("유효하지 않은 역할입니다.");
     }
 
     const supabase = await createClient();
@@ -39,15 +39,15 @@ export async function updateUserRole(userId: string, newRole: UserRole): Promise
     } = await supabase.auth.getUser();
 
     if (userError) {
-      throw new Error(`Authentication failed: ${userError.message}`);
+      throw new Error(`인증에 실패했습니다: ${userError.message}`);
     }
 
     if (!user) {
-      throw new Error("You must be logged in to manage roles.");
+      throw new Error("역할을 관리하려면 로그인이 필요합니다.");
     }
 
     if (user.id === userId) {
-      throw new Error("You cannot change your own role.");
+      throw new Error("자신의 역할은 변경할 수 없습니다.");
     }
 
     const { data: callerProfile, error: callerProfileError } = await supabase
@@ -57,11 +57,11 @@ export async function updateUserRole(userId: string, newRole: UserRole): Promise
       .maybeSingle();
 
     if (callerProfileError) {
-      throw new Error(`Failed to verify admin permissions: ${callerProfileError.message}`);
+      throw new Error(`관리자 권한 확인에 실패했습니다: ${callerProfileError.message}`);
     }
 
     if (!isAdmin(callerProfile)) {
-      throw new Error("Only admins can manage user roles.");
+      throw new Error("관리자만 역할을 관리할 수 있습니다.");
     }
 
 
@@ -72,7 +72,7 @@ export async function updateUserRole(userId: string, newRole: UserRole): Promise
       .eq("id", userId);
 
     if (updateError) {
-      throw new Error(`Failed to update user role: ${updateError.message}`);
+      throw new Error(`역할 수정에 실패했습니다: ${updateError.message}`);
     }
 
     await logAuditEvent({
@@ -88,7 +88,7 @@ export async function updateUserRole(userId: string, newRole: UserRole): Promise
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to update user role.",
+      error: error instanceof Error ? error.message : "역할 수정에 실패했습니다.",
     };
   }
 }
@@ -96,7 +96,7 @@ export async function updateUserRole(userId: string, newRole: UserRole): Promise
 export async function toggleAdminStatus(userId: string, isAdminStatus: boolean): Promise<AdminActionResult> {
   try {
     if (!userId) {
-      throw new Error("Target user is required.");
+      throw new Error("대상 사용자가 필요합니다.");
     }
 
     const supabase = await createClient();
@@ -106,11 +106,11 @@ export async function toggleAdminStatus(userId: string, isAdminStatus: boolean):
     } = await supabase.auth.getUser();
 
     if (userError) {
-      throw new Error(`Authentication failed: ${userError.message}`);
+      throw new Error(`인증에 실패했습니다: ${userError.message}`);
     }
 
     if (!user) {
-      throw new Error("You must be logged in to manage admin status.");
+      throw new Error("관리자 상태를 관리하려면 로그인이 필요합니다.");
     }
 
     const { data: callerProfile, error: callerProfileError } = await supabase
@@ -120,11 +120,11 @@ export async function toggleAdminStatus(userId: string, isAdminStatus: boolean):
       .maybeSingle();
 
     if (callerProfileError) {
-      throw new Error(`Failed to verify admin permissions: ${callerProfileError.message}`);
+      throw new Error(`관리자 권한 확인에 실패했습니다: ${callerProfileError.message}`);
     }
 
     if (!isAdmin(callerProfile)) {
-      throw new Error("Only admins can manage admin status.");
+      throw new Error("관리자만 관리자 상태를 변경할 수 있습니다.");
     }
 
     if (!isAdminStatus) {
@@ -145,7 +145,7 @@ export async function toggleAdminStatus(userId: string, isAdminStatus: boolean):
         .eq("id", userId);
 
       if (updateError) {
-        throw new Error(`Failed to update admin status: ${updateError.message}`);
+        throw new Error(`관리자 상태 수정에 실패했습니다: ${updateError.message}`);
       }
     }
 
@@ -162,7 +162,7 @@ export async function toggleAdminStatus(userId: string, isAdminStatus: boolean):
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to update admin status.",
+      error: error instanceof Error ? error.message : "관리자 상태 수정에 실패했습니다.",
     };
   }
 }
