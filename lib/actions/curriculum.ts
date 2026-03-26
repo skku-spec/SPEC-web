@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { requireRole } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 /* ------------------------------------------------------------------ */
@@ -38,10 +38,8 @@ export type CurriculumArea = {
   updated_at: string;
 };
 
-/* Tables not yet in generated Supabase types — cast via `as never`. */
-type TableName = never;
-const WEEKS_TABLE = "curriculum_weeks" as TableName;
-const AREAS_TABLE = "curriculum_areas" as TableName;
+const WEEKS_TABLE = "curriculum_weeks";
+const AREAS_TABLE = "curriculum_areas";
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -139,7 +137,7 @@ export async function upsertCurriculumWeek(data: {
   sort_order: number;
 }): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     if (!data.week_label.trim() || !data.topic.trim()) {
       return { success: false, error: "주차 라벨과 주제는 필수입니다." };
@@ -157,7 +155,7 @@ export async function upsertCurriculumWeek(data: {
       notes: data.notes?.trim() || null,
       batch: data.batch || "default",
       sort_order: data.sort_order,
-    } as never;
+    };
 
     if (data.id) {
       const { error } = await supabase
@@ -187,7 +185,7 @@ export async function deleteCurriculumWeek(
   id: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     if (!id) {
       return { success: false, error: "삭제할 주차 ID가 필요합니다." };
@@ -223,7 +221,7 @@ export async function upsertCurriculumArea(data: {
   sort_order: number;
 }): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     if (!data.area_number.trim() || !data.title.trim()) {
       return { success: false, error: "영역 번호와 제목은 필수입니다." };
@@ -240,7 +238,7 @@ export async function upsertCurriculumArea(data: {
       activities: data.activities.filter((a) => a.trim()),
       batch: data.batch || "default",
       sort_order: data.sort_order,
-    } as never;
+    };
 
     if (data.id) {
       const { error } = await supabase
@@ -270,7 +268,7 @@ export async function deleteCurriculumArea(
   id: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     if (!id) {
       return { success: false, error: "삭제할 영역 ID가 필요합니다." };

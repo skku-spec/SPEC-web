@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { requireRole } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 /* ------------------------------------------------------------------ */
@@ -26,9 +26,7 @@ type PartnerActionResult<T> = {
   data?: T;
 };
 
-/* Table not yet in generated Supabase types — cast via `as never`. */
-type TableName = never;
-const PARTNERS_TABLE = "partners" as TableName;
+const PARTNERS_TABLE = "partners";
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -106,7 +104,7 @@ export async function upsertPartner(data: {
   is_active?: boolean;
 }): Promise<PartnerActionResult<null>> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     if (!data.name.trim() || !data.logo_url.trim()) {
       return { error: "이름과 로고 URL은 필수입니다." };
@@ -120,7 +118,7 @@ export async function upsertPartner(data: {
       website_url: data.website_url?.trim() || null,
       sort_order: data.sort_order,
       is_active: data.is_active ?? true,
-    } as never;
+    };
 
     if (data.id) {
       const { error } = await supabase
@@ -149,7 +147,7 @@ export async function deletePartner(
   id: string,
 ): Promise<PartnerActionResult<null>> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     if (!id) {
       return { error: "삭제할 파트너 ID가 필요합니다." };

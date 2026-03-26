@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import AuditClient, { type AuditLogItem } from "./AuditClient";
+
+export const metadata: Metadata = {
+  title: "감사 로그 | SPEC Admin",
+};
 
 type AuditLogRow = {
   id: string;

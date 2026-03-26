@@ -2,8 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 
-import { requireRole } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import type { Json } from "@/lib/supabase/types";
 
 export type FormFieldType = "text" | "textarea" | "select" | "number";
 
@@ -41,10 +42,7 @@ type UpsertFormFieldInput = {
   is_active?: boolean;
 };
 
-// "application_form_fields" isn't in the generated Database type yet — remove this
-// cast after running `supabase gen types` to regenerate lib/supabase/types.ts.
-type TableName = never;
-const TABLE = "application_form_fields" as TableName;
+const TABLE = "application_form_fields";
 
 function revalidateFormBuilderPaths() {
   revalidatePath("/admin/form-builder");
@@ -105,7 +103,7 @@ export async function getAllFormFieldsBatches(): Promise<{
   error?: string;
 }> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     const supabase = await createClient();
 
@@ -134,7 +132,7 @@ export async function upsertFormField(
   input: UpsertFormFieldInput,
 ): Promise<{ success: boolean; data?: ApplicationFormField; error?: string }> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     const batch = input.batch.trim();
     const fieldName = input.field_name.trim();
@@ -162,7 +160,7 @@ export async function upsertFormField(
       min_length: input.min_length ?? null,
       max_length: input.max_length ?? null,
       placeholder: input.placeholder ?? null,
-      options: input.options ?? null,
+      options: input.options as unknown as Json | null,
       step_number: input.step_number ?? 0,
       sort_order: input.sort_order ?? 0,
       is_active: input.is_active ?? true,
@@ -171,7 +169,7 @@ export async function upsertFormField(
     if (input.id) {
       const { data, error } = await supabase
         .from(TABLE)
-        .update(payload as never)
+        .update(payload)
         .eq("id", input.id)
         .select("*")
         .maybeSingle();
@@ -187,7 +185,7 @@ export async function upsertFormField(
 
     const { data, error } = await supabase
       .from(TABLE)
-      .insert(payload as never)
+      .insert(payload)
       .select("*")
       .single();
 
@@ -205,7 +203,7 @@ export async function upsertFormField(
 
 export async function deleteFormField(id: string): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     if (!id) {
       return { success: false, error: "삭제할 필드 ID가 필요합니다." };
@@ -235,7 +233,7 @@ export async function duplicateFieldsForBatch(
   targetBatch: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     const source = sourceBatch.trim();
     const target = targetBatch.trim();
@@ -286,7 +284,7 @@ export async function duplicateFieldsForBatch(
       min_length: field.min_length,
       max_length: field.max_length,
       placeholder: field.placeholder,
-      options: field.options,
+      options: field.options as unknown as Json | null,
       step_number: field.step_number,
       sort_order: field.sort_order,
       is_active: field.is_active,
@@ -294,7 +292,7 @@ export async function duplicateFieldsForBatch(
 
     const { error: insertError } = await supabase
       .from(TABLE)
-      .insert(insertRows as never);
+      .insert(insertRows);
 
     if (insertError) throw new Error(insertError.message);
 

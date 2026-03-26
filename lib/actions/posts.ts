@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { Database, PostType } from "@/lib/supabase/types";
 import { BLOG_WRITER_ROLES, isAdmin, type UserRole } from "@/lib/auth";
+import { sanitizeHTML } from "@/lib/sanitize";
+import { isValidUUID } from "@/lib/validators";
 
 type ActionResult = {
   success: boolean;
@@ -137,7 +139,7 @@ async function getCurrentUserAccess(
   const { data: profile, error } = await supabase.from("profiles").select("role, is_admin").eq("id", userId).maybeSingle();
 
   if (error) {
-    throw new Error(`Failed to verify user role: ${error.message}`);
+    throw new Error(`사용자 역할 확인에 실패했습니다: ${error.message}`);
   }
 
   return {
@@ -157,11 +159,11 @@ async function getPostForPermissionCheck(
     .maybeSingle();
 
   if (error) {
-    throw new Error(`Failed to fetch post: ${error.message}`);
+    throw new Error(`게시글을 불러오지 못했습니다: ${error.message}`);
   }
 
   if (!post) {
-    throw new Error("Post not found.");
+    throw new Error("게시글을 찾을 수 없습니다.");
   }
 
   return post;
@@ -178,7 +180,7 @@ async function resolveTagIds(
   const { data: existingTags, error: existingError } = await supabase.from("tags").select("id, slug").in("slug", tagSlugs);
 
   if (existingError) {
-    throw new Error(`Failed to fetch existing tags: ${existingError.message}`);
+    throw new Error(`기존 태그를 불러오지 못했습니다: ${existingError.message}`);
   }
 
   const existingSlugSet = new Set((existingTags ?? []).map((tag) => tag.slug));
@@ -193,14 +195,14 @@ async function resolveTagIds(
     const { error: insertTagsError } = await supabase.from("tags").insert(tagsToInsert);
 
     if (insertTagsError) {
-      throw new Error(`Failed to create missing tags: ${insertTagsError.message}`);
+      throw new Error(`누락된 태그 생성에 실패했습니다: ${insertTagsError.message}`);
     }
   }
 
   const { data: allTags, error: allTagsError } = await supabase.from("tags").select("id, slug").in("slug", tagSlugs);
 
   if (allTagsError) {
-    throw new Error(`Failed to load tags after insert: ${allTagsError.message}`);
+    throw new Error(`태그를 불러오지 못했습니다: ${allTagsError.message}`);
   }
 
   const tagIdMap = new Map((allTags ?? []).map((tag: Pick<TagRow, "id" | "slug">) => [tag.slug, tag.id]));
@@ -218,7 +220,7 @@ async function upsertPostTags(
 
   const { error: deleteError } = await supabase.from("post_tags").delete().eq("post_id", postId);
   if (deleteError) {
-    throw new Error(`Failed to clear existing tags for post: ${deleteError.message}`);
+    throw new Error(`게시글의 기존 태그 삭제에 실패했습니다: ${deleteError.message}`);
   }
 
   if (tagIds.length === 0) {
@@ -232,7 +234,7 @@ async function upsertPostTags(
 
   const { error: insertError } = await supabase.from("post_tags").insert(rows);
   if (insertError) {
-    throw new Error(`Failed to attach tags to post: ${insertError.message}`);
+    throw new Error(`게시글에 태그 연결에 실패했습니다: ${insertError.message}`);
   }
 }
 
@@ -246,11 +248,11 @@ function parsePostPayload(formData: FormData) {
   const publishedValue = parseStringField(formData, "published");
 
   if (!title || !excerpt || !content || !typeValue) {
-    throw new Error("Missing required post fields.");
+    throw new Error("필수 게시글 항목이 누락되었습니다.");
   }
 
   if (!isValidPostType(typeValue)) {
-    throw new Error("Invalid post type. Expected 'news' or 'blog'.");
+    throw new Error("유효하지 않은 게시글 유형입니다. 'news' 또는 'blog'여야 합니다.");
   }
 
   return {
@@ -273,22 +275,23 @@ export async function createPost(formData: FormData): Promise<ActionResult> {
     } = await supabase.auth.getUser();
 
     if (userError) {
-      throw new Error(`Authentication failed: ${userError.message}`);
+      throw new Error(`인증에 실패했습니다: ${userError.message}`);
     }
 
     if (!user) {
-      throw new Error("You must be logged in to create a post.");
+      throw new Error("게시글을 작성하려면 로그인이 필요합니다.");
     }
 
     const profile = await getCurrentUserAccess(supabase, user.id);
     if (!BLOG_WRITER_ROLES.includes(profile.role)) {
-      throw new Error("You do not have permission to create posts.");
+      throw new Error("게시글을 작성할 권한이 없습니다.");
     }
 
     const payload = parsePostPayload(formData);
+    const sanitizedContent = sanitizeHTML(payload.content);
 
     if (payload.type === "news" && !profile.isAdmin) {
-      throw new Error("Only admins can create news posts.");
+      throw new Error("뉴스 게시글은 관리자만 작성할 수 있습니다.");
     }
 
     const generatedSlug = await generateUniqueSlug(supabase, payload.title);
@@ -297,7 +300,7 @@ export async function createPost(formData: FormData): Promise<ActionResult> {
       title: payload.title,
       slug: generatedSlug,
       excerpt: payload.excerpt,
-      content: payload.content,
+      content: sanitizedContent,
       type: payload.type,
       image_url: payload.image_url,
       author_id: user.id,
@@ -308,7 +311,7 @@ export async function createPost(formData: FormData): Promise<ActionResult> {
     const { data: post, error: insertError } = await supabase.from("posts").insert(postInsert).select("id, slug").single();
 
     if (insertError) {
-      throw new Error(`Failed to create post: ${insertError.message}`);
+      throw new Error(`게시글 생성에 실패했습니다: ${insertError.message}`);
     }
 
     await upsertPostTags(supabase, post.id, payload.tags);
@@ -318,12 +321,16 @@ export async function createPost(formData: FormData): Promise<ActionResult> {
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to create post.",
+      error: error instanceof Error ? error.message : "게시글 생성에 실패했습니다.",
     };
   }
 }
 
 export async function updatePost(postId: string, formData: FormData): Promise<ActionResult> {
+  if (!isValidUUID(postId)) {
+    return { success: false, error: "유효하지 않은 게시글 ID입니다." };
+  }
+
   try {
     const supabase = await createClient();
     const {
@@ -332,11 +339,11 @@ export async function updatePost(postId: string, formData: FormData): Promise<Ac
     } = await supabase.auth.getUser();
 
     if (userError) {
-      throw new Error(`Authentication failed: ${userError.message}`);
+      throw new Error(`인증에 실패했습니다: ${userError.message}`);
     }
 
     if (!user) {
-      throw new Error("You must be logged in to update a post.");
+      throw new Error("게시글을 수정하려면 로그인이 필요합니다.");
     }
 
     const profile = await getCurrentUserAccess(supabase, user.id);
@@ -344,19 +351,20 @@ export async function updatePost(postId: string, formData: FormData): Promise<Ac
 
     const existingPost = await getPostForPermissionCheck(supabase, postId);
     if (!userIsAdmin && existingPost.author_id !== user.id) {
-      throw new Error("You do not have permission to update this post.");
+      throw new Error("이 게시글을 수정할 권한이 없습니다.");
     }
 
     const payload = parsePostPayload(formData);
+    const sanitizedContent = sanitizeHTML(payload.content);
 
     if (payload.type === "news" && !userIsAdmin) {
-      throw new Error("Only admins can publish posts as news.");
+      throw new Error("뉴스 게시글은 관리자만 게시할 수 있습니다.");
     }
 
     const updatePayload: Database["public"]["Tables"]["posts"]["Update"] = {
       title: payload.title,
       excerpt: payload.excerpt,
-      content: payload.content,
+      content: sanitizedContent,
       type: payload.type,
       image_url: payload.image_url,
       published: payload.published,
@@ -370,7 +378,7 @@ export async function updatePost(postId: string, formData: FormData): Promise<Ac
       .single();
 
     if (updateError) {
-      throw new Error(`Failed to update post: ${updateError.message}`);
+      throw new Error(`게시글 수정에 실패했습니다: ${updateError.message}`);
     }
 
     await upsertPostTags(supabase, postId, payload.tags);
@@ -380,12 +388,16 @@ export async function updatePost(postId: string, formData: FormData): Promise<Ac
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to update post.",
+      error: error instanceof Error ? error.message : "게시글 수정에 실패했습니다.",
     };
   }
 }
 
 export async function deletePost(postId: string): Promise<ActionResult> {
+  if (!isValidUUID(postId)) {
+    return { success: false, error: "유효하지 않은 게시글 ID입니다." };
+  }
+
   try {
     const supabase = await createClient();
     const {
@@ -394,11 +406,11 @@ export async function deletePost(postId: string): Promise<ActionResult> {
     } = await supabase.auth.getUser();
 
     if (userError) {
-      throw new Error(`Authentication failed: ${userError.message}`);
+      throw new Error(`인증에 실패했습니다: ${userError.message}`);
     }
 
     if (!user) {
-      throw new Error("You must be logged in to delete a post.");
+      throw new Error("게시글을 삭제하려면 로그인이 필요합니다.");
     }
 
     const profile = await getCurrentUserAccess(supabase, user.id);
@@ -406,12 +418,12 @@ export async function deletePost(postId: string): Promise<ActionResult> {
 
     const existingPost = await getPostForPermissionCheck(supabase, postId);
     if (!userIsAdmin && existingPost.author_id !== user.id) {
-      throw new Error("You do not have permission to delete this post.");
+      throw new Error("이 게시글을 삭제할 권한이 없습니다.");
     }
 
     const { error: deleteError } = await supabase.from("posts").delete().eq("id", postId);
     if (deleteError) {
-      throw new Error(`Failed to delete post: ${deleteError.message}`);
+      throw new Error(`게시글 삭제에 실패했습니다: ${deleteError.message}`);
     }
 
     revalidatePath("/blog");
@@ -421,12 +433,16 @@ export async function deletePost(postId: string): Promise<ActionResult> {
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to delete post.",
+      error: error instanceof Error ? error.message : "게시글 삭제에 실패했습니다.",
     };
   }
 }
 
 export async function toggleFeatured(postId: string): Promise<ActionResult> {
+  if (!isValidUUID(postId)) {
+    return { success: false, error: "유효하지 않은 게시글 ID입니다." };
+  }
+
   try {
     const supabase = await createClient();
     const {
@@ -435,16 +451,16 @@ export async function toggleFeatured(postId: string): Promise<ActionResult> {
     } = await supabase.auth.getUser();
 
     if (userError) {
-      throw new Error(`Authentication failed: ${userError.message}`);
+      throw new Error(`인증에 실패했습니다: ${userError.message}`);
     }
 
     if (!user) {
-      throw new Error("You must be logged in to toggle featured state.");
+      throw new Error("추천 상태를 변경하려면 로그인이 필요합니다.");
     }
 
     const profile = await getCurrentUserAccess(supabase, user.id);
     if (!profile.isAdmin) {
-      throw new Error("Only admins can toggle featured posts.");
+      throw new Error("추천 게시글은 관리자만 변경할 수 있습니다.");
     }
 
     const post = await getPostForPermissionCheck(supabase, postId);
@@ -454,7 +470,7 @@ export async function toggleFeatured(postId: string): Promise<ActionResult> {
       .eq("id", postId);
 
     if (updateError) {
-      throw new Error(`Failed to toggle featured state: ${updateError.message}`);
+      throw new Error(`추천 상태 변경에 실패했습니다: ${updateError.message}`);
     }
 
     revalidateBlogPaths(post.slug);
@@ -463,12 +479,16 @@ export async function toggleFeatured(postId: string): Promise<ActionResult> {
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to toggle featured state.",
+      error: error instanceof Error ? error.message : "추천 상태 변경에 실패했습니다.",
     };
   }
 }
 
 export async function togglePublished(postId: string): Promise<ActionResult> {
+  if (!isValidUUID(postId)) {
+    return { success: false, error: "유효하지 않은 게시글 ID입니다." };
+  }
+
   try {
     const supabase = await createClient();
     const {
@@ -477,11 +497,11 @@ export async function togglePublished(postId: string): Promise<ActionResult> {
     } = await supabase.auth.getUser();
 
     if (userError) {
-      throw new Error(`Authentication failed: ${userError.message}`);
+      throw new Error(`인증에 실패했습니다: ${userError.message}`);
     }
 
     if (!user) {
-      throw new Error("You must be logged in to toggle published state.");
+      throw new Error("게시 상태를 변경하려면 로그인이 필요합니다.");
     }
 
     const profile = await getCurrentUserAccess(supabase, user.id);
@@ -489,7 +509,7 @@ export async function togglePublished(postId: string): Promise<ActionResult> {
 
     const post = await getPostForPermissionCheck(supabase, postId);
     if (!userIsAdmin && post.author_id !== user.id) {
-      throw new Error("You do not have permission to publish this post.");
+      throw new Error("이 게시글을 게시할 권한이 없습니다.");
     }
 
     const { error: updateError } = await supabase
@@ -498,7 +518,7 @@ export async function togglePublished(postId: string): Promise<ActionResult> {
       .eq("id", postId);
 
     if (updateError) {
-      throw new Error(`Failed to toggle published state: ${updateError.message}`);
+      throw new Error(`게시 상태 변경에 실패했습니다: ${updateError.message}`);
     }
 
     revalidateBlogPaths(post.slug);
@@ -507,7 +527,7 @@ export async function togglePublished(postId: string): Promise<ActionResult> {
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to toggle published state.",
+      error: error instanceof Error ? error.message : "게시 상태 변경에 실패했습니다.",
     };
   }
 }

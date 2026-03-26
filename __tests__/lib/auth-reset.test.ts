@@ -15,6 +15,16 @@ vi.mock("@/lib/supabase/server", () => ({
   })),
 }));
 
+vi.mock("@/lib/rate-limit", () => ({
+  rateLimit: vi.fn(() => ({ allowed: true })),
+}));
+
+vi.mock("next/headers", () => ({
+  headers: vi.fn(() => ({
+    get: vi.fn(() => "127.0.0.1"),
+  })),
+}));
+
 import { forgotPassword, resetPassword } from "@/lib/actions/auth";
 
 function formData(entries: Record<string, string>): FormData {
@@ -43,7 +53,7 @@ describe("forgotPassword", () => {
 
   it("returns error for empty email", async () => {
     const result = await forgotPassword(formData({ email: "" }));
-    expect(result).toEqual({ error: "Please enter your email." });
+    expect(result).toEqual({ error: "이메일을 입력해주세요." });
   });
 });
 
@@ -69,21 +79,21 @@ describe("resetPassword", () => {
     const result = await resetPassword(
       formData({ new_password: "", confirm_password: "" }),
     );
-    expect(result).toEqual({ error: "Please enter a new password." });
+    expect(result).toEqual({ error: "새 비밀번호를 입력해주세요." });
   });
 
   it("returns error for short password", async () => {
     const result = await resetPassword(
       formData({ new_password: "abc", confirm_password: "abc" }),
     );
-    expect(result).toEqual({ error: "Password must be at least 6 characters." });
+    expect(result).toEqual({ error: "비밀번호는 6자 이상이어야 합니다." });
   });
 
   it("returns error for mismatched passwords", async () => {
     const result = await resetPassword(
       formData({ new_password: "newpass123", confirm_password: "different" }),
     );
-    expect(result).toEqual({ error: "Passwords do not match." });
+    expect(result).toEqual({ error: "비밀번호가 일치하지 않습니다." });
   });
 
   it("returns error when no session", async () => {
@@ -93,7 +103,7 @@ describe("resetPassword", () => {
       formData({ new_password: "newpass123", confirm_password: "newpass123" }),
     );
     expect(result).toEqual({
-      error: "Your session has expired. Please request a new reset link.",
+      error: "세션이 만료되었습니다. 비밀번호 재설정 링크를 다시 요청해주세요.",
     });
   });
 
@@ -106,7 +116,7 @@ describe("resetPassword", () => {
       formData({ new_password: "samepass", confirm_password: "samepass" }),
     );
     expect(result).toEqual({
-      error: "New password must be different from your current password.",
+      error: "새 비밀번호는 현재 비밀번호와 달라야 합니다.",
     });
   });
 
@@ -119,7 +129,7 @@ describe("resetPassword", () => {
       formData({ new_password: "weakpw", confirm_password: "weakpw" }),
     );
     expect(result).toEqual({
-      error: "Password is too weak. Please choose a stronger password.",
+      error: "비밀번호가 너무 약합니다. 더 강한 비밀번호를 선택해주세요.",
     });
   });
 });

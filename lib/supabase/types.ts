@@ -940,6 +940,219 @@ export type Database = {
         };
         Relationships: [];
       };
+      faq_items: {
+        Row: {
+          id: string;
+          section: string;
+          section_title: string;
+          question: string;
+          answer: string;
+          sort_order: number;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          section: string;
+          section_title: string;
+          question: string;
+          answer: string;
+          sort_order: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          section?: string;
+          section_title?: string;
+          question?: string;
+          answer?: string;
+          sort_order?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      partners: {
+        Row: {
+          id: string;
+          name: string;
+          logo_url: string;
+          website_url: string | null;
+          sort_order: number;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          logo_url: string;
+          website_url?: string | null;
+          sort_order: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          logo_url?: string;
+          website_url?: string | null;
+          sort_order?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      curriculum_weeks: {
+        Row: {
+          id: string;
+          track: string;
+          week_number: number | null;
+          week_label: string;
+          topic: string;
+          objectives: string | null;
+          assignment: string | null;
+          notes: string | null;
+          batch: string;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          track: string;
+          week_number?: number | null;
+          week_label: string;
+          topic: string;
+          objectives?: string | null;
+          assignment?: string | null;
+          notes?: string | null;
+          batch: string;
+          sort_order: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          track?: string;
+          week_number?: number | null;
+          week_label?: string;
+          topic?: string;
+          objectives?: string | null;
+          assignment?: string | null;
+          notes?: string | null;
+          batch?: string;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      curriculum_areas: {
+        Row: {
+          id: string;
+          track: string;
+          area_number: string;
+          title: string;
+          subtitle: string | null;
+          description: string | null;
+          activities: Json;
+          batch: string;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          track: string;
+          area_number: string;
+          title: string;
+          subtitle?: string | null;
+          description?: string | null;
+          activities: Json;
+          batch: string;
+          sort_order: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          track?: string;
+          area_number?: string;
+          title?: string;
+          subtitle?: string | null;
+          description?: string | null;
+          activities?: Json;
+          batch?: string;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      application_form_fields: {
+        Row: {
+          id: string;
+          batch: string;
+          field_name: string;
+          label: string;
+          description: string | null;
+          field_type: string;
+          required: boolean;
+          min_length: number | null;
+          max_length: number | null;
+          placeholder: string | null;
+          options: Json | null;
+          step_number: number;
+          sort_order: number;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          batch: string;
+          field_name: string;
+          label: string;
+          description?: string | null;
+          field_type?: string;
+          required?: boolean;
+          min_length?: number | null;
+          max_length?: number | null;
+          placeholder?: string | null;
+          options?: Json | null;
+          step_number?: number;
+          sort_order?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          batch?: string;
+          field_name?: string;
+          label?: string;
+          description?: string | null;
+          field_type?: string;
+          required?: boolean;
+          min_length?: number | null;
+          max_length?: number | null;
+          placeholder?: string | null;
+          options?: Json | null;
+          step_number?: number;
+          sort_order?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -950,6 +1163,12 @@ export type Database = {
           post_id: string;
         };
         Returns: undefined;
+      };
+      safe_remove_admin: {
+        Args: {
+          target_user_id: string;
+        };
+        Returns: boolean;
       };
       save_public_profile: {
         Args: {

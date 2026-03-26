@@ -26,7 +26,7 @@ const WRITER_ROLES = new Set<UserRole>(BLOG_WRITER_ROLES);
 export async function toggleReaction(postId: string, emoji: string): Promise<ActionResult> {
   try {
     if (!ALLOWED_EMOJIS.includes(emoji as (typeof ALLOWED_EMOJIS)[number])) {
-      throw new Error("Invalid reaction emoji.");
+      throw new Error("유효하지 않은 이모지입니다.");
     }
 
     const supabase = await createClient();
@@ -36,11 +36,11 @@ export async function toggleReaction(postId: string, emoji: string): Promise<Act
     } = await supabase.auth.getUser();
 
     if (userError) {
-      throw new Error(`Authentication failed: ${userError.message}`);
+      throw new Error(`인증에 실패했습니다: ${userError.message}`);
     }
 
     if (!user) {
-      throw new Error("You must be logged in to react.");
+      throw new Error("반응을 남기려면 로그인이 필요합니다.");
     }
 
     const { data: profile, error: profileError } = await supabase
@@ -50,11 +50,11 @@ export async function toggleReaction(postId: string, emoji: string): Promise<Act
       .maybeSingle();
 
     if (profileError) {
-      throw new Error(`Failed to verify user role: ${profileError.message}`);
+      throw new Error(`사용자 역할 확인에 실패했습니다: ${profileError.message}`);
     }
 
     if (!WRITER_ROLES.has((profile?.role as UserRole | null) ?? "outsider")) {
-      throw new Error("You do not have permission to react.");
+      throw new Error("반응을 남길 권한이 없습니다.");
     }
 
     const { data: existing, error: existingError } = await supabase
@@ -66,13 +66,13 @@ export async function toggleReaction(postId: string, emoji: string): Promise<Act
       .maybeSingle();
 
     if (existingError) {
-      throw new Error(`Failed to check existing reaction: ${existingError.message}`);
+      throw new Error(`기존 반응 확인에 실패했습니다: ${existingError.message}`);
     }
 
     if (existing) {
       const { error: deleteError } = await supabase.from("reactions").delete().eq("id", existing.id);
       if (deleteError) {
-        throw new Error(`Failed to remove reaction: ${deleteError.message}`);
+        throw new Error(`반응 삭제에 실패했습니다: ${deleteError.message}`);
       }
 
       revalidatePath("/blog");
@@ -88,7 +88,7 @@ export async function toggleReaction(postId: string, emoji: string): Promise<Act
     });
 
     if (insertError) {
-      throw new Error(`Failed to add reaction: ${insertError.message}`);
+      throw new Error(`반응 등록에 실패했습니다: ${insertError.message}`);
     }
 
     revalidatePath("/blog");
@@ -98,7 +98,7 @@ export async function toggleReaction(postId: string, emoji: string): Promise<Act
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to toggle reaction.",
+      error: error instanceof Error ? error.message : "반응 처리에 실패했습니다.",
       added: false,
     };
   }

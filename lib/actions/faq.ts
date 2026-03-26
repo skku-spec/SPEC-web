@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { requireRole } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 /* ------------------------------------------------------------------ */
@@ -32,9 +32,7 @@ type FaqActionResult<T> = {
   data?: T;
 };
 
-/* Table not yet in generated Supabase types — cast via `as never`. */
-type TableName = never;
-const FAQ_TABLE = "faq_items" as TableName;
+const FAQ_TABLE = "faq_items";
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -151,7 +149,7 @@ export async function upsertFaqItem(data: {
   is_active?: boolean;
 }): Promise<FaqActionResult<null>> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     if (!data.section.trim() || !data.question.trim()) {
       return { error: "섹션과 질문은 필수입니다." };
@@ -166,7 +164,7 @@ export async function upsertFaqItem(data: {
       answer: data.answer.trim(),
       sort_order: data.sort_order,
       is_active: data.is_active ?? true,
-    } as never;
+    };
 
     if (data.id) {
       const { error } = await supabase
@@ -195,7 +193,7 @@ export async function deleteFaqItem(
   id: string,
 ): Promise<FaqActionResult<null>> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     if (!id) {
       return { error: "삭제할 FAQ ID가 필요합니다." };

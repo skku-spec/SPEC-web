@@ -6,7 +6,7 @@ import { useState, useTransition } from "react";
 import { updateProfile, updateEmail, updatePassword } from "@/lib/actions/profile";
 
 const INPUT_CLASSNAME =
-  "w-full border-0 border-b border-[#ccc] rounded-none bg-transparent px-0 py-3 text-base outline-none transition-colors focus:border-[#FF6C0F] focus:ring-0";
+  "w-full border-0 border-b border-[#ddd9cc] rounded-none bg-transparent px-0 py-3 text-base outline-none transition-colors focus:border-[#FF6C0F] focus:ring-0";
 
 type ProfileEditFormProps = {
   currentEmail: string;
@@ -25,11 +25,11 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 }
 
 function SuccessMessage({ message }: { message: string }) {
-  return <p className="rounded bg-[#fff4e9] px-3 py-2 text-sm text-[#b64a00]">{message}</p>;
+  return <p className="rounded bg-[#FFF0E5] px-3 py-2 text-sm text-[#FF6C0F]">{message}</p>;
 }
 
 function ErrorMessage({ message }: { message: string }) {
-  return <p className="rounded bg-[#fdecec] px-3 py-2 text-sm text-[#b42318]">{message}</p>;
+  return <p className="rounded bg-[#FEE2E2] px-3 py-2 text-sm text-[#b42318]">{message}</p>;
 }
 
 export default function ProfileEditForm({
@@ -121,7 +121,7 @@ export default function ProfileEditForm({
 
   return (
     <div className="space-y-8">
-      <section className="rounded-2xl border border-[#d7d5ca] bg-[#fcfcf7] p-6 shadow-[0_14px_35px_rgba(22,20,15,0.05)] md:p-8">
+      <section className="rounded-2xl border border-[#ddd9cc] bg-[#fcfcf8] p-6 md:p-8">
         <SectionTitle>기본 정보</SectionTitle>
 
         <form onSubmit={(e) => { e.preventDefault(); handleProfileSubmit(); }} className="mt-5 space-y-5">
@@ -130,7 +130,7 @@ export default function ProfileEditForm({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label htmlFor="first_name" className="block text-sm font-medium text-[#666]">
+              <label htmlFor="first_name" className="block text-sm font-medium text-[#6b6b5e]">
                 First Name
               </label>
               <input
@@ -145,7 +145,7 @@ export default function ProfileEditForm({
             </div>
 
             <div className="space-y-1">
-              <label htmlFor="last_name" className="block text-sm font-medium text-[#666]">
+              <label htmlFor="last_name" className="block text-sm font-medium text-[#6b6b5e]">
                 Last Name
               </label>
               <input
@@ -161,7 +161,7 @@ export default function ProfileEditForm({
           </div>
 
           <div className="space-y-1">
-            <label htmlFor="username" className="block text-sm font-medium text-[#666]">
+            <label htmlFor="username" className="block text-sm font-medium text-[#6b6b5e]">
               Username
             </label>
             <input
@@ -176,8 +176,8 @@ export default function ProfileEditForm({
           </div>
 
           <div className="space-y-1">
-            <label htmlFor="linkedin_url" className="block text-sm font-medium text-[#666]">
-              LinkedIn URL <span className="font-normal text-[#999]">(Optional)</span>
+            <label htmlFor="linkedin_url" className="block text-sm font-medium text-[#6b6b5e]">
+              LinkedIn URL <span className="font-normal text-[#6b6b5e]">(Optional)</span>
             </label>
             <input
               id="linkedin_url"
@@ -200,7 +200,7 @@ export default function ProfileEditForm({
         </form>
       </section>
 
-      <section className="rounded-2xl border border-[#d7d5ca] bg-[#fcfcf7] p-6 shadow-[0_14px_35px_rgba(22,20,15,0.05)] md:p-8">
+      <section className="rounded-2xl border border-[#ddd9cc] bg-[#fcfcf8] p-6 md:p-8">
         <SectionTitle>이메일 변경</SectionTitle>
 
         <form onSubmit={(e) => { e.preventDefault(); handleEmailSubmit(); }} className="mt-5 space-y-5">
@@ -208,7 +208,7 @@ export default function ProfileEditForm({
           {emailSuccess ? <SuccessMessage message={emailSuccess} /> : null}
 
           <div className="space-y-1">
-            <label htmlFor="email" className="block text-sm font-medium text-[#666]">
+            <label htmlFor="email" className="block text-sm font-medium text-[#6b6b5e]">
               이메일
             </label>
             <input
@@ -232,7 +232,7 @@ export default function ProfileEditForm({
         </form>
       </section>
 
-      <section className="rounded-2xl border border-[#d7d5ca] bg-[#fcfcf7] p-6 shadow-[0_14px_35px_rgba(22,20,15,0.05)] md:p-8">
+      <section className="rounded-2xl border border-[#ddd9cc] bg-[#fcfcf8] p-6 md:p-8">
         <SectionTitle>비밀번호 변경</SectionTitle>
 
         <form onSubmit={(e) => { e.preventDefault(); handlePasswordSubmit(); }} className="mt-5 space-y-5">
@@ -240,7 +240,7 @@ export default function ProfileEditForm({
           {passwordSuccess ? <SuccessMessage message={passwordSuccess} /> : null}
 
           <div className="space-y-1">
-            <label htmlFor="new_password" className="block text-sm font-medium text-[#666]">
+            <label htmlFor="new_password" className="block text-sm font-medium text-[#6b6b5e]">
               새 비밀번호
             </label>
             <input
@@ -255,7 +255,7 @@ export default function ProfileEditForm({
           </div>
 
           <div className="space-y-1">
-            <label htmlFor="confirm_password" className="block text-sm font-medium text-[#666]">
+            <label htmlFor="confirm_password" className="block text-sm font-medium text-[#6b6b5e]">
               비밀번호 확인
             </label>
             <input

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import PostsClient from "@/app/admin/posts/PostsClient";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
@@ -5,6 +6,10 @@ import type { Database } from "@/lib/supabase/types";
 type Post = Database["public"]["Tables"]["posts"]["Row"];
 export type PostWithAuthor = Post & {
   authorName: string;
+};
+
+export const metadata: Metadata = {
+  title: "게시글 관리 | SPEC Admin",
 };
 
 export default async function AdminPostsPage() {

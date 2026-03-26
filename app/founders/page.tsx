@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 
@@ -9,6 +10,10 @@ import FoundersPageClient, {
 type MemberRow = Database["public"]["Tables"]["members"]["Row"];
 type ProjectRow = Database["public"]["Tables"]["projects"]["Row"];
 type MemberProjectRow = Database["public"]["Tables"]["member_projects"]["Row"];
+
+export const metadata: Metadata = {
+  title: "팀 소개 | SPEC",
+};
 
 const MEMBER_TYPE_ORDER: FounderMember["memberType"][] = ["러너", "프러너", "alumni"];
 

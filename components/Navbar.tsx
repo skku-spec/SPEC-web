@@ -71,7 +71,7 @@ export default function Navbar() {
 
   const handleSignOut = useCallback(async () => {
     const supabase = createClient();
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: "global" });
     setMenuOpen(false);
     router.push("/");
   }, [router]);

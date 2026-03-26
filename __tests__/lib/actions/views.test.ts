@@ -16,6 +16,16 @@ vi.mock("@/lib/supabase/server", () => ({
   createClient: mockedDeps.createClient,
 }));
 
+vi.mock("@/lib/rate-limit", () => ({
+  rateLimit: vi.fn(() => ({ allowed: true })),
+}));
+
+vi.mock("next/headers", () => ({
+  headers: vi.fn(() => ({
+    get: vi.fn(() => "127.0.0.1"),
+  })),
+}));
+
 import { incrementViewCount } from "@/lib/actions/views";
 
 describe("incrementViewCount", () => {
@@ -27,16 +37,22 @@ describe("incrementViewCount", () => {
     mockRpc.mockResolvedValue({ data: null, error: null });
   });
 
-  it("calls increment_post_view_count RPC with correct post_id", async () => {
-    await incrementViewCount("test-post-id");
+  it("calls increment_post_view_count RPC with valid UUID", async () => {
+    await incrementViewCount("550e8400-e29b-41d4-a716-446655440000");
 
     expect(mockRpc).toHaveBeenCalledWith("increment_post_view_count", {
-      post_id: "test-post-id",
+      post_id: "550e8400-e29b-41d4-a716-446655440000",
     });
   });
 
+  it("skips DB call for invalid UUID", async () => {
+    await incrementViewCount("not-a-uuid");
+
+    expect(mockedDeps.createClient).not.toHaveBeenCalled();
+  });
+
   it("calls createClient to get supabase instance", async () => {
-    await incrementViewCount("any-id");
+    await incrementViewCount("550e8400-e29b-41d4-a716-446655440000");
 
     expect(mockedDeps.createClient).toHaveBeenCalledOnce();
   });

@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { rateLimit } from "@/lib/rate-limit";
 
 type JsonApiResource = {
   type: string;
@@ -8,9 +10,27 @@ type JsonApiResource = {
 };
 
 export async function GET(req: NextRequest) {
+  // Auth check
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+  }
+
+  // Rate limiting
+  const rl = rateLimit(`padlet:${user.id}`, { maxRequests: 10, windowMs: 60 * 1000 });
+  if (!rl.allowed) {
+    return NextResponse.json({ error: "요청이 너무 많습니다." }, { status: 429 });
+  }
+
   let boardId = req.nextUrl.searchParams.get("board_id");
   if (!boardId) {
     return NextResponse.json({ error: "board_id is required" }, { status: 400 });
+  }
+
+  // SSRF validation
+  if (!/^[a-zA-Z0-9_-]+$/.test(boardId)) {
+    return NextResponse.json({ error: "잘못된 board_id입니다." }, { status: 400 });
   }
 
   // Robust parsing: If boardId looks like a URL, extract the last part

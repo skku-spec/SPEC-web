@@ -70,38 +70,14 @@ export default function Navbar() {
 
   const handleSignOut = useCallback(async () => {
     const supabase = createClient();
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: "global" });
     setMenuOpen(false);
     router.push("/");
   }, [router]);
 
   return (
     <div className={`sticky top-0 isolate z-50 ${isHome ? "bg-transparent" : "bg-[#f5f5ee]"}`}>
-      {/* {RECRUITMENT_BATCH.showBanner && (
-        <div className="bg-[#FF6C0F] text-[#FCFCF8] text-center py-[10px] px-[6px]">
-          <Link
-            href="/apply"
-            className="inline-flex items-center gap-1.5 font-['Pretendard',sans-serif] text-sm font-normal tracking-wide hover:opacity-80 transition-opacity no-underline text-white"
-          >
-            {`${RECRUITMENT_BATCH.bannerLabel} — 지원 마감 ${applyDdayLabel}`}
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 20 20"
-              fill="none"
-              className="ml-0.5"
-            >
-              <path
-                d="M8 6L12 10L8 14"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="square"
-                strokeLinejoin="miter"
-              />
-            </svg>
-          </Link>
-        </div>
-      )} */}
+
 
       <nav>
           <div className="relative hidden min-[1024px]:flex items-center justify-center w-full max-w-[1400px] mx-auto px-8 py-2">
@@ -202,12 +178,7 @@ export default function Navbar() {
           </div>
 
           <div className="absolute right-8 flex items-center gap-3">
-           {/* <ApplyButton
-              href={isAuthenticated ? "/apply" : "/login?redirect=/apply"}
-              size="sm"
-            >
-              Apply
-            </ApplyButton> */}
+
 
             {isAuthenticated ? (
               <div className="nav-item">

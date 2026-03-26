@@ -101,19 +101,23 @@ export function AttendanceClient({
     const isToggleOff = current?.status === status;
 
     startTransition(async () => {
-      try {
-        if (isToggleOff) {
-          await deleteAttendance(userId, sessionId);
-          setLogs(prev => prev.filter(l => !(l.user_id === userId && l.session_id === sessionId)));
-        } else {
-          await markAttendance(userId, sessionId, status);
-          setLogs(prev => {
-            const filtered = prev.filter(l => !(l.user_id === userId && l.session_id === sessionId));
-            return [...filtered, { id: crypto.randomUUID(), user_id: userId, session_id: sessionId, status }];
-          });
+      if (isToggleOff) {
+        const result = await deleteAttendance(userId, sessionId);
+        if (!result.success) {
+          alert(result.error ?? "출석 상태 변경 중 오류가 발생했습니다.");
+          return;
         }
-      } catch (e) {
-        alert(e instanceof Error ? e.message : "출석 상태 변경 중 오류가 발생했습니다.");
+        setLogs(prev => prev.filter(l => !(l.user_id === userId && l.session_id === sessionId)));
+      } else {
+        const result = await markAttendance(userId, sessionId, status);
+        if (!result.success) {
+          alert(result.error ?? "출석 상태 변경 중 오류가 발생했습니다.");
+          return;
+        }
+        setLogs(prev => {
+          const filtered = prev.filter(l => !(l.user_id === userId && l.session_id === sessionId));
+          return [...filtered, { id: crypto.randomUUID(), user_id: userId, session_id: sessionId, status }];
+        });
       }
     });
   };
@@ -122,21 +126,21 @@ export function AttendanceClient({
     if (!isAdminOrPreneur) return;
     if (!confirm("전원 출석으로 변경하시겠습니까?")) return;
     startTransition(async () => {
-      try {
-        await markAllPresent(sessionId);
-        setLogs(prev => {
-          const filtered = prev.filter(l => l.session_id !== sessionId);
-          const newLogs = learners.map(r => ({
-            id: crypto.randomUUID(),
-            user_id: r.id,
-            session_id: sessionId,
-            status: "present"
-          }));
-          return [...filtered, ...newLogs];
-        });
-      } catch (e) {
-        alert(e instanceof Error ? e.message : "전원 출석 처리 중 오류가 발생했습니다.");
+      const result = await markAllPresent(sessionId);
+      if (!result.success) {
+        alert(result.error ?? "전원 출석 처리 중 오류가 발생했습니다.");
+        return;
       }
+      setLogs(prev => {
+        const filtered = prev.filter(l => l.session_id !== sessionId);
+        const newLogs = learners.map(r => ({
+          id: crypto.randomUUID(),
+          user_id: r.id,
+          session_id: sessionId,
+          status: "present"
+        }));
+        return [...filtered, ...newLogs];
+      });
     });
   };
 
@@ -144,32 +148,32 @@ export function AttendanceClient({
     const title = newSessionTitle.trim() || `${sessions.length + 1}주차`;
     const date = new Date().toISOString().split('T')[0];
     startTransition(async () => {
-      try {
-        const result = await createSession(title, date);
-        if (result.session) {
-          setSessions(prev => [...prev, {
-            id: result.session.id,
-            title: result.session.title,
-            date: result.session.date
-          }]);
-        }
-        setNewSessionTitle("");
-      } catch (e) {
-        alert(e instanceof Error ? e.message : "세션 추가 중 오류가 발생했습니다.");
+      const result = await createSession(title, date);
+      if (!result.success) {
+        alert(result.error ?? "세션 추가 중 오류가 발생했습니다.");
+        return;
       }
+      if (result.data?.session) {
+        setSessions(prev => [...prev, {
+          id: result.data.session.id,
+          title: result.data.session.title,
+          date: result.data.session.date
+        }]);
+      }
+      setNewSessionTitle("");
     });
   };
 
   const handleDeleteSession = (id: string) => {
     if (!confirm("삭제하시겠습니까?")) return;
     startTransition(async () => {
-      try {
-        await deleteSession(id);
-        setSessions(prev => prev.filter(s => s.id !== id));
-        setLogs(prev => prev.filter(l => l.session_id !== id));
-      } catch (e) {
-        alert(e instanceof Error ? e.message : "세션 삭제 중 오류가 발생했습니다.");
+      const result = await deleteSession(id);
+      if (!result.success) {
+        alert(result.error ?? "세션 삭제 중 오류가 발생했습니다.");
+        return;
       }
+      setSessions(prev => prev.filter(s => s.id !== id));
+      setLogs(prev => prev.filter(l => l.session_id !== id));
     });
   };
 

@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import PostEditorForm from "@/app/blog/PostEditorForm";
+
+export const metadata: Metadata = {
+  title: "새 게시글 | SPEC Admin",
+};
 
 export default function AdminCreateNewsPostPage() {
   return (

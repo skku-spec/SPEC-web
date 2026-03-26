@@ -1,7 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getMyApplicationDetail } from "@/lib/actions/applications";
+
+export const metadata: Metadata = {
+  title: "지원 완료 | SPEC",
+};
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "접수완료",

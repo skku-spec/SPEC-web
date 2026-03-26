@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { BLOG_WRITER_ROLES, isAdmin, type UserRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
+import { isValidUUID } from "@/lib/validators";
 
 type ActionResult = {
   success: boolean;
@@ -34,7 +35,7 @@ async function getCurrentUserProfile(
   const { data: profile, error } = await supabase.from("profiles").select("role, is_admin").eq("id", userId).maybeSingle();
 
   if (error) {
-    throw new Error(`Failed to verify user role: ${error.message}`);
+    throw new Error(`사용자 역할 확인에 실패했습니다: ${error.message}`);
   }
 
   return {
@@ -45,6 +46,14 @@ async function getCurrentUserProfile(
 
 export async function addComment(postId: string, content: string, parentId?: string): Promise<ActionResult> {
   try {
+    if (!isValidUUID(postId)) {
+      return { success: false, error: "유효하지 않은 게시글 ID입니다." };
+    }
+
+    if (parentId && !isValidUUID(parentId)) {
+      return { success: false, error: "유효하지 않은 댓글 ID입니다." };
+    }
+
     const supabase = await createClient();
     const {
       data: { user },
@@ -52,21 +61,21 @@ export async function addComment(postId: string, content: string, parentId?: str
     } = await supabase.auth.getUser();
 
     if (userError) {
-      throw new Error(`Authentication failed: ${userError.message}`);
+      throw new Error(`인증에 실패했습니다: ${userError.message}`);
     }
 
     if (!user) {
-      throw new Error("You must be logged in to comment.");
+      throw new Error("댓글을 작성하려면 로그인이 필요합니다.");
     }
 
     const profile = await getCurrentUserProfile(supabase, user.id);
     if (!BLOG_WRITER_ROLES.includes(profile.role)) {
-      throw new Error("You do not have permission to comment.");
+      throw new Error("댓글을 작성할 권한이 없습니다.");
     }
 
     const normalizedContent = content.trim();
     if (!normalizedContent) {
-      throw new Error("Comment cannot be empty.");
+      throw new Error("댓글 내용을 입력해주세요.");
     }
 
     const insertPayload: Database["public"]["Tables"]["comments"]["Insert"] = {
@@ -78,7 +87,7 @@ export async function addComment(postId: string, content: string, parentId?: str
 
     const { error: insertError } = await supabase.from("comments").insert(insertPayload);
     if (insertError) {
-      throw new Error(`Failed to add comment: ${insertError.message}`);
+      throw new Error(`댓글 등록에 실패했습니다: ${insertError.message}`);
     }
 
     revalidatePath("/blog");
@@ -88,13 +97,17 @@ export async function addComment(postId: string, content: string, parentId?: str
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to add comment.",
+      error: error instanceof Error ? error.message : "댓글 등록에 실패했습니다.",
     };
   }
 }
 
 export async function deleteComment(commentId: string): Promise<ActionResult> {
   try {
+    if (!isValidUUID(commentId)) {
+      return { success: false, error: "유효하지 않은 댓글 ID입니다." };
+    }
+
     const supabase = await createClient();
     const {
       data: { user },
@@ -102,11 +115,11 @@ export async function deleteComment(commentId: string): Promise<ActionResult> {
     } = await supabase.auth.getUser();
 
     if (userError) {
-      throw new Error(`Authentication failed: ${userError.message}`);
+      throw new Error(`인증에 실패했습니다: ${userError.message}`);
     }
 
     if (!user) {
-      throw new Error("You must be logged in to delete comments.");
+      throw new Error("댓글을 삭제하려면 로그인이 필요합니다.");
     }
 
     const { data: comment, error: commentError } = await supabase
@@ -116,23 +129,23 @@ export async function deleteComment(commentId: string): Promise<ActionResult> {
       .maybeSingle();
 
     if (commentError) {
-      throw new Error(`Failed to find comment: ${commentError.message}`);
+      throw new Error(`댓글을 찾지 못했습니다: ${commentError.message}`);
     }
 
     if (!comment) {
-      throw new Error("Comment not found.");
+      throw new Error("댓글을 찾을 수 없습니다.");
     }
 
     const profile = await getCurrentUserProfile(supabase, user.id);
     const canDelete = comment.author_id === user.id || isAdmin(profile);
 
     if (!canDelete) {
-      throw new Error("You do not have permission to delete this comment.");
+      throw new Error("이 댓글을 삭제할 권한이 없습니다.");
     }
 
     const { error: deleteError } = await supabase.from("comments").delete().eq("id", commentId);
     if (deleteError) {
-      throw new Error(`Failed to delete comment: ${deleteError.message}`);
+      throw new Error(`댓글 삭제에 실패했습니다: ${deleteError.message}`);
     }
 
     revalidatePath("/blog");
@@ -142,7 +155,7 @@ export async function deleteComment(commentId: string): Promise<ActionResult> {
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to delete comment.",
+      error: error instanceof Error ? error.message : "댓글 삭제에 실패했습니다.",
     };
   }
 }
