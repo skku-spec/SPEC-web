@@ -370,6 +370,11 @@ export default function LogDetailClient({
               <span className="ml-2 font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">
                 {formatTime(data.log.created_at)}
               </span>
+              {data.log.updated_at !== data.log.created_at && (
+                <span className="ml-1 font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">
+                  (수정됨)
+                </span>
+              )}
             </div>
           </div>
 
