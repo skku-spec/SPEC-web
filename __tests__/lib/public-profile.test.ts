@@ -19,22 +19,29 @@ vi.mock("@/lib/supabase/server", () => ({
 import { getPublicAuthorHref } from "@/lib/public-profile";
 
 describe("getPublicAuthorHref", () => {
-  it("returns canonical /profile/[slug] for public profiles", () => {
+  it("returns canonical /profile/[slug] for eligible roles", () => {
     expect(
       getPublicAuthorHref({
         slug: "jane-doe",
         role: "preneur",
-        profile_visibility: "public",
       }),
     ).toBe("/profile/jane-doe");
   });
 
-  it("returns null for private profiles", () => {
+  it("returns null for outsider role", () => {
     expect(
       getPublicAuthorHref({
         slug: "jane-doe",
-        role: "preneur",
-        profile_visibility: "private",
+        role: "outsider",
+      }),
+    ).toBeNull();
+  });
+
+  it("returns null when slug is missing", () => {
+    expect(
+      getPublicAuthorHref({
+        slug: "",
+        role: "learner",
       }),
     ).toBeNull();
   });

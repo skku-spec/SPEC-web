@@ -60,7 +60,6 @@ export default async function ProfilePage() {
   const publicProfileHref = getPublicAuthorHref({
     slug: profile?.slug,
     role: profile?.role,
-    profile_visibility: profile?.profile_visibility,
   });
 
   let experiences: Awaited<ReturnType<typeof getProfileExperiencesForOwner>> = [];
@@ -188,7 +187,7 @@ export default async function ProfilePage() {
               </div>
             ) : (
               <p className="mt-2 font-['Pretendard',sans-serif] text-xs leading-relaxed text-[#6b6b5e]">
-                공개 프로필이 아직 비공개 상태입니다. 아래 공개 프로필 편집 영역에서 공개로 전환하면 이름이 들어간 공유 링크가 활성화됩니다.
+                공개 프로필 주소를 확인할 수 없습니다.
               </p>
             )}
           </div>
@@ -219,7 +218,7 @@ export default async function ProfilePage() {
               websiteUrl: profile.website_url ?? "",
               brunchUrl: profile.brunch_url ?? "",
               githubUrl: profile.github_url ?? "",
-              profileVisibility: profile.profile_visibility === "public" ? "public" : "private",
+
             }}
             initialExperiences={experiences}
             isEditable={canEditPublicProfile}

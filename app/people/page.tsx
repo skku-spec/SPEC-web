@@ -59,7 +59,6 @@ type MemberWithProfile = Pick<
     name: string;
     slug: string;
     role: string | null;
-    profile_visibility: string | null;
     linkedin_url: string | null;
   } | null;
 };
@@ -223,7 +222,7 @@ export default async function PeoplePage() {
   const { data: memberRows } = await supabase
     .from("members")
     .select(
-      "name, slug, role, bio, photo_url, batch_tags, member_type, parts, public_profile_id, profiles!members_public_profile_id_fkey(name, slug, role, profile_visibility, linkedin_url)",
+      "name, slug, role, bio, photo_url, batch_tags, member_type, parts, public_profile_id, profiles!members_public_profile_id_fkey(name, slug, role, linkedin_url)",
     )
     .or(`preneur_batch.eq.${CURRENT_BATCH},learner_batch.eq.${CURRENT_BATCH}`)
     .order("name", { ascending: true });
