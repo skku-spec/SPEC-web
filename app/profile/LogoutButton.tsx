@@ -24,7 +24,7 @@ export default function LogoutButton() {
       type="button"
       onClick={() => void handleLogout()}
       disabled={isLoading}
-      className="w-full rounded-xl border border-[#16140f]/15 bg-white px-4 py-3 font-['Pretendard',sans-serif] text-[15px] font-semibold text-[#16140f] transition-colors hover:bg-[#f8f8f2] disabled:cursor-not-allowed disabled:opacity-60"
+      className="w-full h-10 rounded-md border border-[#ddd9cc] bg-white px-4 font-['Pretendard',sans-serif] text-sm font-medium text-[#16140f] transition-colors hover:bg-[#fcfcf8] disabled:cursor-not-allowed disabled:opacity-60"
     >
       {isLoading ? "로그아웃 중..." : "로그아웃"}
     </button>
