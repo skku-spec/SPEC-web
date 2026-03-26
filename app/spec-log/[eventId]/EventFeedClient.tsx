@@ -25,13 +25,14 @@ import {
   Notebook,
   PartyPopper,
   Send,
+  Pencil,
   ThumbsUp,
   Share2,
   Trash2,
   X,
 } from "lucide-react";
 
-import { createLog, deleteLog } from "@/lib/actions/spec-log";
+import { createLog, deleteLog, updateLog } from "@/lib/actions/spec-log";
 import {
   addLogComment,
   getCommentsByLog,
@@ -58,6 +59,7 @@ type LogEntry = {
   author_id: string;
   content: string;
   created_at: string;
+  updated_at: string;
   author: { id: string; name: string };
   imageUrls: string[];
   commentCount: number;
@@ -501,6 +503,13 @@ function LogCard({
   const [isDeleting, setIsDeleting] = useState(false);
   const contentRef = useRef<HTMLParagraphElement>(null);
   const [isClamped, setIsClamped] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(log.content);
+  const [editImageUrls, setEditImageUrls] = useState<string[]>(log.imageUrls);
+  const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
+  const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const editFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const el = contentRef.current;
@@ -509,10 +518,20 @@ function LogCard({
     }
   }, [log.content]);
 
+  useEffect(() => {
+    setEditContent(log.content);
+    setEditImageUrls(log.imageUrls);
+    setNewImageFiles([]);
+    setNewImagePreviews([]);
+    setIsEditing(false);
+    setIsSaving(false);
+  }, [log.id, log.content, log.imageUrls]);
+
   const canDelete =
     currentUser &&
     (log.author_id === currentUser.id ||
       normalizeRole(currentUser.role) === "preneur");
+  const canEdit = currentUser && log.author_id === currentUser.id;
 
   const handleDelete = () => {
     if (isDeleting) return;
@@ -523,6 +542,62 @@ function LogCard({
         router.refresh();
       }
       setIsDeleting(false);
+    });
+  };
+
+  const handleEditImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
+    setNewImageFiles((prev) => [...prev, ...files]);
+    for (const file of files) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        setNewImagePreviews((prev) => [...prev, ev.target?.result as string]);
+      };
+      reader.readAsDataURL(file);
+    }
+    if (editFileInputRef.current) editFileInputRef.current.value = "";
+  };
+
+  const handleRemoveExistingImage = (index: number) => {
+    setEditImageUrls((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleRemoveNewImage = (index: number) => {
+    setNewImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setNewImagePreviews((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditContent(log.content);
+    setEditImageUrls(log.imageUrls);
+    setNewImageFiles([]);
+    setNewImagePreviews([]);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editContent.trim() || isSaving) return;
+    setIsSaving(true);
+    startTransition(async () => {
+      try {
+        let uploadedUrls: string[] = [];
+        if (newImageFiles.length > 0) {
+          uploadedUrls = await Promise.all(
+            newImageFiles.map((file) => uploadSpecLogImage(file)),
+          );
+        }
+        const allImageUrls = [...editImageUrls, ...uploadedUrls];
+        const result = await updateLog(log.id, editContent.trim(), allImageUrls);
+        if (result.success) {
+          setIsEditing(false);
+          setNewImageFiles([]);
+          setNewImagePreviews([]);
+          router.refresh();
+        }
+      } finally {
+        setIsSaving(false);
+      }
     });
   };
 
@@ -540,30 +615,47 @@ function LogCard({
             <span className="ml-2 font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">
               {formatTime(log.created_at)}
             </span>
+            {log.updated_at !== log.created_at && (
+              <span className="ml-1 font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">
+                (수정됨)
+              </span>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={async () => {
-              const shareUrl = `${window.location.origin}/spec-log/${log.event_id}/${log.id}`;
-              if (navigator.share) {
+          {canEdit && !isEditing && (
+            <button
+              type="button"
+              onClick={() => setIsEditing(true)}
+              aria-label="로그 수정"
+              className="text-[#6b6b5e] transition-colors hover:text-[#FF6C0F]"
+            >
+              <Pencil className="h-4 w-4" strokeWidth={2} />
+            </button>
+          )}
+          {!isEditing && (
+            <button
+              type="button"
+              onClick={async () => {
+                const shareUrl = `${window.location.origin}/spec-log/${log.event_id}/${log.id}`;
+                if (navigator.share) {
+                  try {
+                    await navigator.share({ title: "SPEC 로그", url: shareUrl });
+                    return;
+                  } catch {}
+                }
                 try {
-                  await navigator.share({ title: "SPEC 로그", url: shareUrl });
-                  return;
+                  await navigator.clipboard.writeText(shareUrl);
+                  onToast("링크가 복사되었습니다");
                 } catch {}
-              }
-              try {
-                await navigator.clipboard.writeText(shareUrl);
-                onToast("링크가 복사되었습니다");
-              } catch {}
-            }}
-            aria-label="로그 공유"
-            className="text-[#6b6b5e] transition-colors hover:text-[#FF6C0F]"
-          >
-            <Share2 className="h-4 w-4" strokeWidth={2} />
-          </button>
-          {canDelete && (
+              }}
+              aria-label="로그 공유"
+              className="text-[#6b6b5e] transition-colors hover:text-[#FF6C0F]"
+            >
+              <Share2 className="h-4 w-4" strokeWidth={2} />
+            </button>
+          )}
+          {canDelete && !isEditing && (
             <button
               type="button"
               onClick={handleDelete}
@@ -581,36 +673,134 @@ function LogCard({
         </div>
       </div>
 
-      <div className="mt-3">
-        <p
-          ref={contentRef}
-          className={`whitespace-pre-wrap font-['Pretendard',sans-serif] text-sm leading-relaxed text-[#4a4a40] ${!isContentExpanded ? "line-clamp-6" : ""}`}
-        >
-          {log.content}
-        </p>
-        {isClamped && !isContentExpanded && (
-          <button
-            type="button"
-            onClick={() => setIsContentExpanded(true)}
-            className="mt-1 inline-flex items-center gap-0.5 font-['Pretendard',sans-serif] text-xs font-medium text-[#FF6C0F] transition-colors hover:text-[#FF6C0F]/80"
-          >
-            더 보기
-            <ChevronDown className="h-3 w-3" strokeWidth={2} />
-          </button>
-        )}
-      </div>
+      {isEditing ? (
+        <div className="mt-3">
+          <textarea
+            rows={4}
+            value={editContent}
+            onChange={(e) => setEditContent(e.target.value)}
+            disabled={isSaving}
+            className="w-full resize-none rounded-lg border border-[#ddd9cc] bg-[#f5f5ee] px-4 py-2.5 font-['Pretendard',sans-serif] text-sm text-[#16140f] placeholder:text-[#16140f]/40 focus:border-[#FF6C0F]/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#FF6C0F]/10 disabled:opacity-50"
+          />
 
-      <ImageGallery
-        images={log.imageUrls}
-        onOpen={(i) => onImageOpen(log.imageUrls, i)}
-      />
+          {editImageUrls.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {editImageUrls.map((url, i) => (
+                <div key={`existing-${i}`} className="group relative">
+                  <img
+                    src={url}
+                    alt=""
+                    className="h-16 w-16 rounded-lg border border-[#ece8db] object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveExistingImage(i)}
+                    aria-label="이미지 제거"
+                    className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-[#16140f] text-white opacity-0 transition-opacity group-hover:opacity-100"
+                  >
+                    <X className="h-3 w-3" strokeWidth={2.5} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
-      <ReactionBar
-        logId={log.id}
-        reactionSummary={log.reactionSummary}
-        currentUserId={currentUser?.id ?? null}
-        currentUserRole={currentUser?.role ?? null}
-      />
+          {newImagePreviews.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {newImagePreviews.map((preview, i) => (
+                <div key={`new-${i}`} className="group relative">
+                  <img
+                    src={preview}
+                    alt=""
+                    className="h-16 w-16 rounded-lg border border-[#FF6C0F]/30 object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveNewImage(i)}
+                    aria-label="새 이미지 제거"
+                    className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-[#16140f] text-white opacity-0 transition-opacity group-hover:opacity-100"
+                  >
+                    <X className="h-3 w-3" strokeWidth={2.5} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="mt-2 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => editFileInputRef.current?.click()}
+                disabled={isSaving}
+                className="inline-flex h-8 items-center gap-1.5 rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#6b6b5e] transition-colors hover:bg-[#f0efe6] disabled:opacity-40"
+              >
+                <ImagePlus className="h-3.5 w-3.5" strokeWidth={2} />
+                이미지 추가
+              </button>
+              <input
+                ref={editFileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleEditImageSelect}
+                className="hidden"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleCancelEdit}
+                disabled={isSaving}
+                className="h-8 rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f] transition-colors hover:bg-[#f0efe6] disabled:opacity-40"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveEdit}
+                disabled={!editContent.trim() || isSaving}
+                className="h-8 rounded-md bg-[#16140f] px-3 font-['Pretendard',sans-serif] text-xs font-semibold text-white transition-colors hover:bg-[#16140f]/90 disabled:opacity-40"
+              >
+                {isSaving ? "저장 중..." : "저장"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="mt-3">
+            <p
+              ref={contentRef}
+              className={`whitespace-pre-wrap font-['Pretendard',sans-serif] text-sm leading-relaxed text-[#4a4a40] ${!isContentExpanded ? "line-clamp-6" : ""}`}
+            >
+              {log.content}
+            </p>
+            {isClamped && !isContentExpanded && (
+              <button
+                type="button"
+                onClick={() => setIsContentExpanded(true)}
+                className="mt-1 inline-flex items-center gap-0.5 font-['Pretendard',sans-serif] text-xs font-medium text-[#FF6C0F] transition-colors hover:text-[#FF6C0F]/80"
+              >
+                더 보기
+                <ChevronDown className="h-3 w-3" strokeWidth={2} />
+              </button>
+            )}
+          </div>
+
+          <ImageGallery
+            images={log.imageUrls}
+            onOpen={(i) => onImageOpen(log.imageUrls, i)}
+          />
+
+          <ReactionBar
+            logId={log.id}
+            reactionSummary={log.reactionSummary}
+            currentUserId={currentUser?.id ?? null}
+            currentUserRole={currentUser?.role ?? null}
+          />
+        </>
+      )}
 
       <CommentThread
         logId={log.id}

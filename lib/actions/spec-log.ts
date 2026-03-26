@@ -706,7 +706,7 @@ export async function createLog(
       throw new Error("로그 내용은 5000자를 초과할 수 없습니다.");
     }
 
-    const MAX_IMAGES_PER_LOG = 10;
+    const MAX_IMAGES_PER_LOG = 20;
     if (imageUrls.length > MAX_IMAGES_PER_LOG) {
       throw new Error(`이미지는 최대 ${MAX_IMAGES_PER_LOG}장까지 첨부할 수 있습니다.`);
     }
@@ -948,6 +948,118 @@ export async function getLogById(logId: string): Promise<
     return {
       success: false,
       error: error instanceof Error ? error.message : "로그 조회에 실패했습니다.",
+    };
+  }
+}
+
+export async function updateLog(
+  logId: string,
+  content: string,
+  imageUrls: string[],
+): Promise<ActionResult> {
+  try {
+    const supabase = await createClient();
+    const profile = await getAuthenticatedProfile(supabase);
+
+    const normalizedContent = content.trim();
+    if (!normalizedContent) {
+      throw new Error("로그 내용을 입력해주세요.");
+    }
+
+    if (normalizedContent.length > 5000) {
+      throw new Error("로그 내용은 5000자를 초과할 수 없습니다.");
+    }
+
+    const MAX_IMAGES_PER_LOG = 20;
+    if (imageUrls.length > MAX_IMAGES_PER_LOG) {
+      throw new Error(`이미지는 최대 ${MAX_IMAGES_PER_LOG}장까지 첨부할 수 있습니다.`);
+    }
+
+    const { data: log, error: logError } = await supabase
+      .from("spec_logs")
+      .select("id, author_id, event_id")
+      .eq("id", logId)
+      .maybeSingle();
+
+    if (logError) {
+      throw new Error(`로그 조회에 실패했습니다: ${logError.message}`);
+    }
+
+    if (!log) {
+      throw new Error("수정할 로그를 찾을 수 없습니다.");
+    }
+
+    if (log.author_id !== profile.userId) {
+      throw new Error("본인이 작성한 로그만 수정할 수 있습니다.");
+    }
+
+    const { error: updateError } = await supabase
+      .from("spec_logs")
+      .update({ content: normalizedContent })
+      .eq("id", logId);
+
+    if (updateError) {
+      throw new Error(`로그 수정에 실패했습니다: ${updateError.message}`);
+    }
+
+    const { data: existingImages } = await supabase
+      .from("spec_log_images")
+      .select("image_url")
+      .eq("log_id", logId);
+
+    const existingUrls = new Set((existingImages ?? []).map((img) => img.image_url));
+    const newUrls = new Set(imageUrls);
+
+    const urlsToDelete = [...existingUrls].filter((url) => !newUrls.has(url));
+    const urlsToAdd = imageUrls.filter((url) => !existingUrls.has(url));
+
+    if (urlsToDelete.length > 0) {
+      await deleteStorageImages(
+        supabase,
+        urlsToDelete,
+      );
+      await supabase
+        .from("spec_log_images")
+        .delete()
+        .eq("log_id", logId)
+        .in("image_url", urlsToDelete);
+    }
+
+    if (urlsToAdd.length > 0) {
+      const startOrder = existingUrls.size - urlsToDelete.length;
+      const imageRows: SpecLogImageInsert[] = urlsToAdd.map((imageUrl, index) => ({
+        log_id: logId,
+        image_url: imageUrl,
+        sort_order: startOrder + index,
+      }));
+
+      const { error: imageInsertError } = await supabase
+        .from("spec_log_images")
+        .insert(imageRows);
+
+      if (imageInsertError) {
+        throw new Error(`이미지 저장에 실패했습니다: ${imageInsertError.message}`);
+      }
+    }
+
+    await logAuditEvent({
+      action: "update",
+      entityType: "spec_log",
+      entityId: logId,
+      details: {
+        eventId: log.event_id,
+        imagesAdded: urlsToAdd.length,
+        imagesRemoved: urlsToDelete.length,
+      },
+    });
+
+    revalidatePath("/spec-log");
+
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "로그 수정에 실패했습니다.",
     };
   }
 }
