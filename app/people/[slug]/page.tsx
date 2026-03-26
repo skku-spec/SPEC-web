@@ -68,7 +68,6 @@ function mapMemberToPerson(
   profileLink: {
     slug: string | null;
     role: string | null;
-    profile_visibility: string | null;
   } | null,
 ): Person {
   const publicHref = getPublicAuthorHref(profileLink);
