@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { getMyApplication } from "@/lib/actions/applications";
@@ -5,6 +6,10 @@ import ApplicationStatusCard from "./ApplicationStatusCard";
 import StatusCheckForm from "./StatusCheckForm";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "지원 현황 | SPEC",
+};
 
 export default async function ApplicationStatusPage() {
   const { user } = await getCurrentUser();

@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import { getTrackerData } from "@/lib/actions/tracker";
 import { AttendanceClient } from "./AttendanceClient";
+
+export const metadata: Metadata = {
+  title: "출석 관리 | SPEC Admin",
+};
 
 export default async function AdminAttendancePage() {
   const result = await getTrackerData();

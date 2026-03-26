@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
 import { getFormFields } from '@/lib/actions/form-builder';
 import { RECRUITMENT_BATCH } from '@/lib/recruitment-schedule';
 import ApplicationFormClient from './client-form';
+
+export const metadata: Metadata = {
+  title: "지원하기 | SPEC",
+};
 
 const FALLBACK_FORM_FIELDS = [
   {

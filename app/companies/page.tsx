@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 
@@ -7,6 +8,10 @@ import CompaniesPageClient, {
 } from "./CompaniesPageClient";
 
 type ProjectRow = Database["public"]["Tables"]["projects"]["Row"];
+
+export const metadata: Metadata = {
+  title: "프로젝트 | SPEC",
+};
 
 function sortBatch(a: string, b: string) {
   const aNumber = Number.parseInt(a, 10);

@@ -1,8 +1,13 @@
+import type { Metadata } from "next";
 import { requireRole } from "@/lib/auth";
 import { getEventsByBatch } from "@/lib/actions/spec-log";
 import SpecLogAdminClient from "./SpecLogAdminClient";
 
 const BATCHES = ["1기", "2기", "3기", "4기"];
+
+export const metadata: Metadata = {
+  title: "SPEC Log 관리 | SPEC Admin",
+};
 
 export default async function AdminSpecLogPage() {
   await requireRole("preneur");

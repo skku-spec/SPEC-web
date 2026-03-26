@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import { getAllSettings } from "@/lib/actions/site-settings";
 import SettingsClient from "./SettingsClient";
+
+export const metadata: Metadata = {
+  title: "설정 | SPEC Admin",
+};
 
 export default async function AdminSettingsPage() {
   const result = await getAllSettings();

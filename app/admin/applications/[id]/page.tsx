@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -6,6 +7,10 @@ import DeleteApplicationButton from "@/components/dashboard/DeleteApplicationBut
 
 type PageProps = {
   params: Promise<{ id: string }>;
+};
+
+export const metadata: Metadata = {
+  title: "지원서 상세 | SPEC Admin",
 };
 
 export default async function AdminApplicationDetailPage({ params }: PageProps) {

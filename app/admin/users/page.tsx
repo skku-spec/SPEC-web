@@ -1,9 +1,14 @@
+import type { Metadata } from "next";
 import UsersClient from "@/app/admin/users/UsersClient";
 import { isAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+
+export const metadata: Metadata = {
+  title: "사용자 관리 | SPEC Admin",
+};
 
 export default async function AdminUsersPage() {
   const supabase = await createClient();

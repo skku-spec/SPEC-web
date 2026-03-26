@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
 import { getTrackerData } from "@/lib/actions/tracker";
 import { getApplicationStats } from "@/lib/actions/export";
 import { DashboardClient } from "./DashboardClient";
+
+export const metadata: Metadata = {
+  title: "대시보드 | SPEC Admin",
+};
 
 export default async function AdminDashboardPage() {
   const [trackerResult, statsResult] = await Promise.all([
