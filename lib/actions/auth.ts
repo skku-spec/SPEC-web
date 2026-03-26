@@ -1,5 +1,7 @@
 "use server";
 
+import { headers } from "next/headers";
+import { rateLimit } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 type AuthActionResult = {
@@ -13,6 +15,13 @@ function readField(formData: FormData, key: string) {
 }
 
 export async function signIn(formData: FormData): Promise<AuthActionResult> {
+  const headerStore = await headers();
+  const ip = headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const rateLimitResult = rateLimit(`signIn:${ip}`, { maxRequests: 5, windowMs: 15 * 60 * 1000 });
+  if (!rateLimitResult.allowed) {
+    return { error: "너무 많은 요청입니다. 잠시 후 다시 시도해주세요." };
+  }
+
   const email = readField(formData, "email").toLowerCase();
   const password = readField(formData, "password");
 
@@ -31,6 +40,13 @@ export async function signIn(formData: FormData): Promise<AuthActionResult> {
 }
 
 export async function signUp(formData: FormData): Promise<AuthActionResult> {
+  const headerStore = await headers();
+  const ip = headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const rateLimitResult = rateLimit(`signUp:${ip}`, { maxRequests: 3, windowMs: 15 * 60 * 1000 });
+  if (!rateLimitResult.allowed) {
+    return { error: "너무 많은 요청입니다. 잠시 후 다시 시도해주세요." };
+  }
+
   const first_name = readField(formData, "first_name").replace(/\s+/g, "");
   const last_name = readField(formData, "last_name").replace(/\s+/g, "");
   const email = readField(formData, "email").toLowerCase();
@@ -75,6 +91,13 @@ export async function signUp(formData: FormData): Promise<AuthActionResult> {
 }
 
 export async function forgotPassword(formData: FormData): Promise<AuthActionResult> {
+  const headerStore = await headers();
+  const ip = headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const rateLimitResult = rateLimit(`forgotPassword:${ip}`, { maxRequests: 3, windowMs: 15 * 60 * 1000 });
+  if (!rateLimitResult.allowed) {
+    return { error: "너무 많은 요청입니다. 잠시 후 다시 시도해주세요." };
+  }
+
   const email = readField(formData, "email").toLowerCase();
 
   if (!email) {
