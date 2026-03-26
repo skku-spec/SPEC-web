@@ -38,10 +38,8 @@ export type CurriculumArea = {
   updated_at: string;
 };
 
-/* Tables not yet in generated Supabase types — cast via `as never`. */
-type TableName = never;
-const WEEKS_TABLE = "curriculum_weeks" as TableName;
-const AREAS_TABLE = "curriculum_areas" as TableName;
+const WEEKS_TABLE = "curriculum_weeks";
+const AREAS_TABLE = "curriculum_areas";
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -157,7 +155,7 @@ export async function upsertCurriculumWeek(data: {
       notes: data.notes?.trim() || null,
       batch: data.batch || "default",
       sort_order: data.sort_order,
-    } as never;
+    };
 
     if (data.id) {
       const { error } = await supabase
@@ -240,7 +238,7 @@ export async function upsertCurriculumArea(data: {
       activities: data.activities.filter((a) => a.trim()),
       batch: data.batch || "default",
       sort_order: data.sort_order,
-    } as never;
+    };
 
     if (data.id) {
       const { error } = await supabase

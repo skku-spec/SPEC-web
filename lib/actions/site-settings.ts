@@ -20,10 +20,7 @@ export type SiteSetting = {
   updated_at: string;
 };
 
-// "site_settings" isn't in the generated Database type yet — remove this
-// cast after running `supabase gen types` to regenerate lib/supabase/types.ts.
-type TableName = never;
-const TABLE = "site_settings" as TableName;
+const TABLE = "site_settings";
 
 function isValidEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -199,7 +196,7 @@ export async function updateSetting(
 
     const { error: updateError } = await supabase
       .from(TABLE)
-      .update({ value, updated_by: user.id } as never)
+      .update({ value, updated_by: user.id })
       .eq("key", key);
 
     if (updateError) throw new Error(updateError.message);
@@ -260,7 +257,7 @@ export async function updateSettings(
     for (const { key, value } of updates) {
       const { error: updateError } = await supabase
         .from(TABLE)
-        .update({ value, updated_by: user.id } as never)
+        .update({ value, updated_by: user.id })
         .eq("key", key);
 
       if (updateError) throw new Error(`"${key}" 업데이트 실패: ${updateError.message}`);
@@ -324,7 +321,7 @@ export async function createSetting(data: {
       label: data.label,
       value_type: valueType,
       sort_order: data.sort_order ?? 0,
-    } as never);
+    });
 
     if (insertError) throw new Error(insertError.message);
 

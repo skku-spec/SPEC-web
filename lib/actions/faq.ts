@@ -32,9 +32,7 @@ type FaqActionResult<T> = {
   data?: T;
 };
 
-/* Table not yet in generated Supabase types — cast via `as never`. */
-type TableName = never;
-const FAQ_TABLE = "faq_items" as TableName;
+const FAQ_TABLE = "faq_items";
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -166,7 +164,7 @@ export async function upsertFaqItem(data: {
       answer: data.answer.trim(),
       sort_order: data.sort_order,
       is_active: data.is_active ?? true,
-    } as never;
+    };
 
     if (data.id) {
       const { error } = await supabase

@@ -26,9 +26,7 @@ type PartnerActionResult<T> = {
   data?: T;
 };
 
-/* Table not yet in generated Supabase types — cast via `as never`. */
-type TableName = never;
-const PARTNERS_TABLE = "partners" as TableName;
+const PARTNERS_TABLE = "partners";
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -120,7 +118,7 @@ export async function upsertPartner(data: {
       website_url: data.website_url?.trim() || null,
       sort_order: data.sort_order,
       is_active: data.is_active ?? true,
-    } as never;
+    };
 
     if (data.id) {
       const { error } = await supabase
