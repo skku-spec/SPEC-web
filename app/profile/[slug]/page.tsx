@@ -148,8 +148,8 @@ function HeroSection({ profile }: { profile: PublicProfile }) {
   );
 }
 
-function AboutSection({ bio }: { bio: string }) {
-  if (!bio.trim()) return null;
+function AboutSection({ bio }: { bio: string | null }) {
+  if (!(bio ?? "").trim()) return null;
 
   return (
     <section className="pt-6 pb-2">
@@ -315,7 +315,7 @@ export default async function PublicAuthorPage({
           <WritingSection posts={posts} />
         </div>
 
-        {!profile.bio.trim() && experiences.length === 0 && posts.length === 0 && (
+        {!(profile.bio ?? "").trim() && experiences.length === 0 && posts.length === 0 && (
           <p className="mt-12 text-center font-['Pretendard',sans-serif] text-[14px] text-[#16140f]/40">
             아직 공개된 정보가 없어요.
           </p>

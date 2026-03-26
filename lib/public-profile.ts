@@ -73,8 +73,8 @@ export function getPublicAuthorHref(profile: {
 }
 
 export function getDisplayRoleLine(profile: Pick<PublicProfile, "current_role" | "company">): string | null {
-  const currentRole = profile.current_role.trim();
-  const company = profile.company.trim();
+  const currentRole = (profile.current_role ?? "").trim();
+  const company = (profile.company ?? "").trim();
 
   if (currentRole && company) {
     return `${currentRole} @ ${company}`;
@@ -93,10 +93,10 @@ export function getDisplayRoleLine(profile: Pick<PublicProfile, "current_role" |
 
 export function getPublicProfileLinks(profile: Pick<PublicProfile, "linkedin_url" | "website_url" | "brunch_url" | "github_url">) {
   return [
-    { label: "LinkedIn", href: profile.linkedin_url.trim() },
-    { label: "Website", href: profile.website_url.trim() },
-    { label: "Brunch", href: profile.brunch_url.trim() },
-    { label: "GitHub", href: profile.github_url.trim() },
+    { label: "LinkedIn", href: (profile.linkedin_url ?? "").trim() },
+    { label: "Website", href: (profile.website_url ?? "").trim() },
+    { label: "Brunch", href: (profile.brunch_url ?? "").trim() },
+    { label: "GitHub", href: (profile.github_url ?? "").trim() },
   ].filter((link) => Boolean(link.href));
 }
 
