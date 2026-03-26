@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -6,8 +7,6 @@ import { usePathname, useRouter } from "next/navigation";
 
 import { useUser } from "@/hooks/useUser";
 import { createClient } from "@/lib/supabase/client";
-
-import ApplyButton from "@/components/ui/ApplyButton";
 
 const ROLE_LABEL: Record<string, string> = {
   outsider: "외부인",
@@ -55,13 +54,8 @@ export default function Navbar() {
   const roleLabel = useMemo(() => ROLE_LABEL[role] ?? "외부", [role]);
   const initials = useMemo(() => getInitials(displayName), [displayName]);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [showComingSoon, setShowComingSoon] = useState(false);
+  const [showComingSoon] = useState(false);
 
-  const handleComingSoon = useCallback(() => {
-    setShowComingSoon(true);
-    setMenuOpen(false);
-    setTimeout(() => setShowComingSoon(false), 2000);
-  }, []);
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";

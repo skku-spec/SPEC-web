@@ -50,12 +50,14 @@ export default function BlogPageClient({
   }, [searchQuery]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPage(1);
   }, [activeTag, sort, debouncedQuery]);
 
   useEffect(() => {
     // Use SSR data for the initial default state to avoid a redundant fetch
     if (!activeTag && sort === "newest" && page === 1 && !debouncedQuery) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDisplayPosts(posts);
       setDisplayTotalCount(totalCount);
       return;

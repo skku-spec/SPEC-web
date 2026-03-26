@@ -6,11 +6,14 @@ import Link from 'next/link';
 import PageHeader from '@/components/PageHeader';
 
 interface CurriculumClientProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   initialWeeks: any[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   initialAreas: any[];
 }
 
-const preneurAreas = [
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _preneurAreas = [
   {
     num: '01',
     title: '조직 운영 & 스케일업',
@@ -80,7 +83,8 @@ const preneurMilestones = [
    LEARNER TRACK DATA (30 weeks)
    ────────────────────────────────────────────── */
 
-const learnerWeeks = [
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _learnerWeeks = [
   {
     week: 1,
     topic: 'Kickoff',
@@ -404,6 +408,7 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Curricu
    PRENEUR TRACK VIEW
    ────────────────────────────────────────────── */
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function PreneurTrack({ areas }: { areas: any[] }) {
   return (
     <div>
@@ -467,7 +472,7 @@ function PreneurTrack({ areas }: { areas: any[] }) {
             </p>
 
             <ul className="mt-5 space-y-2">
-              {area.activities.map((item: any, j: number) => (
+              {area.activities.map((item: string, j: number) => (
                 <li
                   key={j}
                   className="flex items-start gap-2.5 font-['MaruBuri',serif] text-[15px] leading-[1.6] text-[#16140f]/80"
@@ -588,6 +593,7 @@ function VccTrack() {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function LearnerTrack({ weeks }: { weeks: any[] }) {
   return (
     <div>

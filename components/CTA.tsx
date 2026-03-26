@@ -2,8 +2,6 @@
 
 import { startTransition, useEffect, useRef, useState } from "react";
 
-import ApplyButton from "@/components/ui/ApplyButton";
-import { RECRUITMENT_DEADLINE_LABEL } from "@/lib/recruitment-schedule";
 
 export default function CTA() {
   const sectionRef = useRef<HTMLElement>(null);

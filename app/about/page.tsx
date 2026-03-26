@@ -31,9 +31,6 @@ const sectionClass = "mb-10";
 const h2Class =
   "mb-3 font-[system-ui] text-[1.5rem] font-bold leading-tight uppercase text-[#16140f]";
 
-const spanClass =
-  "mb-3 block font-['Pretendard',sans-serif] font-semibold leading-[1.4] text-[#16140f]";
-
 const preneurDivisions = [
   { name: "Operations", desc: "내부 프로세스 설계 · 기수 운영 체계화" },
   { name: "Engineering", desc: "프로덕트 개발 · 기술 인프라 구축" },

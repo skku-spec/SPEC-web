@@ -59,7 +59,7 @@ function getDdayLabel(timelineSteps: unknown) {
   return "마감";
 }
 
-export default async function RecruitmentBanner() {
+async function fetchBannerData() {
   try {
     const supabase = await createClient();
     const { data } = await supabase
@@ -68,49 +68,54 @@ export default async function RecruitmentBanner() {
       .neq("status", "closed")
       .limit(1)
       .maybeSingle();
-
-    if (!data || data.show_banner === false) {
-      return null;
-    }
-
-    if (data.status === "recruiting") {
-      const ddayLabel = getDdayLabel(data.timeline_steps);
-
-      return (
-        <div className="bg-[#FF6C0F] px-4 py-2.5 text-center">
-          <Link
-            href="/apply"
-            className="inline-flex items-center gap-1.5 font-['Pretendard',sans-serif] text-sm font-normal text-white transition-opacity hover:opacity-80"
-          >
-            {data.banner_label} — 지원 마감 {ddayLabel}
-            <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
-          </Link>
-        </div>
-      );
-    }
-
-    if (data.status === "reviewing") {
-      return (
-        <div className="bg-[#16140f] px-4 py-2.5 text-center">
-          <p className="font-['Pretendard',sans-serif] text-sm font-normal text-white/80">
-            심사가 진행 중입니다
-          </p>
-        </div>
-      );
-    }
-
-    if (data.status === "upcoming") {
-      return (
-        <div className="bg-[#FF6C0F] px-4 py-2.5 text-center">
-          <p className="font-['Pretendard',sans-serif] text-sm font-normal text-white transition-opacity hover:opacity-80">
-            다음 모집이 준비 중입니다
-          </p>
-        </div>
-      );
-    }
-
-    return null;
+    return data;
   } catch {
     return null;
   }
+}
+
+export default async function RecruitmentBanner() {
+  const data = await fetchBannerData();
+
+  if (!data || data.show_banner === false) {
+    return null;
+  }
+
+  if (data.status === "recruiting") {
+    const ddayLabel = getDdayLabel(data.timeline_steps);
+
+    return (
+      <div className="bg-[#FF6C0F] px-4 py-2.5 text-center">
+        <Link
+          href="/apply"
+          className="inline-flex items-center gap-1.5 font-['Pretendard',sans-serif] text-sm font-normal text-white transition-opacity hover:opacity-80"
+        >
+          {data.banner_label} — 지원 마감 {ddayLabel}
+          <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
+        </Link>
+      </div>
+    );
+  }
+
+  if (data.status === "reviewing") {
+    return (
+      <div className="bg-[#16140f] px-4 py-2.5 text-center">
+        <p className="font-['Pretendard',sans-serif] text-sm font-normal text-white/80">
+          심사가 진행 중입니다
+        </p>
+      </div>
+    );
+  }
+
+  if (data.status === "upcoming") {
+    return (
+      <div className="bg-[#FF6C0F] px-4 py-2.5 text-center">
+        <p className="font-['Pretendard',sans-serif] text-sm font-normal text-white transition-opacity hover:opacity-80">
+          다음 모집이 준비 중입니다
+        </p>
+      </div>
+    );
+  }
+
+  return null;
 }

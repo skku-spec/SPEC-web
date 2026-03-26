@@ -72,7 +72,7 @@ export function AttendanceClient({
   const [isPending, startTransition] = useTransition();
   const [sessions, setSessions] = useState(initialSessions);
   const [logs, setLogs] = useState(initialLogs);
-  const [submissions, setSubmissions] = useState(initialSubmissions);
+  const [submissions] = useState(initialSubmissions);
   const [newSessionTitle, setNewSessionTitle] = useState("");
 
   const getAttendanceStatus = (userId: string, sessionId: string) => {

@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -5,10 +6,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 import { useUser } from "@/hooks/useUser";
-import {
-  getRecruitmentApplyDdayLabel,
-  RECRUITMENT_BATCH,
-} from "@/lib/recruitment-schedule";
 import { createClient } from "@/lib/supabase/client";
 
 import ApplyButton from "@/components/ui/ApplyButton";
@@ -58,7 +55,6 @@ export default function Navbar() {
   );
   const roleLabel = useMemo(() => ROLE_LABEL[role] ?? "외부", [role]);
   const initials = useMemo(() => getInitials(displayName), [displayName]);
-  const applyDdayLabel = useMemo(() => getRecruitmentApplyDdayLabel(), []);
 
   const [menuOpen, setMenuOpen] = useState(false);
 

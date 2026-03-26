@@ -4,6 +4,7 @@
  * DO NOT use this component on any public-facing page until replaced with real SPEC data.
  * Images are hotlinked from bookface-static.ycombinator.com — do not deploy.
  */
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";

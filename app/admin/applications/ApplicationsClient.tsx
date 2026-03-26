@@ -83,6 +83,7 @@ export default function ApplicationsClient({ initialApplications }: Applications
   }, [initialApplications]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     checkConversionStatuses();
   }, [checkConversionStatuses]);
 

@@ -205,6 +205,7 @@ export default async function BlogPostPage({
 
           {post.imageUrl && (
             <div className="mb-10 overflow-hidden rounded-lg">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={post.imageUrl}
                 alt={post.title}

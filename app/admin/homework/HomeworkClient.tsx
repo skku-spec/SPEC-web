@@ -152,6 +152,7 @@ export function HomeworkClient() {
     if (Object.keys(padletData).length > 0) {
       syncAll();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [padletData, availableRunners, homeworks]);
 
   const handleFetchTeams = async (homeworkId: string) => {

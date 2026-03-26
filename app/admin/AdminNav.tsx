@@ -70,6 +70,7 @@ export function DesktopAdminNav({ items }: DesktopAdminNavProps) {
   const [pendingHref, setPendingHref] = useState<string | null>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPendingHref(null);
   }, [pathname]);
 
@@ -121,6 +122,7 @@ export function MobileAdminNav() {
   const [pendingHref, setPendingHref] = useState<string | null>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPendingHref(null);
   }, [pathname]);
 

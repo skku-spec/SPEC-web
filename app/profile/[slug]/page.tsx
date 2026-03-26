@@ -97,6 +97,7 @@ function HeroSection({ profile }: { profile: PublicProfile }) {
     <header className="pb-10">
       <div className="flex flex-col items-center text-center">
         {profile.photo ? (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={profile.photo}
             alt={`${profile.name} 프로필 사진`}

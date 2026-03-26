@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, useCallback, useEffect } from "react";
-import { Plus, Pencil, Trash2, X, FolderPlus, HelpCircle } from "lucide-react";
+import { Plus, Pencil, X, FolderPlus, HelpCircle } from "lucide-react";
 import {
   getAllFaqItems,
   upsertFaqItem,

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-import ApplyButton from "@/components/ui/ApplyButton";
 export default function Hero() {
   const [mounted, setMounted] = useState(false);
 

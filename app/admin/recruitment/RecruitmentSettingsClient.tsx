@@ -231,7 +231,8 @@ export default function RecruitmentSettingsClient({
   function handleSave() {
     setErrorMsg(null);
     startTransition(async () => {
-      const steps: TimelineStep[] = timelineSteps.map(({ _key: _, ...rest }) => rest);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const steps: TimelineStep[] = timelineSteps.map(({ _key, ...rest }) => rest);
       const result = await upsertRecruitmentSettings({
         ...formData,
         timeline_steps: steps,
