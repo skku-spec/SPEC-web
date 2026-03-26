@@ -118,7 +118,7 @@ function ImageGallery({
           <img
             src={images[0]}
             alt=""
-            className="h-56 w-full object-cover"
+            className="max-h-[400px] w-full object-contain"
             loading="lazy"
           />
         </button>
@@ -140,7 +140,7 @@ function ImageGallery({
             <img
               src={img}
               alt=""
-              className="h-44 w-full object-cover"
+              className="max-h-[280px] w-full object-contain"
               loading="lazy"
             />
           </button>
@@ -162,7 +162,7 @@ function ImageGallery({
           <img
             src={img}
             alt=""
-            className={`w-full object-cover ${index === 0 ? "h-44" : "h-36"}`}
+            className={`w-full object-contain ${index === 0 ? "max-h-[280px]" : "max-h-[200px]"}`}
             loading="lazy"
           />
         </button>
