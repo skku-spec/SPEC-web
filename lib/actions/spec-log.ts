@@ -6,6 +6,7 @@ import { logAuditEvent } from "@/lib/helpers/audit-log";
 import { SPEC_LOG_WRITER_ROLES, type UserRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
+import { isValidUUID } from "@/lib/validators";
 
 type ActionResult<T = undefined> = {
   success: boolean;
@@ -828,6 +829,10 @@ export async function getLogById(logId: string): Promise<
   }>
 > {
   try {
+    if (!isValidUUID(logId)) {
+      return { success: false, error: "유효하지 않은 로그 ID입니다." };
+    }
+
     const supabase = await createClient();
 
     const { data: log, error: logError } = await supabase

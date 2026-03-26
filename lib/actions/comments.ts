@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { BLOG_WRITER_ROLES, isAdmin, type UserRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
+import { isValidUUID } from "@/lib/validators";
 
 type ActionResult = {
   success: boolean;
@@ -45,6 +46,14 @@ async function getCurrentUserProfile(
 
 export async function addComment(postId: string, content: string, parentId?: string): Promise<ActionResult> {
   try {
+    if (!isValidUUID(postId)) {
+      return { success: false, error: "유효하지 않은 게시글 ID입니다." };
+    }
+
+    if (parentId && !isValidUUID(parentId)) {
+      return { success: false, error: "유효하지 않은 댓글 ID입니다." };
+    }
+
     const supabase = await createClient();
     const {
       data: { user },
@@ -95,6 +104,10 @@ export async function addComment(postId: string, content: string, parentId?: str
 
 export async function deleteComment(commentId: string): Promise<ActionResult> {
   try {
+    if (!isValidUUID(commentId)) {
+      return { success: false, error: "유효하지 않은 댓글 ID입니다." };
+    }
+
     const supabase = await createClient();
     const {
       data: { user },
