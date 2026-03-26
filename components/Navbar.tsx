@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -6,10 +7,6 @@ import { usePathname, useRouter } from "next/navigation";
 
 import { useUser } from "@/hooks/useUser";
 import { DASHBOARD_ROLES, normalizeRole } from "@/lib/auth-shared";
-import {
-  getRecruitmentApplyDdayLabel,
-  RECRUITMENT_BATCH,
-} from "@/lib/recruitment-schedule";
 import { createClient } from "@/lib/supabase/client";
 
 import ApplyButton from "@/components/ui/ApplyButton";
@@ -62,7 +59,6 @@ export default function Navbar() {
   const canAccessDashboard = DASHBOARD_ROLES.includes(normalizedRole);
   const canAccessAdmin = normalizedRole === "preneur";
   const initials = useMemo(() => getInitials(displayName), [displayName]);
-  const applyDdayLabel = useMemo(() => getRecruitmentApplyDdayLabel(), []);
 
   const [menuOpen, setMenuOpen] = useState(false);
 

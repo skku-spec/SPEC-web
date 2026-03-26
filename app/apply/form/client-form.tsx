@@ -10,10 +10,11 @@ import {
 } from "@/lib/recruitment-schedule";
 
 interface ApplicationFormClientProps {
-  dbFields?: any[];
+  dbFields?: Record<string, unknown>[];
 }
 
-export default function ApplicationFormClient({ dbFields }: ApplicationFormClientProps) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export default function ApplicationFormClient(_props: ApplicationFormClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [step, setStep] = useState(0);
@@ -42,7 +43,6 @@ export default function ApplicationFormClient({ dbFields }: ApplicationFormClien
   // Step 3: 동의
   const [acceptedConsent, setAcceptedConsent] = useState(false);
 
-  const totalSteps = 4;
   const stepLabels = ["기본 정보", "지원 질문 (1)", "지원 질문 (2)", "동의 확인"];
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -54,6 +54,7 @@ export async function updateProfile(formData: FormData): Promise<ActionResult> {
       username,
       first_name: firstName,
       last_name: lastName,
+      name: lastName + firstName,
       linkedin_url: linkedinUrl,
     })
     .eq("id", user.id);

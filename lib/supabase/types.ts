@@ -292,6 +292,8 @@ export type Database = {
           linkedin_url: string | null;
           bio: string | null;
           notes: string | null;
+          first_name: string | null;
+          last_name: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -315,6 +317,8 @@ export type Database = {
           linkedin_url?: string | null;
           bio?: string | null;
           notes?: string | null;
+          first_name?: string | null;
+          last_name?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -338,6 +342,8 @@ export type Database = {
           linkedin_url?: string | null;
           bio?: string | null;
           notes?: string | null;
+          first_name?: string | null;
+          last_name?: string | null;
           created_at?: string;
           updated_at?: string;
         };

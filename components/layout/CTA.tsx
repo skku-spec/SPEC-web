@@ -2,8 +2,6 @@
 
 import { startTransition, useEffect, useRef, useState } from "react";
 
-import ApplyButton from "@/components/ui/ApplyButton";
-
 export default function CTA() {
   const sectionRef = useRef<HTMLElement>(null);
   const [visible, setVisible] = useState(false);

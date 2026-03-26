@@ -112,6 +112,7 @@ export default function BlockNoteEditor({
     skipNextChangeRef.current = true;
     editor.replaceBlocks(editor.document, parsedBlocks);
     emitWordCount(editor.blocksToHTMLLossy(editor.document));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor, initialHTML]);
 
   const handleEditorChange = () => {

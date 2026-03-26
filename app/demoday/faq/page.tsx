@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { getAllFaqItems } from "@/lib/actions/faq";
 
 export const metadata: Metadata = {

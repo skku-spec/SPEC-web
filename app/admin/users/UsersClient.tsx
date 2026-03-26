@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { toggleAdminStatus, updateUserRole } from "@/lib/actions/admin";
 import { normalizeRole, type UserRole } from "@/lib/auth-shared";
 import CustomSelect from "@/components/ui/CustomSelect";
+import { useRouter } from "next/navigation";
 import type { Database } from "@/lib/supabase/types";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -167,11 +168,10 @@ export default function UsersClient({ initialProfiles, currentUserIsAdmin }: Use
           <table className="min-w-full border-collapse">
             <thead className="bg-[#f0efe6] text-left">
               <tr>
-                <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold">Name</th>
-                <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold">Role</th>
-                <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold">Batch</th>
-                <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold">Company</th>
-                <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold">Joined</th>
+                <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">Name</th>
+                <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">Role</th>
+                <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">Batch / Company</th>
+                <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">Joined</th>
               </tr>
             </thead>
             <tbody>
@@ -183,14 +183,14 @@ export default function UsersClient({ initialProfiles, currentUserIsAdmin }: Use
                   <tr key={profile.id} className="border-t border-[#ece8db]">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="grid h-9 w-9 place-items-center rounded-full bg-[#e8e6dc] font-['Pretendard',sans-serif] text-sm font-semibold text-[#4a4a40]">
+                        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#e8e6dc] font-['Pretendard',sans-serif] text-sm font-semibold text-[#4a4a40]">
                           {initial}
                         </div>
-                        <div>
+                        <div className="flex flex-col">
                           <p className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
-                            {profile.name || "Unknown"}
+                            {profile.name}
                           </p>
-                          <p className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">{profile.slug}</p>
+                          <p className="font-['Pretendard',sans-serif] text-[10px] text-[#6b6b5e]">{profile.slug}</p>
                         </div>
                       </div>
                     </td>
@@ -231,10 +231,8 @@ export default function UsersClient({ initialProfiles, currentUserIsAdmin }: Use
                       </div>
                     </td>
                     <td className="px-4 py-3 font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">
-                      {profile.batch || "-"}
-                    </td>
-                    <td className="px-4 py-3 font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">
-                      {profile.company || "-"}
+                      <span className="block text-xs font-semibold">{profile.batch || "-"}</span>
+                      <span className="block text-xs text-[#6b6b5e]">{profile.company || "-"}</span>
                     </td>
                     <td className="px-4 py-3 font-['Pretendard',sans-serif] text-sm text-[#6b6b5e]">
                       {formatJoinedDate(profile.created_at)}

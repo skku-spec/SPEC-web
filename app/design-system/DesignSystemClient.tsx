@@ -16,7 +16,6 @@ import {
   Package,
   User,
   BarChart3,
-  Palette,
   ChevronDown,
   Plus,
   Trash2,

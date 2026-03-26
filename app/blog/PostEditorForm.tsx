@@ -580,6 +580,7 @@ export default function PostEditorForm({ mode, post, initialTags = [] }: PostEdi
 
               {imageUrl ? (
                 <div className="group relative max-w-[320px] overflow-hidden rounded-[8px]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={imageUrl}
                     alt="썸네일 이미지"

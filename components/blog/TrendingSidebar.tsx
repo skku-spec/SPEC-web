@@ -42,6 +42,7 @@ export default function TrendingSidebar({ posts }: TrendingSidebarProps) {
               <div className="flex items-center gap-1.5 mt-1.5">
                 <span className="h-5 w-5 rounded-full bg-[#e8e6dc] grid place-items-center shrink-0 overflow-hidden">
                   {post.authorAvatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={post.authorAvatarUrl}
                       alt={post.author}

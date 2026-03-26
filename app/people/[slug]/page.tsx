@@ -198,6 +198,7 @@ export default async function PersonPage({ params }: PageProps) {
         <div className="flex flex-col gap-8 md:flex-row md:gap-12">
           <figure className="h-[200px] w-[200px] shrink-0 overflow-hidden rounded-lg bg-[#e8e6dc] md:h-[260px] md:w-[260px]">
             {person.photo ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={person.photo}
                 alt={person.name}
@@ -302,6 +303,7 @@ export default async function PersonPage({ params }: PageProps) {
               >
                 <figure className="mb-2 aspect-square w-full overflow-hidden rounded-lg bg-[#e8e6dc]">
                   {partner.photo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={partner.photo}
                       alt={partner.name}
