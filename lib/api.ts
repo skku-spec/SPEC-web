@@ -393,18 +393,7 @@ export async function getCompanyBySlug(
   };
 }
 
-export async function getTopCompanies(): Promise<Company[]> {
-  const companies = await getCompanies();
-  return companies.filter((company) => company.isTopCompany);
-}
 
-export async function getFeaturedCompanies(): Promise<Company[]> {
-  return getTopCompanies();
-}
-
-export async function getBreakthroughCompanies(): Promise<Company[]> {
-  return getTopCompanies();
-}
 
 export async function getCompanyFilterOptions() {
   const supabase = await createClient();
@@ -512,9 +501,7 @@ export async function getPreneurs(): Promise<Person[]> {
     .map((member) => mapMemberToPerson(member));
 }
 
-export async function getTeamDescriptions() {
-  return TEAM_DESCRIPTIONS;
-}
+
 
 export async function getPersonBySlug(
   slug: string
@@ -527,21 +514,7 @@ export async function getPersonBySlug(
   return mapMemberToPerson(member);
 }
 
-export async function getAllPersonSlugs(): Promise<string[]> {
-  const supabase = await createClient();
-  const membersResult = await supabase
-    .from("members")
-    .select("slug")
-    .eq("preneur_batch", CURRENT_BATCH)
-    .order("name", { ascending: true });
-  const members = handleQueryResult(
-    membersResult,
-    "Failed to fetch person slugs",
-    []
-  );
 
-  return (members ?? []).map((member) => member.slug);
-}
 
 // ─── Blog ───────────────────────────────────────────────────────────
 
@@ -1226,33 +1199,4 @@ export async function getProjectBySlug(slug: string): Promise<ProjectRow | undef
   return row ?? undefined;
 }
 
-export async function getMembersByProject(projectId: string): Promise<MemberRow[]> {
-  const supabase = await createClient();
 
-  const memberProjectsResult = await supabase
-    .from("member_projects")
-    .select("member_id")
-    .eq("project_id", projectId);
-  const memberProjects = handleQueryResult(
-    memberProjectsResult,
-    `Failed to fetch member-project relations for project: ${projectId}`,
-    []
-  );
-
-  if (!memberProjects || memberProjects.length === 0) {
-    return [];
-  }
-
-  const memberIds = memberProjects.map((mp) => mp.member_id);
-  const membersResult = await supabase
-    .from("members")
-    .select("*")
-    .in("id", memberIds);
-  const members = handleQueryResult(
-    membersResult,
-    `Failed to fetch members by project id: ${projectId}`,
-    []
-  );
-
-  return members ?? [];
-}
