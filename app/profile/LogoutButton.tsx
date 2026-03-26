@@ -13,7 +13,7 @@ export default function LogoutButton() {
     setIsLoading(true);
     const supabase = createClient();
 
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: "global" });
 
     router.push("/");
     setIsLoading(false);
