@@ -2,38 +2,38 @@
 
 import { useState, useTransition } from "react";
 
-import { updateUserRole } from "@/lib/actions/admin";
+import { toggleAdminStatus, updateUserRole } from "@/lib/actions/admin";
+import { normalizeRole, type UserRole } from "@/lib/auth-shared";
 import CustomSelect from "@/components/ui/CustomSelect";
+import { useRouter } from "next/navigation";
 import type { Database } from "@/lib/supabase/types";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
 type UsersClientProps = {
   initialProfiles: Profile[];
+  currentUserIsAdmin: boolean;
 };
 
-type UserRole = "outsider" | "runner" | "preneur" | "member" | "admin";
-
-const ROLE_OPTIONS: UserRole[] = ["admin", "member", "preneur", "runner", "outsider"];
+const ROLE_OPTIONS: UserRole[] = ["preneur", "alumni", "learner", "outsider"];
 
 const ROLE_COLORS: Record<UserRole, string> = {
-  admin: "#DC2626",
-  member: "#2563EB",
   preneur: "#7C3AED",
-  runner: "#0F766E",
+  alumni: "#2563EB",
+  learner: "#0F766E",
   outsider: "#6b6b5e",
 };
 
 function formatRoleLabel(role: UserRole) {
   if (role === "outsider") return "외부인";
-  if (role === "runner") return "러너";
+  if (role === "learner") return "러너";
+  if (role === "alumni") return "동문";
   if (role === "preneur") return "프러너";
-  if (role === "member") return "부원";
-  return "관리자";
+  return "외부인";
 }
 
 function isProfileRole(value: string): value is UserRole {
-  return value === "admin" || value === "member" || value === "preneur" || value === "runner" || value === "outsider";
+  return value === "preneur" || value === "alumni" || value === "learner" || value === "outsider";
 }
 
 function formatJoinedDate(date: string) {
@@ -44,11 +44,12 @@ function formatJoinedDate(date: string) {
   }).format(new Date(date));
 }
 
-export default function UsersClient({ initialProfiles }: UsersClientProps) {
+export default function UsersClient({ initialProfiles, currentUserIsAdmin }: UsersClientProps) {
   const [isPending, startTransition] = useTransition();
+  const [profiles, setProfiles] = useState(initialProfiles);
   const [search, setSearch] = useState("");
 
-  const filteredProfiles = initialProfiles.filter((profile) => {
+  const filteredProfiles = profiles.filter((profile) => {
     if (!search.trim()) return true;
     const q = search.trim().toLowerCase();
     return (
@@ -68,6 +69,40 @@ export default function UsersClient({ initialProfiles }: UsersClientProps) {
           return;
         }
 
+        setProfiles((prev) =>
+          prev.map((profile) =>
+            profile.id === userId
+              ? {
+                  ...profile,
+                  role: nextRole,
+                }
+              : profile,
+          ),
+        );
+      })();
+    });
+  };
+
+  const handleAdminToggle = (userId: string, isAdminStatus: boolean) => {
+    startTransition(() => {
+      void (async () => {
+        const result = await toggleAdminStatus(userId, isAdminStatus);
+
+        if (!result.success) {
+          window.alert(result.error ?? "Failed to update admin status.");
+          return;
+        }
+
+        setProfiles((prev) =>
+          prev.map((profile) =>
+            profile.id === userId
+              ? {
+                  ...profile,
+                  is_admin: isAdminStatus,
+                }
+              : profile,
+          ),
+        );
       })();
     });
   };
@@ -133,29 +168,29 @@ export default function UsersClient({ initialProfiles }: UsersClientProps) {
           <table className="min-w-full border-collapse">
             <thead className="bg-[#f0efe6] text-left">
               <tr>
-                <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold">Name</th>
-                <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold">Role</th>
-                <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold">Batch</th>
-                <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold">Company</th>
-                <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold">Joined</th>
+                <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">Name</th>
+                <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">Role</th>
+                <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">Batch / Company</th>
+                <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">Joined</th>
               </tr>
             </thead>
             <tbody>
               {filteredProfiles.map((profile) => {
                 const initial = profile.name.trim().charAt(0).toUpperCase() || "?";
+                const profileRole = normalizeRole(profile.role);
 
                 return (
                   <tr key={profile.id} className="border-t border-[#ece8db]">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="grid h-9 w-9 place-items-center rounded-full bg-[#e8e6dc] font-['Pretendard',sans-serif] text-sm font-semibold text-[#4a4a40]">
+                        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#e8e6dc] font-['Pretendard',sans-serif] text-sm font-semibold text-[#4a4a40]">
                           {initial}
                         </div>
-                        <div>
+                        <div className="flex flex-col">
                           <p className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
-                            {profile.name || "Unknown"}
+                            {profile.name}
                           </p>
-                          <p className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">{profile.slug}</p>
+                          <p className="font-['Pretendard',sans-serif] text-[10px] text-[#6b6b5e]">{profile.slug}</p>
                         </div>
                       </div>
                     </td>
@@ -163,12 +198,12 @@ export default function UsersClient({ initialProfiles }: UsersClientProps) {
                       <div className="flex flex-wrap items-center gap-2">
                         <span
                           className="inline-flex rounded-full px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold text-white"
-                          style={{ backgroundColor: ROLE_COLORS[(profile.role as UserRole | null) ?? "outsider"] }}
+                          style={{ backgroundColor: ROLE_COLORS[profileRole] }}
                         >
-                          {formatRoleLabel((profile.role as UserRole | null) ?? "outsider")}
+                          {formatRoleLabel(profileRole)}
                         </span>
                         <CustomSelect
-                          value={(profile.role as UserRole | null) ?? "outsider"}
+                          value={profileRole}
                           onChange={(nextRole) => {
                             if (isProfileRole(nextRole)) {
                               handleRoleChange(profile.id, nextRole);
@@ -181,13 +216,23 @@ export default function UsersClient({ initialProfiles }: UsersClientProps) {
                           }))}
                           className="w-[130px]"
                         />
+                        {currentUserIsAdmin && (
+                          <label className="inline-flex items-center gap-2 font-['Pretendard',sans-serif] text-xs text-[#4a4a40]">
+                            <input
+                              type="checkbox"
+                              checked={profile.is_admin ?? false}
+                              onChange={(event) => handleAdminToggle(profile.id, event.target.checked)}
+                              disabled={isPending}
+                              className="h-4 w-4 rounded border border-[#ddd9cc] text-[#16140f] focus:ring-2 focus:ring-[#FF6C0F]/20"
+                            />
+                            어드민 권한
+                          </label>
+                        )}
                       </div>
                     </td>
                     <td className="px-4 py-3 font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">
-                      {profile.batch || "-"}
-                    </td>
-                    <td className="px-4 py-3 font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">
-                      {profile.company || "-"}
+                      <span className="block text-xs font-semibold">{profile.batch || "-"}</span>
+                      <span className="block text-xs text-[#6b6b5e]">{profile.company || "-"}</span>
                     </td>
                     <td className="px-4 py-3 font-['Pretendard',sans-serif] text-sm text-[#6b6b5e]">
                       {formatJoinedDate(profile.created_at)}
@@ -213,6 +258,7 @@ export default function UsersClient({ initialProfiles }: UsersClientProps) {
         <div className="flex flex-col gap-3 md:hidden">
           {filteredProfiles.map((profile) => {
             const initial = profile.name.trim().charAt(0).toUpperCase() || "?";
+            const profileRole = normalizeRole(profile.role);
 
             return (
               <div
@@ -233,9 +279,9 @@ export default function UsersClient({ initialProfiles }: UsersClientProps) {
                   </div>
                   <span
                     className="inline-flex shrink-0 rounded-full px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold text-white"
-                    style={{ backgroundColor: ROLE_COLORS[(profile.role as UserRole | null) ?? "outsider"] }}
+                    style={{ backgroundColor: ROLE_COLORS[profileRole] }}
                   >
-                    {formatRoleLabel((profile.role as UserRole | null) ?? "outsider")}
+                    {formatRoleLabel(profileRole)}
                   </span>
                 </div>
 
@@ -257,7 +303,7 @@ export default function UsersClient({ initialProfiles }: UsersClientProps) {
                 <div className="border-t border-[#ece8db] pt-3">
                   <span className="mb-1 block font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">Change Role</span>
                   <CustomSelect
-                    value={(profile.role as UserRole | null) ?? "outsider"}
+                    value={profileRole}
                     onChange={(nextRole) => {
                       if (isProfileRole(nextRole)) {
                         handleRoleChange(profile.id, nextRole);
@@ -270,6 +316,18 @@ export default function UsersClient({ initialProfiles }: UsersClientProps) {
                     }))}
                     className="w-full"
                   />
+                  {currentUserIsAdmin && (
+                    <label className="mt-2 inline-flex items-center gap-2 font-['Pretendard',sans-serif] text-xs text-[#4a4a40]">
+                      <input
+                        type="checkbox"
+                        checked={profile.is_admin ?? false}
+                        onChange={(event) => handleAdminToggle(profile.id, event.target.checked)}
+                        disabled={isPending}
+                        className="h-4 w-4 rounded border border-[#ddd9cc] text-[#16140f] focus:ring-2 focus:ring-[#FF6C0F]/20"
+                      />
+                      어드민 권한
+                    </label>
+                  )}
                 </div>
               </div>
             );

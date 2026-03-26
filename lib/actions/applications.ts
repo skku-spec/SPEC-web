@@ -174,11 +174,11 @@ export async function deleteApplication(id: string): Promise<ApplicationState> {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("is_admin")
     .eq("id", user.id)
     .single();
 
-  if (profile?.role !== "admin") {
+  if (!profile?.is_admin) {
     return { error: "삭제 권한이 없습니다. 관리자만 삭제 가능합니다." };
   }
 
@@ -227,11 +227,11 @@ export async function updateApplicationStatus(
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("is_admin")
     .eq("id", user.id)
     .single();
 
-  if (profile?.role !== "admin") {
+  if (!profile?.is_admin) {
     return { error: "상태 변경 권한이 없습니다. 관리자만 변경 가능합니다." };
   }
 

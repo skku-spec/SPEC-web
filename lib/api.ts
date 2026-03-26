@@ -226,14 +226,6 @@ function createReadonlySupabaseClient() {
   });
 }
 
-function formatBlogDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
 async function getTagsByPostIds(
   postIds: string[]
 ): Promise<Map<string, string[]>> {

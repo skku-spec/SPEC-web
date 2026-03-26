@@ -24,8 +24,8 @@ export default function SignUpForm() {
   const handleSubmit = () => {
     setError(null);
 
-    const trimmedFirstName = firstName.trim();
-    const trimmedLastName = lastName.trim();
+    const trimmedFirstName = firstName.replace(/\s+/g, "");
+    const trimmedLastName = lastName.replace(/\s+/g, "");
     const trimmedEmail = email.trim();
     const trimmedUsername = username.trim();
     const trimmedPassword = password.trim();

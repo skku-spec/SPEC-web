@@ -23,7 +23,6 @@ vi.mock("@/lib/supabase/admin", () => ({
 
 import {
   createTag,
-  updateTag,
   deleteTag,
   getTagsWithPostCount,
 } from "@/lib/actions/tags";

@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 export default function About() {
   const photoStripImages = [
     "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=400&fit=crop",

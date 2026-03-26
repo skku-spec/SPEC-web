@@ -57,7 +57,8 @@ function extractBatches(members: MemberWithProfile[]): string[] {
 }
 
 type MemberForm = {
-  name: string;
+  first_name: string;
+  last_name: string;
   student_id: string;
   phone: string;
   email: string;
@@ -71,7 +72,8 @@ type MemberForm = {
 };
 
 const EMPTY_FORM: MemberForm = {
-  name: "",
+  first_name: "",
+  last_name: "",
   student_id: "",
   phone: "",
   email: "",
@@ -86,7 +88,8 @@ const EMPTY_FORM: MemberForm = {
 
 function memberToForm(m: MemberWithProfile): MemberForm {
   return {
-    name: m.name,
+    first_name: m.first_name ?? "",
+    last_name: m.last_name ?? "",
     student_id: m.student_id ?? "",
     phone: m.phone ?? "",
     email: m.email ?? "",
@@ -182,8 +185,8 @@ export default function MembersClient({ initialMembers }: MembersClientProps) {
   };
 
   const handleSave = () => {
-    if (!form.name.trim()) {
-      setToast({ type: "error", message: "이름을 입력해주세요." });
+    if (!form.first_name.trim() || !form.last_name.trim()) {
+      setToast({ type: "error", message: "성과 이름을 모두 입력해주세요." });
       return;
     }
 
@@ -194,7 +197,8 @@ export default function MembersClient({ initialMembers }: MembersClientProps) {
 
     startTransition(async () => {
       const payload = {
-        name: form.name.trim(),
+        first_name: form.first_name.replace(/\s+/g, ""),
+        last_name: form.last_name.replace(/\s+/g, ""),
         student_id: form.student_id || null,
         phone: form.phone || null,
         email: form.email || null,
@@ -338,8 +342,8 @@ export default function MembersClient({ initialMembers }: MembersClientProps) {
           </div>
         </div>
 
-        <div className="mb-4 flex flex-wrap items-center gap-3">
-          <div className="relative w-full max-w-sm">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+          <div className="relative w-full sm:max-w-sm">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b6b5e]" strokeWidth={2} />
             <input
               type="text"
@@ -350,35 +354,37 @@ export default function MembersClient({ initialMembers }: MembersClientProps) {
             />
           </div>
 
-          <div className="relative">
-            <select
-              value={selectedBatch}
-              onChange={(e) => setSelectedBatch(e.target.value)}
-              className="h-10 appearance-none rounded-lg border border-[#ddd9cc] bg-white py-2.5 pl-4 pr-9 font-['Pretendard',sans-serif] text-sm text-[#16140f] outline-none transition-colors focus:border-[#FF6C0F]/50 focus:ring-2 focus:ring-[#FF6C0F]/10"
-            >
-              <option value="">기수 전체</option>
-              {batches.map((b) => (
-                <option key={b} value={b}>
-                  {b}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b6b5e]" strokeWidth={2} />
-          </div>
+          <div className="flex gap-3">
+            <div className="relative">
+              <select
+                value={selectedBatch}
+                onChange={(e) => setSelectedBatch(e.target.value)}
+                className="h-10 appearance-none rounded-lg border border-[#ddd9cc] bg-white py-2.5 pl-4 pr-9 font-['Pretendard',sans-serif] text-sm text-[#16140f] outline-none transition-colors focus:border-[#FF6C0F]/50 focus:ring-2 focus:ring-[#FF6C0F]/10"
+              >
+                <option value="">기수 전체</option>
+                {batches.map((b) => (
+                  <option key={b} value={b}>
+                    {b}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b6b5e]" strokeWidth={2} />
+            </div>
 
-          <div className="relative">
-            <select
-              value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value)}
-              className="h-10 appearance-none rounded-lg border border-[#ddd9cc] bg-white py-2.5 pl-4 pr-9 font-['Pretendard',sans-serif] text-sm text-[#16140f] outline-none transition-colors focus:border-[#FF6C0F]/50 focus:ring-2 focus:ring-[#FF6C0F]/10"
-            >
-              {MEMBER_TYPE_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b6b5e]" strokeWidth={2} />
+            <div className="relative">
+              <select
+                value={selectedType}
+                onChange={(e) => setSelectedType(e.target.value)}
+                className="h-10 appearance-none rounded-lg border border-[#ddd9cc] bg-white py-2.5 pl-4 pr-9 font-['Pretendard',sans-serif] text-sm text-[#16140f] outline-none transition-colors focus:border-[#FF6C0F]/50 focus:ring-2 focus:ring-[#FF6C0F]/10"
+              >
+                {MEMBER_TYPE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b6b5e]" strokeWidth={2} />
+            </div>
           </div>
 
           <p className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">
@@ -591,7 +597,8 @@ export default function MembersClient({ initialMembers }: MembersClientProps) {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <FieldInput label="이름" required value={form.name} onChange={(v) => handleChange("name", v)} placeholder="홍길동" />
+              <FieldInput label="성 (Last Name)" required value={form.last_name} onChange={(v) => handleChange("last_name", v)} placeholder="홍" />
+              <FieldInput label="이름 (First Name)" required value={form.first_name} onChange={(v) => handleChange("first_name", v)} placeholder="길동" />
               <FieldInput label="학번" value={form.student_id} onChange={(v) => handleChange("student_id", v)} placeholder="2024123456" />
               <FieldInput label="전화번호" value={form.phone} onChange={(v) => handleChange("phone", v)} placeholder="010-1234-5678" />
               <FieldInput label="이메일" value={form.email} onChange={(v) => handleChange("email", v)} placeholder="email@example.com" />

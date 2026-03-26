@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import RecruitmentBanner from "@/components/RecruitmentBanner";
 import Footer from "@/components/Footer";
 import Providers from "@/components/Providers";
+import HideOnAdmin from "@/components/HideOnAdmin";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://skku-spec.com"),
@@ -39,10 +40,12 @@ export default function RootLayout({
           href="https://fonts.gstatic.com"
           crossOrigin="anonymous"
         />
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
           href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&display=swap"
           rel="stylesheet"
         />
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
           href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap"
           rel="stylesheet"
@@ -52,10 +55,14 @@ export default function RootLayout({
         <Providers>
           <div className="relative w-full max-w-[100vw] overflow-x-clip">
             <div className="relative z-10">
-              <RecruitmentBanner />
+              <HideOnAdmin>
+                <RecruitmentBanner />
+              </HideOnAdmin>
               <Navbar />
               <main>{children}</main>
-              <Footer />
+              <HideOnAdmin>
+                <Footer />
+              </HideOnAdmin>
             </div>
           </div>
         </Providers>

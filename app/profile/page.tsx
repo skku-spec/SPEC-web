@@ -19,10 +19,9 @@ type RoleMeta = {
 
 const ROLE_META: Record<UserRole, RoleMeta> = {
   outsider: { label: "외부인", className: "bg-slate-100 text-slate-700" },
-  runner: { label: "러너", className: "bg-teal-100 text-teal-700" },
+  learner: { label: "러너", className: "bg-teal-100 text-teal-700" },
+  alumni: { label: "동문", className: "bg-blue-100 text-blue-700" },
   preneur: { label: "프러너", className: "bg-violet-100 text-violet-700" },
-  member: { label: "부원", className: "bg-blue-100 text-blue-700" },
-  admin: { label: "관리자", className: "bg-red-100 text-red-700" },
 };
 
 export const metadata: Metadata = {
@@ -94,11 +93,18 @@ export default async function ProfilePage() {
               <p className="mt-1 truncate font-['Pretendard',sans-serif] text-[15px] text-[#16140f]/65">
                 {email}
               </p>
-              <span
-                className={`mt-3 inline-flex rounded-full px-3 py-1 font-['Pretendard',sans-serif] text-[12px] font-semibold ${roleMeta.className}`}
-              >
-                {roleMeta.label}
-              </span>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span
+                  className={`inline-flex rounded-full px-3 py-1 font-['Pretendard',sans-serif] text-[12px] font-semibold ${roleMeta.className}`}
+                >
+                  {roleMeta.label}
+                </span>
+                {profile?.is_admin && (
+                  <span className="inline-flex rounded-full bg-[#16140f] px-3 py-1 font-['Pretendard',sans-serif] text-[12px] font-semibold text-white">
+                    어드민
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 

@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 
 import { addComment, deleteComment, type CommentWithAuthor } from "@/lib/actions/comments";
 import { useUser } from "@/hooks/useUser";
-import type { UserRole } from "@/lib/auth";
+import { BLOG_WRITER_ROLES, normalizeRole } from "@/lib/auth-shared";
 
 type CommentSectionProps = {
   postId: string;
@@ -15,8 +15,6 @@ type CommentSectionProps = {
 type ThreadNode = CommentWithAuthor & {
   replies: CommentWithAuthor[];
 };
-
-const WRITER_ROLES = new Set<UserRole>(["runner", "preneur", "admin"]);
 
 function formatDate(value: string): string {
   return new Date(value).toLocaleDateString("ko-KR", {
@@ -117,7 +115,7 @@ function ReplyForm({
 }
 
 export default function CommentSection({ postId, initialComments }: CommentSectionProps) {
-  const { user, role, isLoading, isAuthenticated } = useUser();
+  const { user, profile, role, isLoading, isAuthenticated } = useUser();
   const [comments, setComments] = useState<CommentWithAuthor[]>(initialComments);
   const [draft, setDraft] = useState("");
   const [replyDraft, setReplyDraft] = useState("");
@@ -129,7 +127,9 @@ export default function CommentSection({ postId, initialComments }: CommentSecti
     setComments(initialComments);
   }, [initialComments]);
 
-  const canWrite = isAuthenticated && WRITER_ROLES.has(role);
+  const normalizedRole = normalizeRole(role);
+  const isAdmin = profile?.is_admin === true;
+  const canWrite = isAuthenticated && BLOG_WRITER_ROLES.includes(normalizedRole);
   const thread = useMemo(() => buildThread(comments), [comments]);
 
   const submitTopLevelComment = () => {
@@ -236,7 +236,7 @@ export default function CommentSection({ postId, initialComments }: CommentSecti
         )}
 
         {thread.map((comment) => {
-          const canDelete = user?.id === comment.author.id || role === "admin";
+          const canDelete = user?.id === comment.author.id || isAdmin;
 
           return (
             <article key={comment.id} className="border-b border-[#ece8db] py-5">
@@ -303,7 +303,7 @@ export default function CommentSection({ postId, initialComments }: CommentSecti
                   {comment.replies.length > 0 && (
                     <div className="mt-4 ml-10 space-y-0 border-l-2 border-[#ece8db] pl-4">
                       {comment.replies.map((reply) => {
-                        const canDeleteReply = user?.id === reply.author.id || role === "admin";
+                        const canDeleteReply = user?.id === reply.author.id || isAdmin;
 
                         return (
                           <div key={reply.id} className="py-3">

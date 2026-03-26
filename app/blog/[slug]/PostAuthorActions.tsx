@@ -20,13 +20,13 @@ export default function PostAuthorActions({
   postId,
   published,
 }: PostAuthorActionsProps) {
-  const { profile, role, isAuthenticated } = useUser();
+  const { profile, isAuthenticated } = useUser();
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
 
   const canEdit =
-    isAuthenticated && (role === "admin" || (Boolean(authorId) && profile?.id === authorId));
+    isAuthenticated && ((profile?.is_admin ?? false) || (Boolean(authorId) && profile?.id === authorId));
 
   if (!canEdit) {
     return null;

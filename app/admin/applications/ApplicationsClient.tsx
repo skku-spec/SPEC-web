@@ -83,6 +83,7 @@ export default function ApplicationsClient({ initialApplications }: Applications
   }, [initialApplications]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     checkConversionStatuses();
   }, [checkConversionStatuses]);
 
@@ -134,7 +135,7 @@ export default function ApplicationsClient({ initialApplications }: Applications
     <section>
       <div className="mx-auto max-w-6xl">
         <h1 className="mb-6 font-[system-ui] text-[clamp(2rem,4vw,2.75rem)] font-black">Applications</h1>
-        <div className="flex flex-wrap items-center gap-3">
+         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
           <CustomSelect
             value={selectedBatch}
             onChange={setSelectedBatch}

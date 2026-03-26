@@ -4,16 +4,20 @@ import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 
-export type UserRole = "outsider" | "runner" | "preneur" | "member" | "admin";
+export type { UserRole } from "@/lib/auth-shared";
+export {
+  BLOG_WRITER_ROLES,
+  SPEC_LOG_WRITER_ROLES,
+  SPEC_LOG_ENGAGE_ROLES,
+  ADMIN_PAGE_ROLES,
+  DASHBOARD_ROLES,
+  normalizeRole,
+  isAdmin,
+  canWrite,
+} from "@/lib/auth-shared";
 
-/** DB role 값을 UserRole로 변환. 알 수 없는 값은 outsider로 처리. */
-export function normalizeRole(role: string | null | undefined): UserRole {
-  if (role === "admin") return "admin";
-  if (role === "member") return "member";
-  if (role === "preneur") return "preneur";
-  if (role === "runner") return "runner";
-  return "outsider";
-}
+import { normalizeRole } from "@/lib/auth-shared";
+import type { UserRole } from "@/lib/auth-shared";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -24,10 +28,9 @@ type AuthResult = {
 
 const ROLE_LEVEL: Record<UserRole, number> = {
   outsider: 0,
-  runner: 1,
-  preneur: 2,
-  member: 3,
-  admin: 4,
+  learner: 1,
+  alumni: 2,
+  preneur: 3,
 };
 
 export async function getCurrentUser(): Promise<AuthResult | { user: null; profile: null }> {
@@ -71,12 +74,4 @@ export async function requireRole(minRole: UserRole): Promise<AuthResult> {
   }
 
   return currentUser;
-}
-
-export function isAdmin(role: string | null): boolean {
-  return role === "admin";
-}
-
-export function canWrite(role: string | null): boolean {
-  return role === "runner" || role === "preneur" || role === "member" || role === "admin";
 }

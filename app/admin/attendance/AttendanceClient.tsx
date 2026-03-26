@@ -37,7 +37,7 @@ type Submission = {
 }
 
 type Props = {
-  runners: Profile[];
+  learners: Profile[];
   sessions: Session[];
   logs: AttendanceLog[];
   isAdminOrPreneur: boolean;
@@ -61,7 +61,7 @@ const STATUS_LABELS: Record<Status, string> = {
 };
 
 export function AttendanceClient({
-  runners,
+  learners,
   sessions: initialSessions,
   logs: initialLogs,
   isAdminOrPreneur,
@@ -72,7 +72,7 @@ export function AttendanceClient({
   const [isPending, startTransition] = useTransition();
   const [sessions, setSessions] = useState(initialSessions);
   const [logs, setLogs] = useState(initialLogs);
-  const [submissions, setSubmissions] = useState(initialSubmissions);
+  const [submissions] = useState(initialSubmissions);
   const [newSessionTitle, setNewSessionTitle] = useState("");
 
   const getAttendanceStatus = (userId: string, sessionId: string) => {
@@ -126,7 +126,7 @@ export function AttendanceClient({
         await markAllPresent(sessionId);
         setLogs(prev => {
           const filtered = prev.filter(l => l.session_id !== sessionId);
-          const newLogs = runners.map(r => ({
+          const newLogs = learners.map(r => ({
             id: crypto.randomUUID(),
             user_id: r.id,
             session_id: sessionId,
@@ -194,7 +194,31 @@ export function AttendanceClient({
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-lg border border-[#ddd9cc] bg-white">
+      {isAdminOrPreneur && sessions.length > 0 && (
+        <div className="flex flex-wrap gap-2 md:hidden">
+          {sessions.map(s => (
+            <div key={s.id} className="flex items-center gap-1.5 rounded-md border border-[#ddd9cc] bg-white px-3 py-1.5">
+              <span className="font-['Pretendard',sans-serif] text-xs font-semibold text-[#16140f]">{s.title}</span>
+              <button
+                onClick={() => handleMarkAllPresent(s.id)}
+                disabled={isPending}
+                className="font-['Pretendard',sans-serif] text-xs font-semibold text-[#FF6C0F] hover:underline disabled:opacity-50"
+              >
+                전원 출석
+              </button>
+              <button
+                onClick={() => handleDeleteSession(s.id)}
+                disabled={isPending}
+                className="font-['Pretendard',sans-serif] text-xs font-semibold text-[#b42318] hover:underline disabled:opacity-50"
+              >
+                삭제
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="hidden overflow-x-auto rounded-lg border border-[#ddd9cc] bg-white md:block">
         <table className="w-full border-collapse text-left">
           <thead className="bg-[#f0efe6] text-left">
             <tr>
@@ -234,17 +258,17 @@ export function AttendanceClient({
             </tr>
           </thead>
           <tbody>
-            {runners.map(runner => {
-              const stats = calculateStats(runner.id);
+            {learners.map(learner => {
+              const stats = calculateStats(learner.id);
               return (
-                <tr key={runner.id} className="border-t border-[#ece8db] transition-colors hover:bg-[#fcfcf8] group text-center">
+                <tr key={learner.id} className="border-t border-[#ece8db] transition-colors hover:bg-[#fcfcf8] group text-center">
                   <td className="sticky left-0 z-20 bg-white group-hover:bg-[#fcfcf8] px-4 py-3 text-left">
                     <div className="flex items-center gap-3">
                       <div className="grid h-9 w-9 place-items-center rounded-full bg-[#e8e6dc] font-['Pretendard',sans-serif] text-sm font-semibold text-[#4a4a40]">
-                        {runner.name.charAt(0)}
+                        {learner.name.charAt(0)}
                       </div>
                       <div>
-                        <p className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{runner.name}</p>
+                        <p className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{learner.name}</p>
                         <div className="flex gap-2 font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">
                           <span className="text-[#2f9e44]">출 {stats.present}</span>
                           <span className="text-[#FF6C0F]">지 {stats.late}</span>
@@ -257,7 +281,7 @@ export function AttendanceClient({
                   </td>
 
                   {sessions.map(session => {
-                    const currentStatus = getAttendanceStatus(runner.id, session.id);
+                    const currentStatus = getAttendanceStatus(learner.id, session.id);
                     return (
                       <td key={session.id} className="px-2 py-3">
                         <div className="flex items-center justify-center gap-1">
@@ -266,7 +290,7 @@ export function AttendanceClient({
                             return (
                               <button
                                 key={opt.key}
-                                onClick={() => handleUpdateStatus(runner.id, session.id, opt.key)}
+                                onClick={() => handleUpdateStatus(learner.id, session.id, opt.key)}
                                 disabled={!isAdminOrPreneur || isPending}
                                 className={`flex h-7 w-7 items-center justify-center rounded-md font-['Pretendard',sans-serif] text-xs font-semibold transition-all border ${
                                   isActive
@@ -284,7 +308,7 @@ export function AttendanceClient({
                   })}
 
                   {!hideHomework && homeworks.map(homework => {
-                    const isCompleted = getHomeworkStatus(runner.id, homework.id);
+                    const isCompleted = getHomeworkStatus(learner.id, homework.id);
                     return (
                       <td key={homework.id} className="px-2 py-3">
                         <div
@@ -302,6 +326,81 @@ export function AttendanceClient({
             })}
           </tbody>
         </table>
+      </div>
+
+      <div className="space-y-3 md:hidden">
+        {learners.map(learner => {
+          const stats = calculateStats(learner.id);
+          return (
+            <div key={learner.id} className="rounded-lg border border-[#ddd9cc] bg-white p-4">
+              <div className="mb-3 flex items-center gap-3">
+                <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#e8e6dc] font-['Pretendard',sans-serif] text-sm font-semibold text-[#4a4a40]">
+                  {learner.name.charAt(0)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{learner.name}</p>
+                  <div className="flex gap-2 font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">
+                    <span className="text-[#2f9e44]">출 {stats.present}</span>
+                    <span className="text-[#FF6C0F]">지 {stats.late}</span>
+                    <span className="text-[#b42318]">결 {stats.absent}</span>
+                    <span className="text-[#2563EB]">공 {stats.excused}</span>
+                    {!hideHomework && <span className="text-[#2563EB]">과제 {stats.homework}/{homeworks.length}</span>}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                {sessions.map(session => {
+                  const currentStatus = getAttendanceStatus(learner.id, session.id);
+                  return (
+                    <div key={session.id} className="flex items-center justify-between rounded-md bg-[#f5f5ee] px-3 py-2">
+                      <span className="font-['Pretendard',sans-serif] text-xs font-medium text-[#4a4a40]">{session.title}</span>
+                      <div className="flex items-center gap-1.5">
+                        {STATUS_OPTS.map(opt => {
+                          const isActive = currentStatus === opt.key;
+                          return (
+                            <button
+                              key={opt.key}
+                              onClick={() => handleUpdateStatus(learner.id, session.id, opt.key)}
+                              disabled={!isAdminOrPreneur || isPending}
+                              className={`flex h-10 w-10 items-center justify-center rounded-md font-['Pretendard',sans-serif] text-sm font-semibold transition-all border ${
+                                isActive
+                                  ? `${opt.active} ${opt.text} ${opt.color.replace('bg-', 'border-')}`
+                                  : `bg-white text-[#ddd9cc] border-[#ece8db] ${opt.hover}`
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {!hideHomework && homeworks.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  {homeworks.map((homework, i) => {
+                    const isCompleted = getHomeworkStatus(learner.id, homework.id);
+                    return (
+                      <div key={homework.id} className="flex items-center justify-between rounded-md bg-[#f5f5ee] px-3 py-2">
+                        <span className="font-['Pretendard',sans-serif] text-xs font-medium text-[#4a4a40]">{i + 1}주차 과제</span>
+                        <div
+                          className={`flex h-10 w-10 items-center justify-center rounded-md font-['Pretendard',sans-serif] text-sm font-semibold ${
+                            isCompleted ? "bg-[#2563EB] text-white" : "bg-white text-[#ddd9cc] border border-[#ece8db]"
+                          }`}
+                        >
+                          {isCompleted ? "✓" : "-"}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       <div className="flex items-center gap-4 font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">

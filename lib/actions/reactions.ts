@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/lib/supabase/server";
-import type { UserRole } from "@/lib/auth";
+import { BLOG_WRITER_ROLES, type UserRole } from "@/lib/auth";
 
 type ActionResult = {
   success: boolean;
@@ -21,7 +21,7 @@ export type ReactionSummary = {
 // Shared constant also in components/blog/ReactionBar.tsx
 const ALLOWED_EMOJIS = ["👍", "🔥", "❤️", "🎉", "🤔", "👀"] as const;
 
-const WRITER_ROLES = new Set<UserRole>(["runner", "preneur", "admin"]);
+const WRITER_ROLES = new Set<UserRole>(BLOG_WRITER_ROLES);
 
 export async function toggleReaction(postId: string, emoji: string): Promise<ActionResult> {
   try {

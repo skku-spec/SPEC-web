@@ -10,7 +10,7 @@ import {
 } from "react";
 import type { User } from "@supabase/supabase-js";
 
-import type { UserRole } from "@/lib/auth";
+import { normalizeRole, type UserRole } from "@/lib/auth-shared";
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/lib/supabase/types";
 
@@ -77,7 +77,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     () => ({
       user,
       profile,
-      role: (profile?.role as UserRole | null) ?? "outsider",
+      role: normalizeRole(profile?.role),
       isLoading,
       isAuthenticated: Boolean(user),
       refreshUser: async () => { await fetchRef.current?.(); },

@@ -157,6 +157,7 @@ export default function VCCPage() {
               className="flex flex-col items-center text-center"
             >
               {mentor.photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={mentor.photo}
                   alt={mentor.name}

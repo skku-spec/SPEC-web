@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -5,19 +6,16 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 import { useUser } from "@/hooks/useUser";
-import {
-  getRecruitmentApplyDdayLabel,
-  RECRUITMENT_BATCH,
-} from "@/lib/recruitment-schedule";
+import { DASHBOARD_ROLES, normalizeRole } from "@/lib/auth-shared";
 import { createClient } from "@/lib/supabase/client";
 
 import ApplyButton from "@/components/ui/ApplyButton";
 
 const ROLE_LABEL: Record<string, string> = {
   outsider: "외부인",
-  runner: "러너",
+  learner: "러너",
+  alumni: "동문",
   preneur: "프러너",
-  admin: "관리자",
 };
 
 function getInitials(name: string) {
@@ -56,9 +54,11 @@ export default function Navbar() {
       "사용자",
     [profile, user?.email],
   );
-  const roleLabel = useMemo(() => ROLE_LABEL[role] ?? "외부", [role]);
+  const normalizedRole = useMemo(() => normalizeRole(role), [role]);
+  const roleLabel = useMemo(() => ROLE_LABEL[normalizedRole] ?? "외부", [normalizedRole]);
+  const canAccessDashboard = DASHBOARD_ROLES.includes(normalizedRole);
+  const canAccessAdmin = normalizedRole === "preneur";
   const initials = useMemo(() => getInitials(displayName), [displayName]);
-  const applyDdayLabel = useMemo(() => getRecruitmentApplyDdayLabel(), []);
 
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -113,17 +113,6 @@ export default function Navbar() {
                   <Link href="/people" className={`dropdown-item block px-4 py-2 ${dropdownText} rounded text-sm font-['Pretendard',sans-serif]`}>
                     멤버
                   </Link>
-                  {isAuthenticated && (
-                    <>
-                      <Link href="/profile" className={`dropdown-item block px-4 py-2 ${dropdownText} rounded text-sm font-['Pretendard',sans-serif]`}>
-                        내 프로필
-                      </Link>
-                      <Link href="/apply/status" className={`dropdown-item block px-4 py-2 ${dropdownText} rounded text-sm font-['Pretendard',sans-serif]`}>
-                        지원 현황 확인
-                      </Link>
-                    </>
-                  )}
-
                 </div>
               </div>
             </div>
@@ -154,6 +143,10 @@ export default function Navbar() {
                   </Link>
                   <Link href="/founders" className={`dropdown-item block px-4 py-2 ${dropdownText} rounded text-sm font-['Pretendard',sans-serif]`}>
                     팀원 디렉토리
+                  </Link>
+                  <div className={`mx-4 my-2 h-px ${isHome ? "bg-white/10" : "bg-[#16140f]/10"}`} />
+                  <Link href="/spec-log" className={`dropdown-item block px-4 py-2 ${isHome ? "text-[#FF6C0F]" : "text-[#FF6C0F]"} hover:bg-white/5 rounded text-sm font-medium font-['Pretendard',sans-serif]`}>
+                    SPEC 로그
                   </Link>
                 </div>
               </div>
@@ -215,7 +208,7 @@ export default function Navbar() {
                       내 프로필
                     </Link>
 
-                    {role === "admin" && (
+                    {canAccessAdmin && (
                       <Link href="/admin" className="dropdown-item block px-4 py-2 text-[#16140f] hover:bg-gray-100 rounded text-sm font-['Pretendard',sans-serif]">
                         관리자
                       </Link>
@@ -327,6 +320,9 @@ export default function Navbar() {
                 <Link href="/founders" onClick={() => setMenuOpen(false)} className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}>
                   팀원 디렉토리
                 </Link>
+                <Link href="/spec-log" onClick={() => setMenuOpen(false)} className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-[#FF6C0F] hover:bg-white/5" : "text-[#FF6C0F] hover:bg-[#16140f]/5"}`}>
+                  SPEC 로그
+                </Link>
               </div>
 
               <div className="mb-6 flex flex-col gap-1">
@@ -352,27 +348,13 @@ export default function Navbar() {
                 </Link>
               </div>
 
-              {isAuthenticated && (role === "admin" || role === "preneur" || role === "runner") && (
+              {isAuthenticated && (
                 <>
                   <p className={`mb-3 mt-6 text-xs font-semibold uppercase tracking-widest font-['Pretendard',sans-serif] ${isHome ? "text-white/40" : "text-[#16140f]/40"}`}>
                     멤버 메뉴
                   </p>
                   <div className="mb-6 flex flex-col gap-1">
-                    <Link
-                      href="/profile"
-                      onClick={() => setMenuOpen(false)}
-                      className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}
-                    >
-                      내 프로필
-                    </Link>
-                    <Link
-                      href="/apply/status"
-                      onClick={() => setMenuOpen(false)}
-                      className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}
-                    >
-                      지원 현황 확인
-                    </Link>
-                    {role === "admin" && (
+                    {canAccessAdmin && (
                       <Link
                         href="/admin"
                         onClick={() => setMenuOpen(false)}

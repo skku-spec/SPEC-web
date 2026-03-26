@@ -2,10 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 
+import { isAdmin, type UserRole } from "@/lib/auth";
 import { logAuditEvent } from "@/lib/helpers/audit-log";
 import { createClient } from "@/lib/supabase/server";
-
-type UserRole = "outsider" | "runner" | "preneur" | "member" | "admin";
 
 type AdminActionResult = {
   success: boolean;
@@ -14,10 +13,9 @@ type AdminActionResult = {
 
 const VALID_ROLES: Record<UserRole, string> = {
   outsider: "외부인",
-  runner: "러너",
+  learner: "러너",
+  alumni: "동문",
   preneur: "프러너",
-  member: "부원",
-  admin: "관리자",
 };
 
 function isValidRole(role: string): role is UserRole {
@@ -54,7 +52,7 @@ export async function updateUserRole(userId: string, newRole: UserRole): Promise
 
     const { data: callerProfile, error: callerProfileError } = await supabase
       .from("profiles")
-      .select("role")
+      .select("is_admin")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -62,7 +60,7 @@ export async function updateUserRole(userId: string, newRole: UserRole): Promise
       throw new Error(`Failed to verify admin permissions: ${callerProfileError.message}`);
     }
 
-    if (callerProfile?.role !== "admin") {
+    if (!isAdmin(callerProfile)) {
       throw new Error("Only admins can manage user roles.");
     }
 
@@ -91,6 +89,82 @@ export async function updateUserRole(userId: string, newRole: UserRole): Promise
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to update user role.",
+    };
+  }
+}
+
+export async function toggleAdminStatus(userId: string, isAdminStatus: boolean): Promise<AdminActionResult> {
+  try {
+    if (!userId) {
+      throw new Error("Target user is required.");
+    }
+
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError) {
+      throw new Error(`Authentication failed: ${userError.message}`);
+    }
+
+    if (!user) {
+      throw new Error("You must be logged in to manage admin status.");
+    }
+
+    const { data: callerProfile, error: callerProfileError } = await supabase
+      .from("profiles")
+      .select("is_admin")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (callerProfileError) {
+      throw new Error(`Failed to verify admin permissions: ${callerProfileError.message}`);
+    }
+
+    if (!isAdmin(callerProfile)) {
+      throw new Error("Only admins can manage admin status.");
+    }
+
+    if (!isAdminStatus) {
+      const { count, error: adminCountError } = await supabase
+        .from("profiles")
+        .select("id", { count: "exact", head: true })
+        .eq("is_admin", true);
+
+      if (adminCountError) {
+        throw new Error(`Failed to verify admin count: ${adminCountError.message}`);
+      }
+
+      if ((count ?? 0) <= 1) {
+        throw new Error("Cannot remove the last admin.");
+      }
+    }
+
+    const { error: updateError } = await supabase
+      .from("profiles")
+      .update({ is_admin: isAdminStatus })
+      .eq("id", userId);
+
+    if (updateError) {
+      throw new Error(`Failed to update admin status: ${updateError.message}`);
+    }
+
+    await logAuditEvent({
+      action: "status_change",
+      entityType: "user",
+      entityId: userId,
+      details: { is_admin: isAdminStatus },
+    });
+
+    revalidatePath("/admin/users");
+
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update admin status.",
     };
   }
 }

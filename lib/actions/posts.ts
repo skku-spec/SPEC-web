@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/lib/supabase/server";
 import type { Database, PostType } from "@/lib/supabase/types";
-import type { UserRole } from "@/lib/auth";
+import { BLOG_WRITER_ROLES, isAdmin, type UserRole } from "@/lib/auth";
 
 type ActionResult = {
   success: boolean;
@@ -14,8 +14,6 @@ type ActionResult = {
 
 type PostRow = Database["public"]["Tables"]["posts"]["Row"];
 type TagRow = Database["public"]["Tables"]["tags"]["Row"];
-
-const WRITER_ROLES: UserRole[] = ["runner", "preneur", "admin"];
 
 function isValidPostType(value: string): value is PostType {
   return value === "blog" || value === "news";
@@ -132,14 +130,20 @@ function revalidateBlogPaths(slug?: string) {
   }
 }
 
-async function getCurrentUserRole(supabase: Awaited<ReturnType<typeof createClient>>, userId: string): Promise<UserRole> {
-  const { data: profile, error } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
+async function getCurrentUserAccess(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+): Promise<{ role: UserRole; isAdmin: boolean }> {
+  const { data: profile, error } = await supabase.from("profiles").select("role, is_admin").eq("id", userId).maybeSingle();
 
   if (error) {
     throw new Error(`Failed to verify user role: ${error.message}`);
   }
 
-  return (profile?.role as UserRole | null) ?? "outsider";
+  return {
+    role: (profile?.role as UserRole | null) ?? "outsider",
+    isAdmin: isAdmin(profile),
+  };
 }
 
 async function getPostForPermissionCheck(
@@ -276,14 +280,14 @@ export async function createPost(formData: FormData): Promise<ActionResult> {
       throw new Error("You must be logged in to create a post.");
     }
 
-    const role = await getCurrentUserRole(supabase, user.id);
-    if (!WRITER_ROLES.includes(role)) {
+    const profile = await getCurrentUserAccess(supabase, user.id);
+    if (!BLOG_WRITER_ROLES.includes(profile.role)) {
       throw new Error("You do not have permission to create posts.");
     }
 
     const payload = parsePostPayload(formData);
 
-    if (payload.type === "news" && role !== "admin") {
+    if (payload.type === "news" && !profile.isAdmin) {
       throw new Error("Only admins can create news posts.");
     }
 
@@ -335,17 +339,17 @@ export async function updatePost(postId: string, formData: FormData): Promise<Ac
       throw new Error("You must be logged in to update a post.");
     }
 
-    const role = await getCurrentUserRole(supabase, user.id);
-    const isAdmin = role === "admin";
+    const profile = await getCurrentUserAccess(supabase, user.id);
+    const userIsAdmin = profile.isAdmin;
 
     const existingPost = await getPostForPermissionCheck(supabase, postId);
-    if (!isAdmin && existingPost.author_id !== user.id) {
+    if (!userIsAdmin && existingPost.author_id !== user.id) {
       throw new Error("You do not have permission to update this post.");
     }
 
     const payload = parsePostPayload(formData);
 
-    if (payload.type === "news" && !isAdmin) {
+    if (payload.type === "news" && !userIsAdmin) {
       throw new Error("Only admins can publish posts as news.");
     }
 
@@ -397,11 +401,11 @@ export async function deletePost(postId: string): Promise<ActionResult> {
       throw new Error("You must be logged in to delete a post.");
     }
 
-    const role = await getCurrentUserRole(supabase, user.id);
-    const isAdmin = role === "admin";
+    const profile = await getCurrentUserAccess(supabase, user.id);
+    const userIsAdmin = profile.isAdmin;
 
     const existingPost = await getPostForPermissionCheck(supabase, postId);
-    if (!isAdmin && existingPost.author_id !== user.id) {
+    if (!userIsAdmin && existingPost.author_id !== user.id) {
       throw new Error("You do not have permission to delete this post.");
     }
 
@@ -438,8 +442,8 @@ export async function toggleFeatured(postId: string): Promise<ActionResult> {
       throw new Error("You must be logged in to toggle featured state.");
     }
 
-    const role = await getCurrentUserRole(supabase, user.id);
-    if (role !== "admin") {
+    const profile = await getCurrentUserAccess(supabase, user.id);
+    if (!profile.isAdmin) {
       throw new Error("Only admins can toggle featured posts.");
     }
 
@@ -480,11 +484,11 @@ export async function togglePublished(postId: string): Promise<ActionResult> {
       throw new Error("You must be logged in to toggle published state.");
     }
 
-    const role = await getCurrentUserRole(supabase, user.id);
-    const isAdmin = role === "admin";
+    const profile = await getCurrentUserAccess(supabase, user.id);
+    const userIsAdmin = profile.isAdmin;
 
     const post = await getPostForPermissionCheck(supabase, postId);
-    if (!isAdmin && post.author_id !== user.id) {
+    if (!userIsAdmin && post.author_id !== user.id) {
       throw new Error("You do not have permission to publish this post.");
     }
 

@@ -2,9 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 
+import { BLOG_WRITER_ROLES, isAdmin, type UserRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
-import type { UserRole } from "@/lib/auth";
 
 type ActionResult = {
   success: boolean;
@@ -12,8 +12,6 @@ type ActionResult = {
 };
 
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
-
-const WRITER_ROLES: UserRole[] = ["runner", "preneur", "admin"];
 
 export type CommentWithAuthor = {
   id: string;
@@ -29,14 +27,20 @@ export type CommentWithAuthor = {
   };
 };
 
-async function getCurrentUserRole(supabase: Awaited<ReturnType<typeof createClient>>, userId: string): Promise<UserRole> {
-  const { data: profile, error } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
+async function getCurrentUserProfile(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+): Promise<{ role: UserRole; is_admin?: boolean }> {
+  const { data: profile, error } = await supabase.from("profiles").select("role, is_admin").eq("id", userId).maybeSingle();
 
   if (error) {
     throw new Error(`Failed to verify user role: ${error.message}`);
   }
 
-  return (profile?.role as UserRole | null) ?? "outsider";
+  return {
+    role: (profile?.role as UserRole | null) ?? "outsider",
+    is_admin: profile?.is_admin,
+  };
 }
 
 export async function addComment(postId: string, content: string, parentId?: string): Promise<ActionResult> {
@@ -55,8 +59,8 @@ export async function addComment(postId: string, content: string, parentId?: str
       throw new Error("You must be logged in to comment.");
     }
 
-    const role = await getCurrentUserRole(supabase, user.id);
-    if (!WRITER_ROLES.includes(role)) {
+    const profile = await getCurrentUserProfile(supabase, user.id);
+    if (!BLOG_WRITER_ROLES.includes(profile.role)) {
       throw new Error("You do not have permission to comment.");
     }
 
@@ -119,8 +123,8 @@ export async function deleteComment(commentId: string): Promise<ActionResult> {
       throw new Error("Comment not found.");
     }
 
-    const role = await getCurrentUserRole(supabase, user.id);
-    const canDelete = comment.author_id === user.id || role === "admin";
+    const profile = await getCurrentUserProfile(supabase, user.id);
+    const canDelete = comment.author_id === user.id || isAdmin(profile);
 
     if (!canDelete) {
       throw new Error("You do not have permission to delete this comment.");

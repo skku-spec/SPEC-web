@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/client";
 
 const BLOG_IMAGE_BUCKET = "blog-images";
 const JOB_LOGOS_BUCKET = "job-logos";
+const SPEC_LOG_IMAGE_BUCKET = "spec-log-images";
 
 export function getStorageUrl(path: string): string {
   const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
@@ -21,6 +22,24 @@ export async function uploadBlogImage(file: File): Promise<string> {
   formData.append("image", file);
 
   const response = await fetch("/api/upload/blog-image", {
+    method: "POST",
+    body: formData,
+  });
+
+  const result = await response.json();
+
+  if (!response.ok || !result.success) {
+    throw new Error(result.error || "이미지 업로드에 실패했습니다.");
+  }
+
+  return result.url;
+}
+
+export async function uploadSpecLogImage(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append("image", file);
+
+  const response = await fetch("/api/upload/spec-log-image", {
     method: "POST",
     body: formData,
   });

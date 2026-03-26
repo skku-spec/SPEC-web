@@ -1,6 +1,5 @@
 "use client";
 
-import ApplyButton from "@/components/ui/ApplyButton";
 export default function Hero() {
   return (
     <section

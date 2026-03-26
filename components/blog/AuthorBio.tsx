@@ -40,6 +40,7 @@ export default function AuthorBio({
       <div className="flex gap-4 items-start">
         <div className="h-14 w-14 rounded-full bg-[#e8e6dc] shrink-0 grid place-items-center overflow-hidden">
           {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={avatarUrl}
               alt={name}

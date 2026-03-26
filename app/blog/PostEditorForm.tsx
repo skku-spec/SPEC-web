@@ -16,13 +16,11 @@ import BlockNoteEditor from "@/components/blog/BlockNoteEditor";
 import { useUser } from "@/hooks/useUser";
 import { createPost, updatePost } from "@/lib/actions/posts";
 import type { BlogPost, TagInfo } from "@/lib/api";
-import type { UserRole } from "@/lib/auth";
+import { BLOG_WRITER_ROLES, normalizeRole } from "@/lib/auth-shared";
 import { uploadBlogImage } from "@/lib/storage";
 import { createClient } from "@/lib/supabase/client";
 
 /* ─── Constants & Types ─────────────────────────────────────────── */
-
-const WRITER_ROLES: UserRole[] = ["runner", "preneur", "admin"];
 
 type PostEditorFormProps = {
   mode: "create" | "edit";
@@ -127,8 +125,9 @@ export default function PostEditorForm({ mode, post, initialTags = [] }: PostEdi
   const coverInputRef = useRef<HTMLInputElement>(null);
 
   /* ─── Derived ───────────────────────────────────────────────── */
-  const isAdmin = role === "admin";
-  const canWrite = isAuthenticated && WRITER_ROLES.includes(role);
+  const normalizedRole = normalizeRole(role);
+  const isAdmin = profile?.is_admin === true;
+  const canWrite = isAuthenticated && BLOG_WRITER_ROLES.includes(normalizedRole);
   const canEditCurrentPost =
     mode === "edit" && post
       ? isAuthenticated && (isAdmin || (Boolean(post.authorId) && post.authorId === profile?.id))
@@ -415,11 +414,11 @@ export default function PostEditorForm({ mode, post, initialTags = [] }: PostEdi
           <h1 className="font-[system-ui] text-[28px] font-bold text-[#16140f]">
             권한이 없습니다
           </h1>
-          <p className="mt-3 font-['Pretendard',sans-serif] text-[15px] text-[#6b6b5e]">
-            {mode === "create"
-              ? "글쓰기는 runner 이상 권한에서만 가능합니다."
-              : "본인 글 작성자 또는 관리자만 수정할 수 있습니다."}
-          </p>
+            <p className="mt-3 font-['Pretendard',sans-serif] text-[15px] text-[#6b6b5e]">
+              {mode === "create"
+                ? "글쓰기는 러너/동문/프러너 권한에서만 가능합니다."
+                : "본인 글 작성자 또는 관리자만 수정할 수 있습니다."}
+            </p>
           <Link
             href="/blog"
             className="mt-6 inline-flex rounded-[6px] bg-[#FF6C0F] px-4 py-2 font-['Pretendard',sans-serif] text-[14px] font-medium text-white"
@@ -581,6 +580,7 @@ export default function PostEditorForm({ mode, post, initialTags = [] }: PostEdi
 
               {imageUrl ? (
                 <div className="group relative max-w-[320px] overflow-hidden rounded-[8px]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={imageUrl}
                     alt="썸네일 이미지"
