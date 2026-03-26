@@ -5,8 +5,6 @@ import { useMemo, useState, useTransition, type SyntheticEvent } from "react";
 
 import { savePublicProfile } from "@/lib/actions/public-profile";
 import type { PublicProfileExperience } from "@/lib/public-profile";
-import type { ProfileVisibility } from "@/lib/supabase/types";
-
 type PublicProfileEditorProps = {
   initial: {
     name: string;
@@ -19,7 +17,6 @@ type PublicProfileEditorProps = {
     websiteUrl: string;
     brunchUrl: string;
     githubUrl: string;
-    profileVisibility: ProfileVisibility;
   };
   initialExperiences: PublicProfileExperience[];
   isEditable?: boolean;
@@ -226,7 +223,6 @@ export default function PublicProfileEditor({ initial, initialExperiences, isEdi
   const [websiteUrl, setWebsiteUrl] = useState(initial.websiteUrl);
   const [brunchUrl, setBrunchUrl] = useState(initial.brunchUrl);
   const [githubUrl, setGithubUrl] = useState(initial.githubUrl);
-  const [profileVisibility, setProfileVisibility] = useState<ProfileVisibility>(initial.profileVisibility);
   const [experiences, setExperiences] = useState<EditableExperience[]>(() => initialExperiences.map(mapInitialExperience));
 
   const serializedExperiences = useMemo(
@@ -375,26 +371,6 @@ export default function PublicProfileEditor({ initial, initialExperiences, isEdi
               <span className="font-['Pretendard',sans-serif] text-xs font-medium text-[#6b6b5e]">자기소개</span>
               <textarea name="bio" value={bio} onChange={(event) => setBio(event.target.value)} disabled={disabled} rows={6} maxLength={600} className="w-full rounded-lg border border-[#ddd9cc] bg-white px-4 py-2.5 font-['Pretendard',sans-serif] text-sm leading-relaxed text-[#16140f] transition-colors focus:border-[#FF6C0F]/50 focus:outline-none focus:ring-2 focus:ring-[#FF6C0F]/10 disabled:cursor-not-allowed disabled:opacity-60" />
             </label>
-          </div>
-        </section>
-
-        <section className="rounded-lg border border-[#ddd9cc] bg-[#fcfcf8] p-5 md:p-6">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <div>
-              <h3 className="font-['Pretendard',sans-serif] text-base font-semibold text-[#16140f]">공개 여부</h3>
-              <p className="mt-1 font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">
-                공개 상태일 때만 블로그 저자 링크와 `/profile/[slug]` 페이지가 활성화됩니다.
-              </p>
-            </div>
-            <input type="hidden" name="profile_visibility" value={profileVisibility} />
-            <div className="inline-flex rounded-lg border border-[#ddd9cc] bg-white p-1">
-              <button type="button" onClick={() => setProfileVisibility("private")} disabled={disabled} className={`rounded-md px-3 py-1.5 font-['Pretendard',sans-serif] text-xs font-semibold transition-colors ${profileVisibility === "private" ? "bg-[#16140f] text-white" : "text-[#6b6b5e] hover:text-[#16140f]"}`}>
-                비공개
-              </button>
-              <button type="button" onClick={() => setProfileVisibility("public")} disabled={disabled} className={`rounded-md px-3 py-1.5 font-['Pretendard',sans-serif] text-xs font-semibold transition-colors ${profileVisibility === "public" ? "bg-[#FF6C0F] text-white" : "text-[#6b6b5e] hover:text-[#16140f]"}`}>
-                공개
-              </button>
-            </div>
           </div>
         </section>
 

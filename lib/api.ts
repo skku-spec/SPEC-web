@@ -118,7 +118,7 @@ export interface CompanyDetail {
 
 import { createClient } from "@/lib/supabase/server";
 import { CURRENT_BATCH } from "@/lib/constants";
-import type { Database, MemberType, ProfileRole, ProfileVisibility } from "@/lib/supabase/types";
+import type { Database, MemberType, ProfileRole } from "@/lib/supabase/types";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 export type MemberRow = Database["public"]["Tables"]["members"]["Row"];
@@ -188,7 +188,6 @@ export interface BlogPost {
   type?: "news" | "blog";
   authorId?: string;
   authorRole?: ProfileRole;
-  authorProfileVisibility?: ProfileVisibility;
   published?: boolean;
   id?: string;
   viewCount: number;
@@ -280,7 +279,7 @@ async function mapRowsToBlogPosts(rows: PostRow[]): Promise<BlogPost[]> {
   const [profilesResult, tagsByPostId] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id,name,slug,role,profile_visibility,company,current_role,bio,photo")
+      .select("id,name,slug,role,company,current_role,bio,photo")
       .in("id", authorIds),
     getTagsByPostIds(rows.map((row) => row.id)),
   ]);
@@ -294,7 +293,7 @@ async function mapRowsToBlogPosts(rows: PostRow[]): Promise<BlogPost[]> {
     string,
     Pick<
       ProfileRow,
-      "name" | "slug" | "role" | "profile_visibility" | "company" | "current_role" | "bio" | "photo"
+      "name" | "slug" | "role" | "company" | "current_role" | "bio" | "photo"
     >
   >(
     (profiles ?? []).map((profile) => [profile.id, profile])
@@ -310,7 +309,7 @@ async function mapRowsToBlogPosts(rows: PostRow[]): Promise<BlogPost[]> {
       author: profile?.name ?? "",
       authorSlug: profile?.slug ?? "",
       authorRole: profile?.role,
-      authorProfileVisibility: profile?.profile_visibility,
+
       date: row.created_at,
       tags: tagsByPostId.get(row.id) ?? [],
       featured: row.featured,

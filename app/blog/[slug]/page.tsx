@@ -135,7 +135,6 @@ export default async function BlogPostPage({
   const authorHref = getPublicAuthorHref({
     slug: post.authorSlug,
     role: post.authorRole,
-    profile_visibility: post.authorProfileVisibility,
   });
 
   return (

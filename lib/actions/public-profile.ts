@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { canWrite, normalizeRole, requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import type { Database, ProfileVisibility } from "@/lib/supabase/types";
+import type { Database } from "@/lib/supabase/types";
 
 type ActionResult = {
   success: boolean;
@@ -28,10 +28,6 @@ const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 function parseStringField(formData: FormData, key: string): string {
   const value = formData.get(key);
   return typeof value === "string" ? value.trim() : "";
-}
-
-function parseVisibility(value: string): ProfileVisibility {
-  return value === "public" ? "public" : "private";
 }
 
 function validateOptionalUrl(value: string, fieldName: string): string {
@@ -149,8 +145,6 @@ function buildProfileUpdate(formData: FormData): ProfileUpdate {
   const websiteUrl = validateOptionalUrl(parseStringField(formData, "website_url"), "Website");
   const brunchUrl = validateOptionalUrl(parseStringField(formData, "brunch_url"), "Brunch");
   const githubUrl = validateOptionalUrl(parseStringField(formData, "github_url"), "GitHub");
-  const visibility = parseVisibility(parseStringField(formData, "profile_visibility"));
-
   if (!name) {
     throw new Error("이름을 입력해 주세요.");
   }
@@ -177,7 +171,7 @@ function buildProfileUpdate(formData: FormData): ProfileUpdate {
     website_url: websiteUrl,
     brunch_url: brunchUrl,
     github_url: githubUrl,
-    profile_visibility: visibility,
+    profile_visibility: "public",
   };
 }
 
@@ -230,7 +224,7 @@ export async function savePublicProfile(formData: FormData): Promise<ActionResul
       input_website_url: updatePayload.website_url ?? "",
       input_brunch_url: updatePayload.brunch_url ?? "",
       input_github_url: updatePayload.github_url ?? "",
-      input_profile_visibility: updatePayload.profile_visibility ?? "private",
+      input_profile_visibility: "public",
       input_experiences: serializedExperiences,
     });
 
