@@ -5,6 +5,7 @@ const mockedDeps = vi.hoisted(() => ({
   createAdminClient: vi.fn(),
   revalidatePath: vi.fn(),
   rateLimit: vi.fn(() => ({ allowed: true, remaining: 5, retryAfterMs: 0 })),
+  getActiveRecruitment: vi.fn(),
 }));
 
 const viMockWithVirtual = vi.mock as unknown as (
@@ -33,6 +34,10 @@ vi.mock("@/lib/supabase/admin", () => ({
 
 vi.mock("@/lib/rate-limit", () => ({
   rateLimit: mockedDeps.rateLimit,
+}));
+
+vi.mock("@/lib/actions/recruitment", () => ({
+  getActiveRecruitment: mockedDeps.getActiveRecruitment,
 }));
 
 import {
@@ -119,6 +124,7 @@ const mockedCreateClient = mockedDeps.createClient;
 const mockedCreateAdminClient = mockedDeps.createAdminClient;
 const mockedRateLimit = mockedDeps.rateLimit;
 const mockedRevalidatePath = mockedDeps.revalidatePath;
+const mockedGetActiveRecruitment = mockedDeps.getActiveRecruitment;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -126,6 +132,22 @@ beforeEach(() => {
     allowed: true,
     remaining: 5,
     retryAfterMs: 0,
+  });
+  mockedGetActiveRecruitment.mockResolvedValue({
+    success: true,
+    data: {
+      id: "rec-1",
+      batch: "4",
+      batch_label: "4기",
+      short_label: "4기",
+      banner_label: "4기 모집 중",
+      hero_badge: "4기",
+      status: "recruiting",
+      show_banner: true,
+      timeline_steps: [],
+      created_at: "2026-01-01T00:00:00Z",
+      updated_at: "2026-01-01T00:00:00Z",
+    },
   });
 });
 
