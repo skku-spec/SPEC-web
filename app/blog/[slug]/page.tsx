@@ -212,7 +212,7 @@ export default async function BlogPostPage({
                 loading="eager"
                 decoding="async"
                 fetchPriority="high"
-                className="aspect-[16/9] h-auto w-full object-cover"
+                className="max-h-[480px] h-auto w-full rounded-lg object-contain"
               />
             </div>
           )}
