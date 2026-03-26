@@ -26,6 +26,7 @@ import {
   PartyPopper,
   Send,
   ThumbsUp,
+  Share2,
   Trash2,
   X,
 } from "lucide-react";
@@ -43,6 +44,7 @@ import {
   normalizeRole,
 } from "@/lib/auth-shared";
 import { uploadSpecLogImage } from "@/lib/storage";
+import { useToast } from "@/components/ui/Toast";
 
 type ReactionSummary = {
   emoji: string;
@@ -487,10 +489,12 @@ function LogCard({
   log,
   currentUser,
   onImageOpen,
+  onToast,
 }: {
   log: LogEntry;
   currentUser: CurrentUserProp;
   onImageOpen: (images: string[], index: number) => void;
+  onToast: (message: string) => void;
 }) {
   const router = useRouter();
   const [isContentExpanded, setIsContentExpanded] = useState(false);
@@ -538,21 +542,41 @@ function LogCard({
             </span>
           </div>
         </div>
-        {canDelete && (
+        <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={handleDelete}
-            disabled={isDeleting}
-            aria-label="로그 삭제"
-            className="text-[#b42318] transition-colors hover:text-[#b42318]/70 disabled:opacity-40"
+            onClick={async () => {
+              const shareUrl = `${window.location.origin}/spec-log/${log.event_id}/${log.id}`;
+              if (navigator.share) {
+                try {
+                  await navigator.share({ title: "SPEC 로그", url: shareUrl });
+                } catch {}
+              } else {
+                await navigator.clipboard.writeText(shareUrl);
+                onToast("링크가 복사되었습니다");
+              }
+            }}
+            aria-label="로그 공유"
+            className="text-[#6b6b5e] transition-colors hover:text-[#FF6C0F]"
           >
-            {isDeleting ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Trash2 className="h-4 w-4" strokeWidth={2} />
-            )}
+            <Share2 className="h-4 w-4" strokeWidth={2} />
           </button>
-        )}
+          {canDelete && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={isDeleting}
+              aria-label="로그 삭제"
+              className="text-[#b42318] transition-colors hover:text-[#b42318]/70 disabled:opacity-40"
+            >
+              {isDeleting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" strokeWidth={2} />
+              )}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="mt-3">
@@ -756,6 +780,7 @@ export default function EventFeedClient({
 }) {
   const status = STATUS_CONFIG[event.status] ?? STATUS_CONFIG.closed;
   const logGroups = groupLogsByDate(initialLogs);
+  const { toast, ToastComponent } = useToast();
 
   const [lightbox, setLightbox] = useState<{
     images: string[];
@@ -858,6 +883,7 @@ export default function EventFeedClient({
                       log={log}
                       currentUser={currentUser}
                       onImageOpen={openLightbox}
+                      onToast={toast}
                     />
                   ))}
                 </div>
@@ -876,6 +902,8 @@ export default function EventFeedClient({
           onNext={nextImage}
         />
       )}
+
+      <ToastComponent />
     </>
   );
 }

@@ -796,6 +796,157 @@ export async function createLog(
   }
 }
 
+export async function getLogById(logId: string): Promise<
+  ActionResult<{
+    log: {
+      id: string;
+      event_id: string;
+      author_id: string;
+      content: string;
+      created_at: string;
+      updated_at: string;
+    };
+    author: { id: string; name: string };
+    event: {
+      id: string;
+      title: string;
+      description: string | null;
+      batch: string;
+      status: string;
+      start_date: string;
+      end_date: string;
+    };
+    images: { id: string; image_url: string; sort_order: number }[];
+    comments: {
+      id: string;
+      content: string;
+      created_at: string;
+      author: { id: string; name: string };
+      parent_id: string | null;
+    }[];
+    reactionSummary: LogReactionSummary[];
+  }>
+> {
+  try {
+    const supabase = await createClient();
+
+    const { data: log, error: logError } = await supabase
+      .from("spec_logs")
+      .select("*")
+      .eq("id", logId)
+      .maybeSingle();
+
+    if (logError) {
+      throw new Error(`로그 조회에 실패했습니다: ${logError.message}`);
+    }
+
+    if (!log) {
+      throw new Error("로그를 찾을 수 없습니다.");
+    }
+
+    const { data: event, error: eventError } = await supabase
+      .from("spec_events")
+      .select("id, title, description, batch, status, start_date, end_date")
+      .eq("id", log.event_id)
+      .maybeSingle();
+
+    if (eventError) {
+      throw new Error(`이벤트 조회에 실패했습니다: ${eventError.message}`);
+    }
+
+    if (!event) {
+      throw new Error("이벤트를 찾을 수 없습니다.");
+    }
+
+    const { data: images } = await supabase
+      .from("spec_log_images")
+      .select("id, image_url, sort_order")
+      .eq("log_id", logId)
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true });
+
+    const { data: comments } = await supabase
+      .from("spec_log_comments")
+      .select("id, log_id, author_id, content, parent_id, created_at, updated_at")
+      .eq("log_id", logId)
+      .order("created_at", { ascending: true });
+
+    const { data: reactions } = await supabase
+      .from("spec_log_reactions")
+      .select("emoji, user_id")
+      .eq("log_id", logId);
+
+    const authorIdSet = new Set<string>([log.author_id]);
+    for (const comment of comments ?? []) {
+      authorIdSet.add(comment.author_id);
+    }
+    const authorIds = Array.from(authorIdSet);
+
+    const authorNameMap = new Map<string, string>();
+    if (authorIds.length > 0) {
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, name")
+        .in("id", authorIds);
+
+      if (!profilesError) {
+        for (const profile of profiles ?? []) {
+          authorNameMap.set(profile.id, profile.name);
+        }
+      }
+    }
+
+    const reactionMap = new Map<string, { count: number; userIds: string[] }>();
+    for (const r of reactions ?? []) {
+      const existing = reactionMap.get(r.emoji) ?? { count: 0, userIds: [] };
+      existing.count += 1;
+      existing.userIds.push(r.user_id);
+      reactionMap.set(r.emoji, existing);
+    }
+    const reactionSummary = Array.from(reactionMap.entries()).map(([emoji, value]) => ({
+      emoji,
+      count: value.count,
+      userIds: value.userIds,
+    }));
+
+    return {
+      success: true,
+      data: {
+        log: {
+          id: log.id,
+          event_id: log.event_id,
+          author_id: log.author_id,
+          content: log.content,
+          created_at: log.created_at,
+          updated_at: log.updated_at,
+        },
+        author: {
+          id: log.author_id,
+          name: authorNameMap.get(log.author_id) ?? "알 수 없음",
+        },
+        event,
+        images: images ?? [],
+        comments: (comments ?? []).map((c) => ({
+          id: c.id,
+          content: c.content,
+          created_at: c.created_at,
+          parent_id: c.parent_id,
+          author: {
+            id: c.author_id,
+            name: authorNameMap.get(c.author_id) ?? "알 수 없음",
+          },
+        })),
+        reactionSummary,
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "로그 조회에 실패했습니다.",
+    };
+  }
+}
+
 export async function deleteLog(logId: string): Promise<ActionResult> {
   try {
     const supabase = await createClient();
