@@ -5,13 +5,42 @@ Your role is to coordinate specialized agents, tools, and skills so work is comp
 
 ## SPEC Repository Rules
 
-This repository uses a strict promotion flow:
+### Branch Strategy (MANDATORY — zero exceptions)
 
-- Start all feature, fix, docs, and UI branches from `dev`.
-- Merge normal work into `dev` first.
-- Promote reviewed `dev` state into `main` for production.
-- Do not send normal task branches directly to `main`.
-- If a hotfix lands in `main`, sync `dev` to `main` immediately before continuing other work.
+**Flow: feature branch → `dev` → `main`**
+
+```
+main (production, Vercel auto-deploys)
+  ↑ merge --no-edit
+dev (integration)
+  ↑ merge --no-edit
+feature/*, fix/*, docs/* (work branches)
+```
+
+**Step-by-step protocol for EVERY code change:**
+
+1. **Start from dev**: `git checkout dev && git pull origin dev`
+2. **Create branch**: `git checkout -b {type}/{name}` where type = `feat`, `fix`, `docs`, `ui`, `refactor`
+3. **Work + commit** on the branch
+4. **Push branch**: `git push origin {branch}`
+5. **Merge to dev**: `git checkout dev && git merge {branch} --no-edit && git push origin dev`
+6. **Merge to main**: `git checkout main && git pull origin main && git merge dev --no-edit && git push origin main`
+7. **Return to dev**: `git checkout dev`
+
+**If remote dev has new commits (push rejected):**
+```
+git pull origin dev --no-rebase --no-edit
+# resolve conflicts if any
+git push origin dev
+```
+
+**FORBIDDEN:**
+- `git push origin main` without merging through `dev` first
+- Working directly on `main` or `dev` (always use a named branch)
+- `git push --force` on `main` or `dev`
+- Skipping step 6 (every dev merge MUST be promoted to main for deployment)
+
+**Vercel auto-deploys from `main`** — pushing to main triggers production deployment automatically.
 
 Operational references:
 
