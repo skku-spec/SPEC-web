@@ -328,7 +328,7 @@ function SpacingSection() {
 }
 
 function ComponentsSection() {
-  const [selectValue, setSelectValue] = useState("runner");
+  const [selectValue, setSelectValue] = useState("learner");
 
   return (
     <div className="space-y-8">
@@ -382,10 +382,10 @@ focus:border-[#FF6C0F]/50 focus:ring-2 focus:ring-[#FF6C0F]/10`}</CodeBlock>
               value={selectValue}
               onChange={setSelectValue}
               options={[
-                { value: "admin", label: "관리자" },
-                { value: "member", label: "부원" },
+                { value: "alumni", label: "동문" },
                 { value: "preneur", label: "프러너" },
-                { value: "runner", label: "러너" },
+                { value: "learner", label: "러너" },
+                { value: "outsider", label: "외부인" },
               ]}
             />
           </div>

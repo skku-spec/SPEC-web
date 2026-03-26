@@ -41,7 +41,7 @@ type ApplicationStats = Record<
 >;
 
 type Props = {
-  runners: Profile[];
+  learners: Profile[];
   sessions: Session[];
   logs: AttendanceLog[];
   homeworks: Homework[];
@@ -50,7 +50,7 @@ type Props = {
 }
 
 export function DashboardClient({
-  runners,
+  learners,
   sessions,
   logs,
   homeworks,
@@ -95,28 +95,28 @@ export function DashboardClient({
     }
   }, [downloadCSV]);
 
-  const safeRunners = runners || [];
+  const safeLearners = learners || [];
   const safeSessions = sessions || [];
   const safeLogs = logs || [];
   const safeHomeworks = homeworks || [];
   const safeSubmissions = submissions || [];
 
-  const totalRunners = safeRunners.length;
-  const totalAttendancePointsPossible = safeRunners.length * safeSessions.length;
+  const totalLearners = safeLearners.length;
+  const totalAttendancePointsPossible = safeLearners.length * safeSessions.length;
   const actualPresentCount = safeLogs.filter(l => l.status === "present").length;
   const attendanceRate = totalAttendancePointsPossible > 0 
     ? Math.round((actualPresentCount / totalAttendancePointsPossible) * 100) 
     : 0;
 
-  const totalHomeworkPossible = safeRunners.length * safeHomeworks.length;
+  const totalHomeworkPossible = safeLearners.length * safeHomeworks.length;
   const completedHomeworkCount = safeSubmissions.filter(s => s.status === "completed").length;
   const homeworkRate = totalHomeworkPossible > 0 
     ? Math.round((completedHomeworkCount / totalHomeworkPossible) * 100) 
     : 0;
 
-  const runnerStats = safeRunners.map(runner => {
-    const userLogs = safeLogs.filter(l => l.user_id === runner.id);
-    const userSubmissions = safeSubmissions.filter(s => s.user_id === runner.id && s.status === "completed");
+  const learnerStats = safeLearners.map(learner => {
+    const userLogs = safeLogs.filter(l => l.user_id === learner.id);
+    const userSubmissions = safeSubmissions.filter(s => s.user_id === learner.id && s.status === "completed");
     
     const attRate = safeSessions.length > 0 
       ? Math.round((userLogs.filter(l => l.status === "present").length / safeSessions.length) * 100) 
@@ -127,7 +127,7 @@ export function DashboardClient({
       : 0;
 
     return {
-      ...runner,
+      ...learner,
       attRate,
       hwRate,
       totalPresent: userLogs.filter(l => l.status === "present").length,
@@ -142,9 +142,9 @@ export function DashboardClient({
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="rounded-lg border border-[#ddd9cc] bg-white p-5">
-          <p className="font-['Pretendard',sans-serif] text-xs font-semibold text-[#6b6b5e]">Total Runners</p>
+          <p className="font-['Pretendard',sans-serif] text-xs font-semibold text-[#6b6b5e]">Total Learners</p>
           <div className="mt-3 flex items-end gap-2">
-            <span className="font-['Pretendard',sans-serif] text-3xl font-black text-[#16140f]">{totalRunners}</span>
+            <span className="font-['Pretendard',sans-serif] text-3xl font-black text-[#16140f]">{totalLearners}</span>
             <span className="font-['Pretendard',sans-serif] text-sm text-[#6b6b5e] mb-0.5">명</span>
           </div>
         </div>
@@ -191,24 +191,24 @@ export function DashboardClient({
             </tr>
           </thead>
           <tbody>
-            {runnerStats.map(runner => {
-              const totalScore = Math.round((runner.attRate + runner.hwRate) / 2);
+            {learnerStats.map(learner => {
+              const totalScore = Math.round((learner.attRate + learner.hwRate) / 2);
               
               return (
-                <tr key={runner.id} className="border-t border-[#ece8db] transition-colors hover:bg-[#fcfcf8] group">
+                <tr key={learner.id} className="border-t border-[#ece8db] transition-colors hover:bg-[#fcfcf8] group">
                   <td className="sticky left-0 z-10 bg-white group-hover:bg-[#fcfcf8] px-4 py-3">
                     <div className="flex items-center gap-3">
                       <div className="grid h-9 w-9 place-items-center rounded-full bg-[#e8e6dc] font-['Pretendard',sans-serif] text-sm font-semibold text-[#4a4a40]">
-                        {runner.name.charAt(0)}
+                        {learner.name.charAt(0)}
                       </div>
-                      <span className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{runner.name}</span>
+                      <span className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{learner.name}</span>
                     </div>
                   </td>
                   
                   <td className="px-4 py-3">
                     <div className="flex gap-1.5">
                       {safeSessions.map(s => {
-                        const status = safeLogs.find(l => l.session_id === s.id && l.user_id === runner.id)?.status;
+                        const status = safeLogs.find(l => l.session_id === s.id && l.user_id === learner.id)?.status;
                         const isPresent = status === 'present' || status === 'late';
                         return (
                           <div key={s.id} className="group/dot relative cursor-help">
@@ -229,7 +229,7 @@ export function DashboardClient({
                   <td className="px-4 py-3">
                     <div className="flex gap-1.5">
                       {safeHomeworks.map(h => {
-                        const isDone = safeSubmissions.some(s => s.homework_id === h.id && s.user_id === runner.id && s.status === 'completed');
+                        const isDone = safeSubmissions.some(s => s.homework_id === h.id && s.user_id === learner.id && s.status === 'completed');
                         return (
                           <div key={h.id} className="group/dot relative cursor-help">
                             <div className={`h-6 w-6 rounded-md flex items-center justify-center font-['Pretendard',sans-serif] text-[9px] font-semibold ${
@@ -255,7 +255,7 @@ export function DashboardClient({
                       }`}>
                         {totalScore}%
                       </span>
-                      <div className="font-['Pretendard',sans-serif] text-[10px] text-[#6b6b5e]">A:{runner.attRate}% H:{runner.hwRate}%</div>
+                      <div className="font-['Pretendard',sans-serif] text-[10px] text-[#6b6b5e]">A:{learner.attRate}% H:{learner.hwRate}%</div>
                     </div>
                   </td>
                 </tr>
@@ -264,16 +264,16 @@ export function DashboardClient({
           </tbody>
         </table>
         <div className="md:hidden space-y-3 p-4">
-          {runnerStats.map(runner => {
-            const totalScore = Math.round((runner.attRate + runner.hwRate) / 2);
+          {learnerStats.map(learner => {
+            const totalScore = Math.round((learner.attRate + learner.hwRate) / 2);
             return (
-              <div key={runner.id} className="rounded-lg border border-[#ddd9cc] bg-white p-4">
+              <div key={learner.id} className="rounded-lg border border-[#ddd9cc] bg-white p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="grid h-9 w-9 place-items-center rounded-full bg-[#e8e6dc] font-['Pretendard',sans-serif] text-sm font-semibold text-[#4a4a40]">
-                      {runner.name.charAt(0)}
+                      {learner.name.charAt(0)}
                     </div>
-                    <span className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{runner.name}</span>
+                    <span className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{learner.name}</span>
                   </div>
                   <span className={`inline-flex rounded-full px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold ${
                     totalScore >= 80 ? "bg-[#E6F9E6] text-[#2f9e44]" :
@@ -294,8 +294,8 @@ export function DashboardClient({
                   />
                 </div>
                 <div className="mt-2 flex gap-4 font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">
-                  <span>출석 {runner.attRate}%</span>
-                  <span>과제 {runner.hwRate}%</span>
+                  <span>출석 {learner.attRate}%</span>
+                  <span>과제 {learner.hwRate}%</span>
                 </div>
               </div>
             );

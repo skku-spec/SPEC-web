@@ -43,7 +43,7 @@ type PadletPost = {
 };
 
 type SubmissionRow = {
-  label: string;         // runner name
+  label: string;         // learner name
   isTeam: boolean;
   memberNames: string[];
   sectionStatus: Record<string, boolean>; // sectionId -> submitted
@@ -67,7 +67,7 @@ const supabase = createClient();
 
 export function HomeworkClient() {
   const [homeworks, setHomeworks] = useState<Homework[]>([]);
-  const [availableRunners, setAvailableRunners] = useState<Profile[]>([]);
+  const [availableLearners, setAvailableLearners] = useState<Profile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   
@@ -104,20 +104,20 @@ export function HomeworkClient() {
     setIsLoading(false);
   }, []);
 
-  const fetchRunners = useCallback(async () => {
+  const fetchLearners = useCallback(async () => {
     const { data, error } = await supabase
       .from("profiles")
       .select("id,name,username,slug,role") // Added slug
-      .eq("role", "runner");
+      .eq("role", "learner");
     if (!error && data) {
-      setAvailableRunners(data as Profile[]);
+      setAvailableLearners(data as Profile[]);
     }
   }, []);
 
   useEffect(() => {
     fetchHomeworks();
-    fetchRunners();
-  }, [fetchHomeworks, fetchRunners]);
+    fetchLearners();
+  }, [fetchHomeworks, fetchLearners]);
 
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -128,15 +128,15 @@ export function HomeworkClient() {
       try {
         for (const hwId of Object.keys(padletData)) {
           const pData = padletData[hwId];
-          if (pData && !pData.loading && !pData.error && availableRunners.length > 0) {
+          if (pData && !pData.loading && !pData.error && availableLearners.length > 0) {
             const hw = homeworks.find(h => h.id === hwId);
             if (hw) {
               const rows = buildSubmissionRows(hw);
-              const syncData = availableRunners.map(runner => {
-                const row = rows.find(r => r.label === runner.name);
+              const syncData = availableLearners.map(learner => {
+                const row = rows.find(r => r.label === learner.name);
                 const isCompleted = row ? Object.values(row.sectionStatus).some(v => v === true) : false;
                 return {
-                  user_id: runner.id,
+                  user_id: learner.id,
                   status: isCompleted ? "completed" : "pending"
                 };
               });
@@ -152,7 +152,7 @@ export function HomeworkClient() {
     if (Object.keys(padletData).length > 0) {
       syncAll();
     }
-  }, [padletData, availableRunners, homeworks]);
+  }, [padletData, availableLearners, homeworks]);
 
   const handleFetchTeams = async (homeworkId: string) => {
     if (viewingId === homeworkId) {
@@ -317,21 +317,21 @@ export function HomeworkClient() {
     if (!pData) return [];
     const { sections, posts } = pData;
 
-    // Build a map: runnerId -> { teamName, allTeamMemberNames }
+    // Build a map: learnerId -> { teamName, allTeamMemberNames }
     // so we can check if any team member submitted for team sections
-    const runnerTeamMap = new Map<string, { teamName: string; memberNames: string[]; memberUsernames: string[] }>();
+    const learnerTeamMap = new Map<string, { teamName: string; memberNames: string[]; memberUsernames: string[] }>();
     if (hw.is_team && viewingTeams.length > 0) {
       // Create a map of user_id to profile for quick lookup
-      const runnerLookup = new Map(availableRunners.map(r => [r.id, r]));
+      const learnerLookup = new Map(availableLearners.map(r => [r.id, r]));
 
       viewingTeams.forEach(vt => {
         const teamMembers = viewingTeams
           .filter(m => m.team_name === vt.team_name);
         
-        const memberNames = teamMembers.map(m => runnerLookup.get(m.user_id)?.name || 'Unknown');
-        const memberUsernames = teamMembers.map(m => runnerLookup.get(m.user_id)?.username || '');
+        const memberNames = teamMembers.map(m => learnerLookup.get(m.user_id)?.name || 'Unknown');
+        const memberUsernames = teamMembers.map(m => learnerLookup.get(m.user_id)?.username || '');
         
-        runnerTeamMap.set(vt.user_id, { teamName: vt.team_name, memberNames, memberUsernames });
+        learnerTeamMap.set(vt.user_id, { teamName: vt.team_name, memberNames, memberUsernames });
       });
     }
 
@@ -359,14 +359,14 @@ export function HomeworkClient() {
 
     const rows: SubmissionRow[] = [];
 
-    // Show every available runner as a row
-    availableRunners.forEach(runner => {
+    // Show every available learner as a row
+    availableLearners.forEach(learner => {
       const sectionStatus: Record<string, boolean> = {};
-      const teamInfo = runnerTeamMap.get(runner.id);
+      const teamInfo = learnerTeamMap.get(learner.id);
 
       // Collect all names and usernames to search for (including team members)
-      const targetNames = [runner.name];
-      const targetUsernames = [runner.username];
+      const targetNames = [learner.name];
+      const targetUsernames = [learner.username];
 
       if (teamInfo) {
         teamInfo.memberNames.forEach(name => {
@@ -387,9 +387,9 @@ export function HomeworkClient() {
 
       const teamLabel = teamInfo ? `(${teamInfo.teamName})` : '';
       rows.push({
-        label: runner.name,
+        label: learner.name,
         isTeam: !!teamInfo,
-        memberNames: teamInfo?.memberNames ?? [runner.name],
+        memberNames: teamInfo?.memberNames ?? [learner.name],
         sectionStatus,
         teamLabel,
       });
@@ -647,10 +647,10 @@ export function HomeworkClient() {
                     {/* Member Chips */}
                     <div className="flex flex-wrap gap-2 mb-4">
                       {t.memberIds.map(mId => {
-                        const runner = availableRunners.find(r => r.id === mId);
+                        const learner = availableLearners.find(r => r.id === mId);
                         return (
                           <div key={mId} className="flex items-center gap-2 rounded-lg bg-[#f5f5ee] px-3 py-1.5 text-[11px] font-semibold text-[#16140f] border border-[#ddd9cc]">
-                            {runner?.name}
+                            {learner?.name}
                             <button 
                               type="button" 
                               onClick={() => toggleMemberInTeam(idx, mId)}
@@ -686,23 +686,23 @@ export function HomeworkClient() {
                        {/* Result List - INTEGRATED (not absolute) to prevent clipping */}
                        {teamSearchQueries[idx] && (
                          <div className="mt-2 space-y-1 max-h-32 overflow-y-auto rounded-lg border border-dashed border-[#ddd9cc] bg-[#fcfcfb] p-2 animate-in fade-in duration-200">
-                          {availableRunners
+                          {availableLearners
                             .filter(r => 
                               r.name.toLowerCase().includes(teamSearchQueries[idx].toLowerCase()) &&
                               !teams.some(team => team.memberIds.includes(r.id))
                             )
-                            .map(runner => (
+                            .map(learner => (
                               <button
-                                key={runner.id}
+                                key={learner.id}
                                 type="button"
-                                onClick={() => toggleMemberInTeam(idx, runner.id)}
+                                onClick={() => toggleMemberInTeam(idx, learner.id)}
                                 className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-[11px] font-semibold hover:bg-[#FF6C0F] hover:text-white transition-all"
                               >
-                                <span>{runner.name}</span>
-                                <span className="text-[9px] opacity-70">{runner.role}</span>
+                                <span>{learner.name}</span>
+                                <span className="text-[9px] opacity-70">{learner.role}</span>
                               </button>
                             ))}
-                          {availableRunners.filter(r => 
+                          {availableLearners.filter(r => 
                             r.name.toLowerCase().includes(teamSearchQueries[idx].toLowerCase()) &&
                             !teams.some(team => team.memberIds.includes(r.id))
                           ).length === 0 && (
@@ -898,10 +898,10 @@ export function HomeworkClient() {
                                     </p>
                                     <div className="flex flex-wrap gap-2">
                                       {viewingTeams.filter(vt => vt.team_name === teamName).map((member) => {
-                                        const runner = availableRunners.find(r => r.id === member.user_id);
+                                        const learner = availableLearners.find(r => r.id === member.user_id);
                                         return (
                                           <span key={member.user_id} className="inline-flex items-center rounded-lg bg-[#f5f5ee] px-3 py-1.5 text-[11px] font-semibold text-[#16140f] border border-transparent transition-all group-hover/item:border-[#FF6C0F] group-hover/item:bg-white">
-                                            {runner?.name || 'Unknown'}
+                                            {learner?.name || 'Unknown'}
                                           </span>
                                         );
                                       })}

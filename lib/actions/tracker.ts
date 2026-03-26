@@ -6,28 +6,28 @@ import { requireRole } from "@/lib/auth";
 
 /**
  * Fetches all necessary data for the attendance & homework tracker.
- * If the user is an Admin/Preneur, fetches all runners.
+ * If the user is an Admin/Preneur, fetches all learners.
  * If the user is a Runner, fetches only their own data.
  */
 export async function getTrackerData() {
   unstable_noStore();
-  const { profile } = await requireRole("runner");
+  const { profile } = await requireRole("learner");
   const supabase = await createClient();
 
-  const isAdminOrPreneur = profile?.role === "admin" || profile?.role === "preneur";
+  const isAdminOrPreneur = profile?.is_admin || profile?.role === "preneur";
 
   // 1. Fetch Runners
-  let runnersQuery = supabase
+  let learnersQuery = supabase
     .from("profiles")
     .select("id, name, role, username")
-    .eq("role", "runner");
+    .eq("role", "learner");
   
   if (!isAdminOrPreneur) {
-    runnersQuery = runnersQuery.eq("id", profile!.id);
+    learnersQuery = learnersQuery.eq("id", profile!.id);
   }
 
-  const { data: runners, error: runnersError } = await runnersQuery;
-  if (runnersError) throw new Error(`Failed to fetch runners: ${runnersError.message}`);
+  const { data: learners, error: learnersError } = await learnersQuery;
+  if (learnersError) throw new Error(`Failed to fetch learners: ${learnersError.message}`);
 
   // 2. Fetch Attendance Sessions (All)
   const { data: sessions, error: sessionsError } = await supabase
@@ -58,7 +58,7 @@ export async function getTrackerData() {
   const { data: submissions } = await subsQuery;
 
   return {
-    runners,
+    learners,
     sessions,
     homeworks,
     logs: logs || [],
@@ -117,7 +117,7 @@ export async function deleteAttendance(userId: string, sessionId: string) {
  * Runners mark their own homework as completed.
  */
 export async function toggleHomeworkSubmission(homeworkId: string, completed: boolean) {
-  const { user } = await requireRole("runner");
+  const { user } = await requireRole("learner");
   const supabase = await createClient();
 
   if (completed) {
@@ -253,21 +253,21 @@ export async function deleteSession(id: string) {
 }
 
 /**
- * Marks all runners as present for a specific session.
+ * Marks all learners as present for a specific session.
  */
 export async function markAllPresent(sessionId: string) {
   await requireRole("preneur");
   if (!sessionId?.trim()) return { success: false, error: "세션 ID가 필요합니다." };
   const supabase = await createClient();
 
-  const { data: runners } = await supabase
+  const { data: learners } = await supabase
     .from("profiles")
     .select("id")
-    .eq("role", "runner");
+    .eq("role", "learner");
 
-  if (!runners) return { success: false };
+  if (!learners) return { success: false };
 
-  const logs = runners.map(r => ({
+  const logs = learners.map(r => ({
     user_id: r.id,
     session_id: sessionId,
     status: "present",

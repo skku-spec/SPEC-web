@@ -7,8 +7,8 @@ import type { Database } from "@/lib/supabase/types";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
-const WRITER_ROLES = ["runner", "preneur", "admin"];
-type UserRole = "outsider" | "runner" | "preneur" | "admin";
+const WRITER_ROLES = ["learner", "alumni", "preneur"];
+type UserRole = "outsider" | "learner" | "alumni" | "preneur";
 
 function isAdminRoute(pathname: string) {
   return pathname === "/admin" || pathname.startsWith("/admin/");
@@ -39,6 +39,10 @@ const BLOCKED_ROUTES = [
   "/subscribe",
   "/vcc",
 ];
+
+function isSpecLogRoute(pathname: string) {
+  return pathname === "/spec-log" || pathname.startsWith("/spec-log/");
+}
 
 function isBlockedRoute(pathname: string) {
   return BLOCKED_ROUTES.some(
@@ -118,7 +122,7 @@ export async function middleware(request: NextRequest) {
 
   const role = await getUserRole(request, response, user.id);
 
-  if (needsAdmin && role !== "admin") {
+  if (needsAdmin && role !== "preneur") {
     return redirectWithCookies(request, response, "/");
   }
 

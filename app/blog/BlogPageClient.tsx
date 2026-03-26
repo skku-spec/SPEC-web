@@ -6,14 +6,12 @@ import { Search } from "lucide-react";
 
 import { useUser } from "@/hooks/useUser";
 import type { BlogPost, TagInfo } from "@/lib/api";
-import type { UserRole } from "@/lib/auth";
+import { BLOG_WRITER_ROLES } from "@/lib/auth-shared";
 import ArticleCard from "@/components/blog/ArticleCard";
 import CategoryTabs from "@/components/blog/CategoryTabs";
 import { SortSelect } from "@/components/blog/SortSelect";
 import { Pagination } from "@/components/blog/Pagination";
 import TrendingSidebar from "@/components/blog/TrendingSidebar";
-
-const WRITER_ROLES: UserRole[] = ["runner", "preneur", "admin"];
 
 type BlogPageClientProps = {
   posts: BlogPost[];
@@ -42,7 +40,7 @@ export default function BlogPageClient({
   const [isLoading, setIsLoading] = useState(false);
 
   const { role, isAuthenticated } = useUser();
-  const canWrite = isAuthenticated && WRITER_ROLES.includes(role);
+  const canWrite = isAuthenticated && BLOG_WRITER_ROLES.includes(role);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300);

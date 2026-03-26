@@ -37,7 +37,7 @@ type Submission = {
 }
 
 type Props = {
-  runners: Profile[];
+  learners: Profile[];
   sessions: Session[];
   logs: AttendanceLog[];
   isAdminOrPreneur: boolean;
@@ -61,7 +61,7 @@ const STATUS_LABELS: Record<Status, string> = {
 };
 
 export function AttendanceClient({
-  runners,
+  learners,
   sessions: initialSessions,
   logs: initialLogs,
   isAdminOrPreneur,
@@ -126,7 +126,7 @@ export function AttendanceClient({
         await markAllPresent(sessionId);
         setLogs(prev => {
           const filtered = prev.filter(l => l.session_id !== sessionId);
-          const newLogs = runners.map(r => ({
+          const newLogs = learners.map(r => ({
             id: crypto.randomUUID(),
             user_id: r.id,
             session_id: sessionId,
@@ -258,17 +258,17 @@ export function AttendanceClient({
             </tr>
           </thead>
           <tbody>
-            {runners.map(runner => {
-              const stats = calculateStats(runner.id);
+            {learners.map(learner => {
+              const stats = calculateStats(learner.id);
               return (
-                <tr key={runner.id} className="border-t border-[#ece8db] transition-colors hover:bg-[#fcfcf8] group text-center">
+                <tr key={learner.id} className="border-t border-[#ece8db] transition-colors hover:bg-[#fcfcf8] group text-center">
                   <td className="sticky left-0 z-20 bg-white group-hover:bg-[#fcfcf8] px-4 py-3 text-left">
                     <div className="flex items-center gap-3">
                       <div className="grid h-9 w-9 place-items-center rounded-full bg-[#e8e6dc] font-['Pretendard',sans-serif] text-sm font-semibold text-[#4a4a40]">
-                        {runner.name.charAt(0)}
+                        {learner.name.charAt(0)}
                       </div>
                       <div>
-                        <p className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{runner.name}</p>
+                        <p className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{learner.name}</p>
                         <div className="flex gap-2 font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">
                           <span className="text-[#2f9e44]">출 {stats.present}</span>
                           <span className="text-[#FF6C0F]">지 {stats.late}</span>
@@ -281,7 +281,7 @@ export function AttendanceClient({
                   </td>
 
                   {sessions.map(session => {
-                    const currentStatus = getAttendanceStatus(runner.id, session.id);
+                    const currentStatus = getAttendanceStatus(learner.id, session.id);
                     return (
                       <td key={session.id} className="px-2 py-3">
                         <div className="flex items-center justify-center gap-1">
@@ -290,7 +290,7 @@ export function AttendanceClient({
                             return (
                               <button
                                 key={opt.key}
-                                onClick={() => handleUpdateStatus(runner.id, session.id, opt.key)}
+                                onClick={() => handleUpdateStatus(learner.id, session.id, opt.key)}
                                 disabled={!isAdminOrPreneur || isPending}
                                 className={`flex h-7 w-7 items-center justify-center rounded-md font-['Pretendard',sans-serif] text-xs font-semibold transition-all border ${
                                   isActive
@@ -308,7 +308,7 @@ export function AttendanceClient({
                   })}
 
                   {!hideHomework && homeworks.map(homework => {
-                    const isCompleted = getHomeworkStatus(runner.id, homework.id);
+                    const isCompleted = getHomeworkStatus(learner.id, homework.id);
                     return (
                       <td key={homework.id} className="px-2 py-3">
                         <div
@@ -329,16 +329,16 @@ export function AttendanceClient({
       </div>
 
       <div className="space-y-3 md:hidden">
-        {runners.map(runner => {
-          const stats = calculateStats(runner.id);
+        {learners.map(learner => {
+          const stats = calculateStats(learner.id);
           return (
-            <div key={runner.id} className="rounded-lg border border-[#ddd9cc] bg-white p-4">
+            <div key={learner.id} className="rounded-lg border border-[#ddd9cc] bg-white p-4">
               <div className="mb-3 flex items-center gap-3">
                 <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#e8e6dc] font-['Pretendard',sans-serif] text-sm font-semibold text-[#4a4a40]">
-                  {runner.name.charAt(0)}
+                  {learner.name.charAt(0)}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{runner.name}</p>
+                  <p className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{learner.name}</p>
                   <div className="flex gap-2 font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">
                     <span className="text-[#2f9e44]">출 {stats.present}</span>
                     <span className="text-[#FF6C0F]">지 {stats.late}</span>
@@ -351,7 +351,7 @@ export function AttendanceClient({
 
               <div className="space-y-2">
                 {sessions.map(session => {
-                  const currentStatus = getAttendanceStatus(runner.id, session.id);
+                  const currentStatus = getAttendanceStatus(learner.id, session.id);
                   return (
                     <div key={session.id} className="flex items-center justify-between rounded-md bg-[#f5f5ee] px-3 py-2">
                       <span className="font-['Pretendard',sans-serif] text-xs font-medium text-[#4a4a40]">{session.title}</span>
@@ -361,7 +361,7 @@ export function AttendanceClient({
                           return (
                             <button
                               key={opt.key}
-                              onClick={() => handleUpdateStatus(runner.id, session.id, opt.key)}
+                              onClick={() => handleUpdateStatus(learner.id, session.id, opt.key)}
                               disabled={!isAdminOrPreneur || isPending}
                               className={`flex h-10 w-10 items-center justify-center rounded-md font-['Pretendard',sans-serif] text-sm font-semibold transition-all border ${
                                 isActive
@@ -382,7 +382,7 @@ export function AttendanceClient({
               {!hideHomework && homeworks.length > 0 && (
                 <div className="mt-3 space-y-2">
                   {homeworks.map((homework, i) => {
-                    const isCompleted = getHomeworkStatus(runner.id, homework.id);
+                    const isCompleted = getHomeworkStatus(learner.id, homework.id);
                     return (
                       <div key={homework.id} className="flex items-center justify-between rounded-md bg-[#f5f5ee] px-3 py-2">
                         <span className="font-['Pretendard',sans-serif] text-xs font-medium text-[#4a4a40]">{i + 1}주차 과제</span>

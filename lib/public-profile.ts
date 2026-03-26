@@ -44,14 +44,14 @@ export type PublicAuthorProfilePageData = {
   posts: BlogPost[];
 };
 
-export const PUBLIC_AUTHOR_ROLES: ProfileRole[] = ["runner", "preneur", "member", "admin"];
+export const PUBLIC_AUTHOR_ROLES: ProfileRole[] = ["learner", "alumni", "preneur"];
 
 export function normalizeProfileVisibility(value: string | null | undefined): ProfileVisibility {
   return value === "public" ? "public" : "private";
 }
 
 export function isPublicAuthorRole(role: string | null | undefined): role is ProfileRole {
-  return role === "runner" || role === "preneur" || role === "member" || role === "admin";
+  return role === "learner" || role === "alumni" || role === "preneur";
 }
 
 export function isPublicAuthorProfile(profile: {

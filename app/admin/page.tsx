@@ -14,7 +14,7 @@ export default async function AdminDashboardPage() {
     <section className="space-y-8 pb-10">
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
         <DashboardClient 
-          runners={trackerData.runners} 
+          learners={trackerData.learners} 
           sessions={trackerData.sessions} 
           logs={trackerData.logs} 
           homeworks={trackerData.homeworks}

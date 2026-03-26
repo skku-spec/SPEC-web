@@ -8,10 +8,9 @@ export type Json =
 
 export type ProfileRole =
   | "outsider"
-  | "runner"
-  | "preneur"
-  | "member"
-  | "admin";
+  | "learner"
+  | "alumni"
+  | "preneur";
 
 export type ProfileVisibility = "private" | "public";
 
@@ -39,6 +38,7 @@ export type Database = {
           brunch_url: string;
           github_url: string;
           profile_visibility: ProfileVisibility;
+          is_admin: boolean;
           username: string;
           first_name: string;
           last_name: string;
@@ -61,6 +61,7 @@ export type Database = {
           brunch_url: string;
           github_url: string;
           profile_visibility?: ProfileVisibility;
+          is_admin?: boolean;
           username: string;
           first_name: string;
           last_name: string;
@@ -83,6 +84,7 @@ export type Database = {
           brunch_url?: string;
           github_url?: string;
           profile_visibility?: ProfileVisibility;
+          is_admin?: boolean;
           username?: string;
           first_name?: string;
           last_name?: string;
@@ -785,6 +787,150 @@ export type Database = {
           updated_by?: string | null;
           created_at?: string;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+      spec_events: {
+        Row: {
+          id: string;
+          title: string;
+          description: string;
+          batch: string;
+          status: string;
+          start_date: string;
+          end_date: string;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          description?: string;
+          batch: string;
+          status?: string;
+          start_date: string;
+          end_date: string;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          description?: string;
+          batch?: string;
+          status?: string;
+          start_date?: string;
+          end_date?: string;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      spec_logs: {
+        Row: {
+          id: string;
+          event_id: string;
+          author_id: string;
+          content: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          event_id: string;
+          author_id: string;
+          content: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          event_id?: string;
+          author_id?: string;
+          content?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      spec_log_images: {
+        Row: {
+          id: string;
+          log_id: string;
+          image_url: string;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          log_id: string;
+          image_url: string;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          log_id?: string;
+          image_url?: string;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      spec_log_comments: {
+        Row: {
+          id: string;
+          log_id: string;
+          author_id: string;
+          content: string;
+          parent_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          log_id: string;
+          author_id: string;
+          content: string;
+          parent_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          log_id?: string;
+          author_id?: string;
+          content?: string;
+          parent_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      spec_log_reactions: {
+        Row: {
+          id: string;
+          log_id: string;
+          user_id: string;
+          emoji: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          log_id: string;
+          user_id: string;
+          emoji: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          log_id?: string;
+          user_id?: string;
+          emoji?: string;
+          created_at?: string;
         };
         Relationships: [];
       };

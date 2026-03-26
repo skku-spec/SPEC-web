@@ -24,7 +24,9 @@ type AuditEntityType =
   | "post"
   | "job"
   | "launch"
-  | "library";
+  | "library"
+  | "spec_event"
+  | "spec_log";
 
 export async function logAuditEvent(params: {
   action: AuditAction;
