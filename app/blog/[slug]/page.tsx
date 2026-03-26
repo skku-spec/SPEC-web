@@ -16,6 +16,7 @@ import {
   getRelatedPosts,
 } from "@/lib/api";
 import { getPublicAuthorHref } from "@/lib/public-profile";
+import { sanitizeHTML } from "@/lib/sanitize";
 
 import AuthorBio from "@/components/blog/AuthorBio";
 import CopyLinkButton from "./CopyLinkButton";
@@ -123,7 +124,7 @@ export default async function BlogPostPage({
   }
 
   const tagLabelBySlug = new Map((tags ?? []).map((tag) => [tag.slug, tag.label]));
-  const sanitizedContent = (post.content ?? "")
+  const sanitizedContent = sanitizeHTML(post.content ?? "")
     .replace(/<img(?![^>]*\bloading=)/gi, '<img loading="lazy"')
     .replace(/<img(?![^>]*\bdecoding=)/gi, '<img decoding="async"');
   const authorName = post.author?.trim() || "SPEC";

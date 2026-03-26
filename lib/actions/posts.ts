@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { Database, PostType } from "@/lib/supabase/types";
 import { BLOG_WRITER_ROLES, isAdmin, type UserRole } from "@/lib/auth";
+import { sanitizeHTML } from "@/lib/sanitize";
+import { isValidUUID } from "@/lib/validators";
 
 type ActionResult = {
   success: boolean;
@@ -286,6 +288,7 @@ export async function createPost(formData: FormData): Promise<ActionResult> {
     }
 
     const payload = parsePostPayload(formData);
+    const sanitizedContent = sanitizeHTML(payload.content);
 
     if (payload.type === "news" && !profile.isAdmin) {
       throw new Error("Only admins can create news posts.");
@@ -297,7 +300,7 @@ export async function createPost(formData: FormData): Promise<ActionResult> {
       title: payload.title,
       slug: generatedSlug,
       excerpt: payload.excerpt,
-      content: payload.content,
+      content: sanitizedContent,
       type: payload.type,
       image_url: payload.image_url,
       author_id: user.id,
@@ -324,6 +327,10 @@ export async function createPost(formData: FormData): Promise<ActionResult> {
 }
 
 export async function updatePost(postId: string, formData: FormData): Promise<ActionResult> {
+  if (!isValidUUID(postId)) {
+    return { success: false, error: "유효하지 않은 게시글 ID입니다." };
+  }
+
   try {
     const supabase = await createClient();
     const {
@@ -348,6 +355,7 @@ export async function updatePost(postId: string, formData: FormData): Promise<Ac
     }
 
     const payload = parsePostPayload(formData);
+    const sanitizedContent = sanitizeHTML(payload.content);
 
     if (payload.type === "news" && !userIsAdmin) {
       throw new Error("Only admins can publish posts as news.");
@@ -356,7 +364,7 @@ export async function updatePost(postId: string, formData: FormData): Promise<Ac
     const updatePayload: Database["public"]["Tables"]["posts"]["Update"] = {
       title: payload.title,
       excerpt: payload.excerpt,
-      content: payload.content,
+      content: sanitizedContent,
       type: payload.type,
       image_url: payload.image_url,
       published: payload.published,
@@ -386,6 +394,10 @@ export async function updatePost(postId: string, formData: FormData): Promise<Ac
 }
 
 export async function deletePost(postId: string): Promise<ActionResult> {
+  if (!isValidUUID(postId)) {
+    return { success: false, error: "유효하지 않은 게시글 ID입니다." };
+  }
+
   try {
     const supabase = await createClient();
     const {
@@ -427,6 +439,10 @@ export async function deletePost(postId: string): Promise<ActionResult> {
 }
 
 export async function toggleFeatured(postId: string): Promise<ActionResult> {
+  if (!isValidUUID(postId)) {
+    return { success: false, error: "유효하지 않은 게시글 ID입니다." };
+  }
+
   try {
     const supabase = await createClient();
     const {
@@ -469,6 +485,10 @@ export async function toggleFeatured(postId: string): Promise<ActionResult> {
 }
 
 export async function togglePublished(postId: string): Promise<ActionResult> {
+  if (!isValidUUID(postId)) {
+    return { success: false, error: "유효하지 않은 게시글 ID입니다." };
+  }
+
   try {
     const supabase = await createClient();
     const {
