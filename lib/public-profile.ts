@@ -2,7 +2,7 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import type { BlogPost } from "@/lib/api";
-import type { Database, ProfileRole, ProfileVisibility } from "@/lib/supabase/types";
+import type { Database, ProfileRole } from "@/lib/supabase/types";
 
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
 type ProfileExperienceRow = Database["public"]["Tables"]["profile_experiences"]["Row"];
@@ -22,7 +22,7 @@ export type PublicProfile = Pick<
   | "brunch_url"
   | "github_url"
   | "linkedin_url"
-  | "profile_visibility"
+
 >;
 
 export type PublicProfileExperience = Pick<
@@ -46,10 +46,6 @@ export type PublicAuthorProfilePageData = {
 
 export const PUBLIC_AUTHOR_ROLES: ProfileRole[] = ["learner", "alumni", "preneur"];
 
-export function normalizeProfileVisibility(value: string | null | undefined): ProfileVisibility {
-  return value === "public" ? "public" : "private";
-}
-
 export function isPublicAuthorRole(role: string | null | undefined): role is ProfileRole {
   return role === "learner" || role === "alumni" || role === "preneur";
 }
@@ -57,19 +53,17 @@ export function isPublicAuthorRole(role: string | null | undefined): role is Pro
 export function isPublicAuthorProfile(profile: {
   slug?: string | null;
   role?: string | null;
-  profile_visibility?: string | null;
-} | null | undefined): profile is { slug: string; role: ProfileRole; profile_visibility: ProfileVisibility } {
+} | null | undefined): profile is { slug: string; role: ProfileRole } {
   if (!profile?.slug?.trim()) {
     return false;
   }
 
-  return isPublicAuthorRole(profile.role) && normalizeProfileVisibility(profile.profile_visibility) === "public";
+  return isPublicAuthorRole(profile.role);
 }
 
 export function getPublicAuthorHref(profile: {
   slug?: string | null;
   role?: string | null;
-  profile_visibility?: string | null;
 } | null | undefined): string | null {
   if (!isPublicAuthorProfile(profile)) {
     return null;
@@ -121,7 +115,7 @@ export async function getProfileExperiencesForOwner(profileId: string): Promise<
   return data ?? [];
 }
 
-export type DirectoryProfileLink = Pick<PublicProfile, "slug" | "role" | "profile_visibility">;
+export type DirectoryProfileLink = Pick<PublicProfile, "slug" | "role">;
 
 export async function getProfilesForDirectory(profileIds: string[], candidateSlugs: string[] = []) {
   if (profileIds.length === 0 && candidateSlugs.length === 0) {
@@ -136,13 +130,13 @@ export async function getProfilesForDirectory(profileIds: string[], candidateSlu
     profileIds.length > 0
       ? supabase
           .from("profiles")
-          .select("id, slug, role, profile_visibility")
+          .select("id, slug, role")
           .in("id", profileIds)
       : Promise.resolve({ data: [], error: null }),
     candidateSlugs.length > 0
       ? supabase
           .from("profiles")
-          .select("id, slug, role, profile_visibility")
+          .select("id, slug, role")
           .in("slug", candidateSlugs)
       : Promise.resolve({ data: [], error: null }),
   ]);
@@ -161,7 +155,6 @@ export async function getProfilesForDirectory(profileIds: string[], candidateSlu
     id: profile.id,
     slug: profile.slug,
     role: profile.role,
-    profile_visibility: profile.profile_visibility,
   }));
 
   return {
@@ -193,7 +186,7 @@ export async function getPublicAuthorProfilePageData(slug: string): Promise<Publ
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select(
-      "id, name, slug, role, bio, photo, company, headline, current_role, website_url, brunch_url, github_url, linkedin_url, profile_visibility",
+      "id, name, slug, role, bio, photo, company, headline, current_role, website_url, brunch_url, github_url, linkedin_url",
     )
     .eq("slug", slug)
     .maybeSingle();
