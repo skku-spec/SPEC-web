@@ -94,10 +94,14 @@ function revalidateAll(): void {
 }
 
 function escapeCSVField(value: string): string {
-  if (value.includes(",") || value.includes('"') || value.includes("\n")) {
-    return `"${value.replace(/"/g, '""')}"`;
+  let str = (value ?? "").toString();
+  if (/^[=+@\-]/.test(str)) {
+    str = "'" + str;
   }
-  return value;
+  if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
 }
 
 type LinkedProfile = { name: string; role: string; slug: string };
