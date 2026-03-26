@@ -550,11 +550,13 @@ function LogCard({
               if (navigator.share) {
                 try {
                   await navigator.share({ title: "SPEC 로그", url: shareUrl });
+                  return;
                 } catch {}
-              } else {
+              }
+              try {
                 await navigator.clipboard.writeText(shareUrl);
                 onToast("링크가 복사되었습니다");
-              }
+              } catch {}
             }}
             aria-label="로그 공유"
             className="text-[#6b6b5e] transition-colors hover:text-[#FF6C0F]"
