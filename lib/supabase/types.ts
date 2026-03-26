@@ -951,6 +951,12 @@ export type Database = {
         };
         Returns: undefined;
       };
+      safe_remove_admin: {
+        Args: {
+          target_user_id: string;
+        };
+        Returns: boolean;
+      };
       save_public_profile: {
         Args: {
           input_profile_id: string;

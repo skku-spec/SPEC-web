@@ -128,27 +128,25 @@ export async function toggleAdminStatus(userId: string, isAdminStatus: boolean):
     }
 
     if (!isAdminStatus) {
-      const { count, error: adminCountError } = await supabase
+      const { error } = await supabase.rpc("safe_remove_admin", { target_user_id: userId });
+      if (error) {
+        if (error.message.includes("last admin")) {
+          return { success: false, error: "마지막 관리자는 해제할 수 없습니다." };
+        }
+        if (error.message.includes("not found") || error.message.includes("not an admin")) {
+          return { success: false, error: "사용자를 찾을 수 없거나 관리자가 아닙니다." };
+        }
+        return { success: false, error: error.message };
+      }
+    } else {
+      const { error: updateError } = await supabase
         .from("profiles")
-        .select("id", { count: "exact", head: true })
-        .eq("is_admin", true);
+        .update({ is_admin: isAdminStatus })
+        .eq("id", userId);
 
-      if (adminCountError) {
-        throw new Error(`Failed to verify admin count: ${adminCountError.message}`);
+      if (updateError) {
+        throw new Error(`Failed to update admin status: ${updateError.message}`);
       }
-
-      if ((count ?? 0) <= 1) {
-        throw new Error("Cannot remove the last admin.");
-      }
-    }
-
-    const { error: updateError } = await supabase
-      .from("profiles")
-      .update({ is_admin: isAdminStatus })
-      .eq("id", userId);
-
-    if (updateError) {
-      throw new Error(`Failed to update admin status: ${updateError.message}`);
     }
 
     await logAuditEvent({
