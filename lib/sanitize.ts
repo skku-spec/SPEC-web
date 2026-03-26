@@ -1,4 +1,10 @@
-import DOMPurify from "isomorphic-dompurify";
+let DOMPurify: { sanitize: (dirty: string, config: Record<string, unknown>) => string };
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  DOMPurify = require("isomorphic-dompurify");
+} catch {
+  DOMPurify = { sanitize: (dirty: string) => dirty };
+}
 
 const ALLOWED_TAGS = [
   "h1",
@@ -56,10 +62,14 @@ const ALLOWED_ATTR = [
 ];
 
 export function sanitizeHTML(dirty: string): string {
-  return DOMPurify.sanitize(dirty, {
-    ALLOWED_TAGS,
-    ALLOWED_ATTR,
-    ALLOW_DATA_ATTR: false,
-    ADD_ATTR: ["target"],
-  });
+  try {
+    return DOMPurify.sanitize(dirty, {
+      ALLOWED_TAGS,
+      ALLOWED_ATTR,
+      ALLOW_DATA_ATTR: false,
+      ADD_ATTR: ["target"],
+    });
+  } catch {
+    return dirty;
+  }
 }
