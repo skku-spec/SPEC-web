@@ -60,6 +60,7 @@ export async function signUp(formData: FormData): Promise<AuthActionResult> {
       data: {
         first_name,
         last_name,
+        name: last_name + first_name,
         username,
         linkedin_url,
       },

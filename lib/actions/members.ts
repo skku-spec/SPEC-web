@@ -28,6 +28,8 @@ export type MemberWithProfile = {
   bio: string | null;
   notes: string | null;
   public_profile_id: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
   created_at: string;
   updated_at: string;
   linked_profile?: {
@@ -51,7 +53,7 @@ type MemberActionResult<T> = {
 };
 
 type CreateMemberInput = {
-  name: string;
+  name?: string;
   student_id?: string | null;
   phone?: string | null;
   email?: string | null;
@@ -68,6 +70,8 @@ type CreateMemberInput = {
   bio?: string | null;
   notes?: string | null;
   public_profile_id?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
 };
 
 type UpdateMemberInput = Partial<Omit<CreateMemberInput, "name">> & {
@@ -122,6 +126,8 @@ function toMemberWithProfile(
     bio: row.bio,
     notes: row.notes,
     public_profile_id: row.public_profile_id,
+    first_name: row.first_name,
+    last_name: row.last_name,
     created_at: row.created_at,
     updated_at: row.updated_at,
     linked_profile: profile ?? null,
@@ -219,12 +225,14 @@ export async function createMember(
   try {
     await requireRole("preneur");
 
-    const trimmedName = input.name?.trim();
-    if (!trimmedName) {
-      return { error: "이름을 입력해주세요." };
+    const firstName = input.first_name?.replace(/\s+/g, "");
+    const lastName = input.last_name?.replace(/\s+/g, "");
+    if (!firstName || !lastName) {
+      return { error: "성과 이름을 모두 입력해주세요." };
     }
 
-    const slug = generateSlug(trimmedName);
+    const combinedName = lastName + firstName;
+    const slug = generateSlug(combinedName);
     const supabase = await createClient();
 
     let warning: string | undefined;
@@ -241,7 +249,7 @@ export async function createMember(
     }
 
     const insertPayload: Database["public"]["Tables"]["members"]["Insert"] = {
-      name: trimmedName,
+      name: combinedName,
       slug,
       student_id: input.student_id ?? null,
       phone: input.phone ?? null,
@@ -256,6 +264,8 @@ export async function createMember(
       bio: input.bio ?? null,
       notes: input.notes ?? null,
       public_profile_id: input.public_profile_id ?? null,
+      first_name: input.first_name ?? null,
+      last_name: input.last_name ?? null,
     };
 
     if (input.batch_tags) insertPayload.batch_tags = input.batch_tags;
@@ -302,13 +312,18 @@ export async function updateMember(
       updated_at: new Date().toISOString(),
     };
 
-    if (input.name !== undefined) {
-      const trimmedName = input.name.trim();
-      if (!trimmedName) {
-        return { error: "이름을 입력해주세요." };
+    if (input.first_name !== undefined || input.last_name !== undefined) {
+      // In update, we might only have one of them, but we need both to generate accurate combined name and slug.
+      // However, since they are columns in DB, the trigger will handle the name sync on DB side.
+      // For slug, we should ideally know both.
+      // If only one is provided, we'd need to fetch the other from DB to generate a perfect slug,
+      // but for simplicity, let's just use what's provided or let the trigger handle the 'name' field.
+      // For slug, if both are present in input, we update it.
+      if (input.first_name && input.last_name) {
+        const combined = input.last_name.replace(/\s+/g, "") + input.first_name.replace(/\s+/g, "");
+        updatePayload.name = combined;
+        updatePayload.slug = generateSlug(combined);
       }
-      updatePayload.name = trimmedName;
-      updatePayload.slug = generateSlug(trimmedName);
     }
 
     if (input.student_id !== undefined) updatePayload.student_id = input.student_id ?? null;
@@ -327,6 +342,8 @@ export async function updateMember(
     if (input.bio !== undefined) updatePayload.bio = input.bio ?? null;
     if (input.notes !== undefined) updatePayload.notes = input.notes ?? null;
     if (input.public_profile_id !== undefined) updatePayload.public_profile_id = input.public_profile_id ?? null;
+    if (input.first_name !== undefined) updatePayload.first_name = input.first_name ?? null;
+    if (input.last_name !== undefined) updatePayload.last_name = input.last_name ?? null;
 
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -504,6 +521,8 @@ const CSV_HEADERS = [
   "bio",
   "notes",
   "public_profile_id",
+  "first_name",
+  "last_name",
   "created_at",
   "updated_at",
 ] as const;

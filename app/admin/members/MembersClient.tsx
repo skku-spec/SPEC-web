@@ -57,7 +57,8 @@ function extractBatches(members: MemberWithProfile[]): string[] {
 }
 
 type MemberForm = {
-  name: string;
+  first_name: string;
+  last_name: string;
   student_id: string;
   phone: string;
   email: string;
@@ -71,7 +72,8 @@ type MemberForm = {
 };
 
 const EMPTY_FORM: MemberForm = {
-  name: "",
+  first_name: "",
+  last_name: "",
   student_id: "",
   phone: "",
   email: "",
@@ -86,7 +88,8 @@ const EMPTY_FORM: MemberForm = {
 
 function memberToForm(m: MemberWithProfile): MemberForm {
   return {
-    name: m.name,
+    first_name: m.first_name ?? "",
+    last_name: m.last_name ?? "",
     student_id: m.student_id ?? "",
     phone: m.phone ?? "",
     email: m.email ?? "",
@@ -182,8 +185,8 @@ export default function MembersClient({ initialMembers }: MembersClientProps) {
   };
 
   const handleSave = () => {
-    if (!form.name.trim()) {
-      setToast({ type: "error", message: "이름을 입력해주세요." });
+    if (!form.first_name.trim() || !form.last_name.trim()) {
+      setToast({ type: "error", message: "성과 이름을 모두 입력해주세요." });
       return;
     }
 
@@ -194,7 +197,8 @@ export default function MembersClient({ initialMembers }: MembersClientProps) {
 
     startTransition(async () => {
       const payload = {
-        name: form.name.trim(),
+        first_name: form.first_name.replace(/\s+/g, ""),
+        last_name: form.last_name.replace(/\s+/g, ""),
         student_id: form.student_id || null,
         phone: form.phone || null,
         email: form.email || null,
@@ -591,7 +595,8 @@ export default function MembersClient({ initialMembers }: MembersClientProps) {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <FieldInput label="이름" required value={form.name} onChange={(v) => handleChange("name", v)} placeholder="홍길동" />
+              <FieldInput label="성 (Last Name)" required value={form.last_name} onChange={(v) => handleChange("last_name", v)} placeholder="홍" />
+              <FieldInput label="이름 (First Name)" required value={form.first_name} onChange={(v) => handleChange("first_name", v)} placeholder="길동" />
               <FieldInput label="학번" value={form.student_id} onChange={(v) => handleChange("student_id", v)} placeholder="2024123456" />
               <FieldInput label="전화번호" value={form.phone} onChange={(v) => handleChange("phone", v)} placeholder="010-1234-5678" />
               <FieldInput label="이메일" value={form.email} onChange={(v) => handleChange("email", v)} placeholder="email@example.com" />
