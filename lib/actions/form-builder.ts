@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { requireRole } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 export type FormFieldType = "text" | "textarea" | "select" | "number";
@@ -105,7 +105,7 @@ export async function getAllFormFieldsBatches(): Promise<{
   error?: string;
 }> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     const supabase = await createClient();
 
@@ -134,7 +134,7 @@ export async function upsertFormField(
   input: UpsertFormFieldInput,
 ): Promise<{ success: boolean; data?: ApplicationFormField; error?: string }> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     const batch = input.batch.trim();
     const fieldName = input.field_name.trim();
@@ -205,7 +205,7 @@ export async function upsertFormField(
 
 export async function deleteFormField(id: string): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     if (!id) {
       return { success: false, error: "삭제할 필드 ID가 필요합니다." };
@@ -235,7 +235,7 @@ export async function duplicateFieldsForBatch(
   targetBatch: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     const source = sourceBatch.trim();
     const target = targetBatch.trim();

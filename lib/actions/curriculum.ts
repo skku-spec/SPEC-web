@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { requireRole } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 /* ------------------------------------------------------------------ */
@@ -139,7 +139,7 @@ export async function upsertCurriculumWeek(data: {
   sort_order: number;
 }): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     if (!data.week_label.trim() || !data.topic.trim()) {
       return { success: false, error: "주차 라벨과 주제는 필수입니다." };
@@ -187,7 +187,7 @@ export async function deleteCurriculumWeek(
   id: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     if (!id) {
       return { success: false, error: "삭제할 주차 ID가 필요합니다." };
@@ -223,7 +223,7 @@ export async function upsertCurriculumArea(data: {
   sort_order: number;
 }): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     if (!data.area_number.trim() || !data.title.trim()) {
       return { success: false, error: "영역 번호와 제목은 필수입니다." };
@@ -270,7 +270,7 @@ export async function deleteCurriculumArea(
   id: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     if (!id) {
       return { success: false, error: "삭제할 영역 ID가 필요합니다." };

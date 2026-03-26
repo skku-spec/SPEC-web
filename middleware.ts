@@ -64,7 +64,7 @@ async function getUserRole(
   request: NextRequest,
   response: NextResponse,
   userId: string,
-): Promise<UserRole> {
+): Promise<{ role: UserRole; isAdmin: boolean }> {
   const supabase = createServerClient<Database>(
     SUPABASE_URL,
     SUPABASE_ANON_KEY,
@@ -85,11 +85,14 @@ async function getUserRole(
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, is_admin")
     .eq("id", userId)
     .maybeSingle();
 
-  return (profile?.role as UserRole | null) ?? "outsider";
+  return {
+    role: (profile?.role as UserRole | null) ?? "outsider",
+    isAdmin: profile?.is_admin === true,
+  };
 }
 
 export async function middleware(request: NextRequest) {
@@ -120,9 +123,9 @@ export async function middleware(request: NextRequest) {
     return redirectWithCookies(request, response, "/");
   }
 
-  const role = await getUserRole(request, response, user.id);
+  const { role, isAdmin } = await getUserRole(request, response, user.id);
 
-  if (needsAdmin && role !== "preneur") {
+  if (needsAdmin && role !== "preneur" && !isAdmin) {
     return redirectWithCookies(request, response, "/");
   }
 

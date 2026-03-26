@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireRole } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { logAuditEvent } from "@/lib/helpers/audit-log";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -121,7 +121,7 @@ export async function submitWaitlistPhone(phone: string): Promise<WaitlistSubmit
 
 export async function getAllRecruitments(): Promise<RecruitmentActionResult<RecruitmentSettings[]>> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("recruitment_settings")
@@ -142,7 +142,7 @@ export async function upsertRecruitmentSettings(
   input: UpsertRecruitmentInput,
 ): Promise<RecruitmentActionResult<RecruitmentSettings>> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     const validationError = validateRecruitmentInput({
       batch: input.batch,
@@ -220,7 +220,7 @@ export async function updateRecruitmentStatus(
   status: RecruitmentStatus,
 ): Promise<RecruitmentActionResult<RecruitmentSettings>> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     const trimmedBatch = batch.trim();
     if (!trimmedBatch) {
@@ -281,7 +281,7 @@ export async function updateRecruitmentStatus(
 
 export async function getWaitlistEntries(): Promise<RecruitmentActionResult<WaitlistEntry[]>> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("recruitment_waitlist")
@@ -300,7 +300,7 @@ export async function getWaitlistEntries(): Promise<RecruitmentActionResult<Wait
 
 export async function deleteWaitlistEntry(id: string): Promise<RecruitmentActionResult<null>> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     const supabase = await createClient();
     const { data, error } = await supabase

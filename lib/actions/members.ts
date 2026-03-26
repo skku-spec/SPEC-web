@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireRole } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { logAuditEvent } from "@/lib/helpers/audit-log";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
@@ -141,7 +141,7 @@ export async function getAllMembers(
   filters?: MemberFilters,
 ): Promise<MemberActionResult<MemberWithProfile[]>> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
     const supabase = await createClient();
 
     let query = supabase
@@ -189,7 +189,7 @@ export async function getMember(
   id: string,
 ): Promise<MemberActionResult<MemberWithProfile>> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     if (!id) {
       return { error: "멤버 ID를 입력해주세요." };
@@ -223,7 +223,7 @@ export async function createMember(
   input: CreateMemberInput,
 ): Promise<MemberActionResult<MemberWithProfile>> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     const firstName = input.first_name?.replace(/\s+/g, "");
     const lastName = input.last_name?.replace(/\s+/g, "");
@@ -302,7 +302,7 @@ export async function updateMember(
   input: UpdateMemberInput,
 ): Promise<MemberActionResult<MemberWithProfile>> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     if (!id) {
       return { error: "멤버 ID를 입력해주세요." };
@@ -378,7 +378,7 @@ export async function deleteMember(
   id: string,
 ): Promise<MemberActionResult<null>> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     if (!id) {
       return { error: "멤버 ID를 입력해주세요." };
@@ -414,7 +414,7 @@ export async function linkMemberProfile(
   profileId: string,
 ): Promise<MemberActionResult<MemberWithProfile>> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     if (!memberId || !profileId) {
       return { error: "멤버 ID와 프로필 ID를 모두 입력해주세요." };
@@ -465,7 +465,7 @@ export async function unlinkMemberProfile(
   memberId: string,
 ): Promise<MemberActionResult<MemberWithProfile>> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     if (!memberId) {
       return { error: "멤버 ID를 입력해주세요." };
@@ -531,7 +531,7 @@ export async function exportMembersCSV(
   filters?: MemberFilters,
 ): Promise<MemberActionResult<string>> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     const result = await getAllMembers(filters);
 

@@ -1,6 +1,6 @@
 "use server";
 
-import { requireRole } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 type ExportResult = {
@@ -34,7 +34,7 @@ const ATTENDANCE_STATUS_LABELS: Record<string, string> = {
 
 export async function exportApplicationsCSV(batch?: string): Promise<ExportResult> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
     const supabase = await createClient();
 
     let query = supabase
@@ -79,7 +79,7 @@ export async function exportApplicationsCSV(batch?: string): Promise<ExportResul
 
 export async function exportAttendanceCSV(): Promise<ExportResult> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
     const supabase = await createClient();
 
     const { data, error } = await supabase
@@ -120,7 +120,7 @@ export async function exportAttendanceCSV(): Promise<ExportResult> {
 
 export async function getApplicationStats(): Promise<StatsResult> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
     const supabase = await createClient();
 
     const { data, error } = await supabase

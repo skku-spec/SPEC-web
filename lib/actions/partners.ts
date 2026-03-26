@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { requireRole } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 /* ------------------------------------------------------------------ */
@@ -106,7 +106,7 @@ export async function upsertPartner(data: {
   is_active?: boolean;
 }): Promise<PartnerActionResult<null>> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     if (!data.name.trim() || !data.logo_url.trim()) {
       return { error: "이름과 로고 URL은 필수입니다." };
@@ -149,7 +149,7 @@ export async function deletePartner(
   id: string,
 ): Promise<PartnerActionResult<null>> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     if (!id) {
       return { error: "삭제할 파트너 ID가 필요합니다." };

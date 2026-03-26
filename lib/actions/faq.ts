@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { requireRole } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 /* ------------------------------------------------------------------ */
@@ -151,7 +151,7 @@ export async function upsertFaqItem(data: {
   is_active?: boolean;
 }): Promise<FaqActionResult<null>> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     if (!data.section.trim() || !data.question.trim()) {
       return { error: "섹션과 질문은 필수입니다." };
@@ -195,7 +195,7 @@ export async function deleteFaqItem(
   id: string,
 ): Promise<FaqActionResult<null>> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     if (!id) {
       return { error: "삭제할 FAQ ID가 필요합니다." };

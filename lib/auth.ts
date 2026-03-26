@@ -75,3 +75,15 @@ export async function requireRole(minRole: UserRole): Promise<AuthResult> {
 
   return currentUser;
 }
+
+export async function requireAdmin(): Promise<AuthResult> {
+  const currentUser = await requireAuth();
+  const isPreneur = ROLE_LEVEL[normalizeRole(currentUser.profile?.role)] >= ROLE_LEVEL["preneur"];
+  const isAdminFlag = currentUser.profile?.is_admin === true;
+
+  if (!isPreneur && !isAdminFlag) {
+    redirect("/");
+  }
+
+  return currentUser;
+}

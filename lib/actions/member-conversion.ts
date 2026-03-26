@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { requireRole } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { logAuditEvent } from "@/lib/helpers/audit-log";
 import { createClient } from "@/lib/supabase/server";
 
@@ -29,7 +29,7 @@ function generateSlugFromName(name: string): string {
 }
 
 export async function convertApplicationToMember(applicationId: string): Promise<ActionResult> {
-  await requireRole("preneur");
+  await requireAdmin();
 
   const supabase = await createClient();
 
@@ -111,7 +111,7 @@ export async function convertApplicationToMember(applicationId: string): Promise
 export async function getConversionStatusBatch(
   applicationIds: string[],
 ): Promise<ActionResult<Record<string, ConversionStatus>>> {
-  await requireRole("preneur");
+  await requireAdmin();
 
   if (applicationIds.length === 0) {
     return { success: true, data: {} };
@@ -168,7 +168,7 @@ export async function getConversionStatusBatch(
 }
 
 export async function getConversionStatus(applicationId: string): Promise<ActionResult<ConversionStatus>> {
-  await requireRole("preneur");
+  await requireAdmin();
 
   const supabase = await createClient();
 

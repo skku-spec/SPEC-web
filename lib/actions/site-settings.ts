@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { requireRole } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { logAuditEvent } from "@/lib/helpers/audit-log";
 import { createClient } from "@/lib/supabase/server";
 
@@ -171,7 +171,7 @@ export async function updateSetting(
   value: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const { user } = await requireRole("preneur");
+    const { user } = await requireAdmin();
 
     if (!key) {
       return { success: false, error: "설정 키를 지정해주세요." };
@@ -224,7 +224,7 @@ export async function updateSettings(
   updates: { key: string; value: string }[],
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const { user } = await requireRole("preneur");
+    const { user } = await requireAdmin();
 
     if (!updates || updates.length === 0) {
       return { success: false, error: "업데이트할 설정이 없습니다." };
@@ -291,7 +291,7 @@ export async function createSetting(data: {
   sort_order?: number;
 }): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     if (!data.key || !data.category || !data.label) {
       return { success: false, error: "키, 카테고리, 라벨은 필수입니다." };
@@ -342,7 +342,7 @@ export async function deleteSetting(
   key: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireRole("preneur");
+    await requireAdmin();
 
     if (!key) {
       return { success: false, error: "설정 키를 지정해주세요." };
