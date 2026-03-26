@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { validateMagicBytes } from "@/lib/upload-validation";
 
 const SPEC_LOG_IMAGE_BUCKET = "spec-log-images";
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
@@ -138,6 +139,14 @@ export async function POST(request: Request) {
           success: false,
           error: "이미지는 10MB 이하만 업로드할 수 있어요.",
         },
+        { status: 400 },
+      );
+    }
+
+    const buffer = await image.arrayBuffer();
+    if (!validateMagicBytes(buffer, image.type)) {
+      return NextResponse.json(
+        { success: false, error: "파일 형식이 올바르지 않습니다." },
         { status: 400 },
       );
     }

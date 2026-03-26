@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { BLOG_WRITER_ROLES } from "@/lib/auth-shared";
+import { validateMagicBytes } from "@/lib/upload-validation";
 
 const BLOG_IMAGE_BUCKET = "blog-images";
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
@@ -95,6 +97,14 @@ export async function POST(request: Request) {
       );
     }
 
+    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+    if (!profile || !BLOG_WRITER_ROLES.includes(profile.role)) {
+      return NextResponse.json(
+        { success: false, error: "블로그 이미지를 업로드할 권한이 없습니다." },
+        { status: 403 },
+      );
+    }
+
     const formData = await request.formData();
     const image = formData.get("image");
 
@@ -124,6 +134,14 @@ export async function POST(request: Request) {
           success: false,
           error: "이미지는 10MB 이하만 업로드할 수 있어요.",
         },
+        { status: 400 },
+      );
+    }
+
+    const buffer = await image.arrayBuffer();
+    if (!validateMagicBytes(buffer, image.type)) {
+      return NextResponse.json(
+        { success: false, error: "파일 형식이 올바르지 않습니다." },
         { status: 400 },
       );
     }
