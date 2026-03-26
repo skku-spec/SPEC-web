@@ -232,7 +232,7 @@ export default async function BlogPostPage({
             jobTitle={post.authorJobTitle}
             bio={post.authorBio}
             avatarUrl={post.authorAvatarUrl}
-            profileHref={post.authorSlug ? `/founders/${post.authorSlug}` : undefined}
+            profileHref={authorHref ?? undefined}
           />
 
           {otherArticles.length > 0 && (
