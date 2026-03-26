@@ -3,6 +3,85 @@
 You are running with oh-my-codex (OMX), a multi-agent orchestration layer for Codex CLI.
 Your role is to coordinate specialized agents, tools, and skills so work is completed accurately and efficiently.
 
+## PROJECT OVERVIEW
+
+**SPEC** — 성균관대학교 창업 학회 웹사이트. Next.js 16 App Router + Supabase + Tailwind v4.
+
+### STRUCTURE
+```
+app/                    # Next.js App Router pages (60 pages, 17 admin)
+  admin/                # Admin CRUD pages (preneur+ access) → see app/admin/AGENTS.md
+  spec-log/             # Activity logging feature → see app/spec-log/AGENTS.md
+  blog/                 # Blog with rich editor, tags, reactions
+  apply/                # Recruitment application flow
+  profile/              # User profile management
+  founders/             # Team directory (reads from members table)
+  companies/            # Project showcase
+  curriculum/           # Curriculum roadmap
+lib/
+  actions/              # 23 server action files (6500 lines) → see lib/actions/AGENTS.md
+  supabase/             # DB clients + types → see lib/supabase/AGENTS.md
+  auth.ts               # Server-only auth (getCurrentUser, requireAuth, requireRole)
+  auth-shared.ts        # Client-safe auth constants (role arrays, normalizeRole)
+  storage.ts            # Image upload utilities (blog + spec-log)
+  constants.ts          # CURRENT_BATCH = "4기"
+  api.ts                # Static data (companies, people)
+components/             # 58 components → see components/AGENTS.md
+  blog/, profile/, home/, about/, ui/, layout/, project/, partners/, dashboard/
+contexts/UserContext.tsx # Client-side auth state with real-time subscription
+hooks/useUser.ts        # Convenience hook for UserContext
+middleware.ts           # Route protection (learner+ for spec-log, preneur+ for admin)
+supabase/migrations/    # 19 timestamped SQL migration files
+e2e/                    # 6 Playwright E2E test files
+__tests__/              # 16 Vitest unit test files
+```
+
+### WHERE TO LOOK
+| Task | Location |
+|------|----------|
+| Add server action | `lib/actions/` — follow existing pattern (see lib/actions/AGENTS.md) |
+| Add admin page | `app/admin/` — server page.tsx + *Client.tsx pattern |
+| Add public page | `app/` — use `mx-auto max-w-[960px] px-6` wrapper |
+| Modify auth/roles | `lib/auth-shared.ts` (constants) + `lib/auth.ts` (server functions) |
+| Database schema | `supabase/migrations/` — timestamp-named SQL files |
+| Add component | `components/{feature}/` — server by default, client only if interactive |
+| Run tests | `npm run test:unit` (Vitest) / `npm run test` (Playwright) |
+| Type check | `npx tsc --noEmit` |
+| Build | `npm run build` |
+
+### ROLE SYSTEM
+4 roles + admin flag: `outsider → learner → alumni → preneur` + `is_admin` boolean.
+- `lib/auth-shared.ts`: BLOG_WRITER_ROLES, SPEC_LOG_WRITER_ROLES, SPEC_LOG_ENGAGE_ROLES, ADMIN_PAGE_ROLES
+- Middleware: preneur+ for /admin/*, no gate for /spec-log (public read)
+- Server actions: import role constants from `@/lib/auth` (server) or `@/lib/auth-shared` (client)
+
+### DATA FLOW
+```
+Request → middleware.ts (session + route protection)
+  → page.tsx (server component, fetches data via server actions or Supabase)
+    → *Client.tsx (client component, receives initial data as props)
+      → server actions (lib/actions/*.ts) for mutations
+        → Supabase (lib/supabase/server.ts) → PostgreSQL
+```
+
+### ANTI-PATTERNS (THIS PROJECT)
+- `components/CompanyShowcase.tsx` + `components/project/CompanyShowcase.tsx`: DO NOT use — hotlinked YC images
+- 22 duplicate components exist at root + subdirectory (e.g., `Navbar.tsx` vs `layout/Navbar.tsx`) — root versions are canonical
+- `profiles` and `members` tables have overlapping fields (name, bio, photo, linkedin_url) — known tech debt
+- `lib/api.ts` contains static mock data for companies/people — not a real API layer
+
+### COMMANDS
+```bash
+npm run dev              # Dev server (port 3000)
+npm run build            # Production build
+npm run lint             # ESLint
+npx tsc --noEmit         # Type check
+npm run test:unit        # Vitest unit tests
+npm run test             # Playwright E2E
+npm run test:all         # Both
+npx supabase db push     # Apply migrations to remote DB
+```
+
 ## SPEC Repository Rules
 
 ### Branch Strategy (MANDATORY — zero exceptions)
