@@ -133,7 +133,8 @@ export default function BylawsPage() {
             </h3>
             <ul className="mb-6 list-decimal space-y-2 pl-8">
               <li>
-                러너 지원 자격은 성균관대학교 재학생 또는 휴학생으로 한다.
+                러너 지원 자격은 성균관대학교 재학생, 휴학생, 수료생,
+                대학원생으로 한다.
               </li>
               <li>
                 가입은 학회가 공고한 정규 모집 기간 내 서류 접수 &rarr; 면접
@@ -285,8 +286,8 @@ export default function BylawsPage() {
                 경고를 통보한다.
               </li>
               <li>
-                <strong>무단 결석 3회</strong> 누적 시 운영진 내에서{" "}
-                <strong>제명 심의 회의</strong>를 개최한다.
+                <strong>무단 결석 3회 초과</strong> 시 운영진 내에서{" "}
+                <strong>제명 심의 대상</strong>이 된다.
               </li>
               <li>
                 전체 프로그램 기간 중 결석(공결 제외){" "}
@@ -401,7 +402,7 @@ export default function BylawsPage() {
               다음 각 호에 해당하는 경우 징계 대상이 된다.
             </p>
             <ul className="mb-6 list-decimal space-y-2 pl-8">
-              <li>무단 결석 3회 이상 누적</li>
+              <li>무단 결석 3회 초과 누적</li>
               <li>
                 과제 불성실 이행에 대한 개인 면담 이후에도 개선이 없는 경우
               </li>
