@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 
+import { redirect } from "next/navigation";
+
 import { requireRole } from "@/lib/auth";
 import { DashboardSidebar } from "./DashboardSidebar";
 import { MobileDashboardNav } from "./DashboardNav";
@@ -11,7 +13,11 @@ type DashboardLayoutProps = {
 };
 
 export default async function DashboardLayout({ children }: DashboardLayoutProps) {
-  await requireRole("learner");
+  const { profile } = await requireRole("learner");
+
+  if (profile?.role !== "learner") {
+    redirect("/admin/attendance");
+  }
 
   return (
     <div className="min-h-screen bg-[#f5f5ee] text-[#16140f] [font-family:Pretendard,system-ui,sans-serif]">
