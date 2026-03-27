@@ -14,6 +14,7 @@ export default function Footer() {
     company: [
       { label: "블로그", href: "/blog" },
       { label: "멤버", href: "/people" },
+      { label: "회칙", href: "/bylaws" },
       { label: "개인정보처리방침", href: "/legal#privacy" },
       { label: "이용약관", href: "/legal#tou" },
     ],

@@ -11,8 +11,8 @@ type Homework = {
   is_team: boolean;
   padlet_board_id?: string | null;
   submission_link?: string | null;
-  individual_content?: any;
-  team_content?: any;
+  individual_content?: unknown;
+  team_content?: unknown;
 }
 
 type Submission = {
@@ -62,7 +62,7 @@ export function LearnerHomeworkClient({
       const res = await fetch(`/api/padlet/board?board_id=${hw.padlet_board_id}`);
       if (!res.ok) return; // Silent fail on API error
       
-      const { posts } = await res.json() as { posts: any[] };
+      const { posts } = await res.json() as { posts: { author?: { name?: string; username?: string } }[] };
       const normalizedCurrentName = normalize(currentUserName);
       const normalizedCurrentUsername = normalize(currentUserUsername).replace(/^@/, '');
 
@@ -81,7 +81,7 @@ export function LearnerHomeworkClient({
           // Since "matchFound" is true, it *should* proceed.
         }
       }
-    } catch (err: unknown) {
+    } catch {
       // Silent catch
     } finally {
       setLoadingId(null);
@@ -104,7 +104,7 @@ export function LearnerHomeworkClient({
           과제 제출
         </h1>
         <p className="font-['Pretendard',sans-serif] text-sm text-[#6b6b5e]">
-          이번 주차 과제를 확인하고 Padlet에 과제를 올린 뒤 '제출 확인' 버튼을 눌러주세요.
+          이번 주차 과제를 확인하고 Padlet에 과제를 올린 뒤 &apos;제출 확인&apos; 버튼을 눌러주세요.
         </p>
       </div>
 
@@ -206,10 +206,10 @@ export function LearnerHomeworkClient({
       <div className="rounded-lg bg-white border border-[#ddd9cc] p-6 space-y-4">
         <h4 className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">제출 시 유의사항</h4>
         <ul className="list-disc pl-5 space-y-1.5 font-['Pretendard',sans-serif] text-xs text-[#6b6b5e] leading-relaxed">
-          <li>'제출하기' 버튼을 누르면 과제 제출 페이지(Padlet 등)가 열리며, 동시에 제출 여부를 자동으로 확인합니다.</li>
-          <li>Padlet의 작성자 이름 또는 프로필 이름이 회원님의 성함(LastNameFirstName)과 일치해야 자동으로 '제출 완료' 처리됩니다.</li>
-          <li>게시물을 올린 직후에는 확인이 되지 않을 수 있으니, 잠시 후 다시 '제출하기'를 눌러주세요.</li>
-          <li>잘못 제출했거나 상태를 초기화하고 싶은 경우 '제출 완료' 버튼을 다시 눌러 취소할 수 있습니다.</li>
+          <li>&apos;제출하기&apos; 버튼을 누르면 과제 제출 페이지(Padlet 등)가 열리며, 동시에 제출 여부를 자동으로 확인합니다.</li>
+          <li>Padlet의 작성자 이름 또는 프로필 이름이 회원님의 성함(LastNameFirstName)과 일치해야 자동으로 &apos;제출 완료&apos; 처리됩니다.</li>
+          <li>게시물을 올린 직후에는 확인이 되지 않을 수 있으니, 잠시 후 다시 &apos;제출하기&apos;를 눌러주세요.</li>
+          <li>잘못 제출했거나 상태를 초기화하고 싶은 경우 &apos;제출 완료&apos; 버튼을 다시 눌러 취소할 수 있습니다.</li>
         </ul>
       </div>
 
@@ -233,7 +233,7 @@ export function LearnerHomeworkClient({
                 <p className="font-['Pretendard',sans-serif] text-base text-[#4a4a40]">{selectedHomework.title}</p>
               </div>
 
-              {selectedHomework.is_individual && selectedHomework.individual_content && (
+              {selectedHomework.is_individual && Array.isArray(selectedHomework.individual_content) && (
                 <div>
                   <h3 className="mb-2 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">개인 과제 내용</h3>
                   <div className="rounded-lg border border-[#ddd9cc] bg-[#fcfcf8] p-4">
@@ -249,7 +249,7 @@ export function LearnerHomeworkClient({
                 </div>
               )}
 
-              {selectedHomework.is_team && selectedHomework.team_content && (
+              {selectedHomework.is_team && Array.isArray(selectedHomework.team_content) && (
                 <div>
                   <h3 className="mb-2 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">팀 과제 내용</h3>
                   <div className="rounded-lg border border-[#ddd9cc] bg-[#fcfcf8] p-4">

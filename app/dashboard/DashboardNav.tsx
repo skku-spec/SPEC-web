@@ -23,9 +23,11 @@ export function DesktopDashboardNav({ items }: DesktopDashboardNavProps) {
   const router = useRouter();
   const [pendingHref, setPendingHref] = useState<string | null>(null);
 
-  useEffect(() => {
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
     setPendingHref(null);
-  }, [pathname]);
+  }
 
   useEffect(() => {
     items.forEach((item) => router.prefetch(item.href));
@@ -73,9 +75,11 @@ export function MobileDashboardNav() {
   const router = useRouter();
   const [pendingHref, setPendingHref] = useState<string | null>(null);
 
-  useEffect(() => {
+  const [prevMobilePath, setPrevMobilePath] = useState(pathname);
+  if (prevMobilePath !== pathname) {
+    setPrevMobilePath(pathname);
     setPendingHref(null);
-  }, [pathname]);
+  }
 
   useEffect(() => {
     items.forEach((item) => router.prefetch(item.href));
