@@ -37,7 +37,7 @@ export async function getTrackerData() {
 
     const { data: homeworks, error: hwError } = await supabase
       .from("homeworks")
-      .select("id, title, is_individual, is_team")
+      .select("id, title, is_individual, is_team, padlet_board_id, submission_link, individual_content, team_content")
       .order("created_at", { ascending: true });
     if (hwError) return { success: false as const, error: `과제 목록을 불러오지 못했습니다: ${hwError.message}` };
 
