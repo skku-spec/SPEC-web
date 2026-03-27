@@ -32,9 +32,11 @@ export default function AdminBottomNav() {
   const [pendingHref, setPendingHref] = useState<string | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-  useEffect(() => {
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
     setPendingHref(null);
-  }, [pathname]);
+  }
 
   useEffect(() => {
     PRIMARY_NAV_ITEMS.forEach((item) => router.prefetch(item.href));

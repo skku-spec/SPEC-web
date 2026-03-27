@@ -40,10 +40,6 @@ const BLOCKED_ROUTES = [
   "/vcc",
 ];
 
-function isSpecLogRoute(pathname: string) {
-  return pathname === "/spec-log" || pathname.startsWith("/spec-log/");
-}
-
 function isBlockedRoute(pathname: string) {
   return BLOCKED_ROUTES.some(
     (route) => pathname === route || pathname.startsWith(route + "/"),

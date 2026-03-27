@@ -5,7 +5,6 @@ import { useState, useTransition } from "react";
 import { toggleAdminStatus, updateUserRole } from "@/lib/actions/admin";
 import { normalizeRole, type UserRole } from "@/lib/auth-shared";
 import CustomSelect from "@/components/ui/CustomSelect";
-import { useRouter } from "next/navigation";
 import type { Database } from "@/lib/supabase/types";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 import { useUser } from "@/hooks/useUser";
-import { DASHBOARD_ROLES, normalizeRole } from "@/lib/auth-shared";
+import { normalizeRole } from "@/lib/auth-shared";
 import { createClient } from "@/lib/supabase/client";
 
 import ApplyButton from "@/components/ui/ApplyButton";
@@ -56,7 +56,6 @@ export default function Navbar() {
   );
   const normalizedRole = useMemo(() => normalizeRole(role), [role]);
   const roleLabel = useMemo(() => ROLE_LABEL[normalizedRole] ?? "외부", [normalizedRole]);
-  const canAccessDashboard = DASHBOARD_ROLES.includes(normalizedRole);
   const canAccessAdmin = normalizedRole === "preneur";
   const initials = useMemo(() => getInitials(displayName), [displayName]);
 

@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -264,10 +265,12 @@ export default function LogDetailClient({
     null,
   );
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Syncing local optimistic state with server-refreshed prop data */
   useEffect(() => {
     setReactions(data.reactionSummary);
     setComments(data.comments);
   }, [data.reactionSummary, data.comments]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const currentRole = currentUser ? normalizeRole(currentUser.role) : null;
   const canEngage =
