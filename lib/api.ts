@@ -138,33 +138,6 @@ function handleQueryResult<T>(
   return result.data ?? fallback;
 }
 
-const TEAM_DESCRIPTIONS: TeamDescription[] = [
-  {
-    name: "Contents",
-    description:
-      "창업가 인터뷰 영상 기획·제작, 알럼나이 성공 사례 콘텐츠화, 릴스·숏폼 제작, 유튜브·인스타그램 운영",
-  },
-  {
-    name: "Partnerships",
-    description:
-      "VC 네트워킹, IR 지원, 창업 멘토 섭외, 데모데이 심사위원·연사 섭외, 기관 협업",
-  },
-  {
-    name: "Engineering",
-    description:
-      "내부 소프트웨어 개발, 멘토링 신청·과제 관리·KPI 트래킹 시스템 구축, 운영 업무 자동화",
-  },
-  {
-    name: "Design",
-    description:
-      "포스터·카드뉴스 디자인, 브랜드 아이덴티티 관리, 홍보물 제작, SNS 콘텐츠 디자인",
-  },
-  {
-    name: "Community",
-    description: "멤버 간 네트워킹, 알럼나이·동문 모임 운영, 커뮤니티 활성화",
-  },
-];
-
 const DEFAULT_PERSON_PHOTO =
   "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=face";
 

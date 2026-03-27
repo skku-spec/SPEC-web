@@ -152,6 +152,7 @@ export function HomeworkClient() {
     if (Object.keys(padletData).length > 0) {
       syncAll();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- buildSubmissionRows is a pure function whose deps (padletData) are already listed
   }, [padletData, availableLearners, homeworks]);
 
   const handleFetchTeams = async (homeworkId: string) => {

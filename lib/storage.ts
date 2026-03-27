@@ -2,7 +2,6 @@ import { createClient } from "@/lib/supabase/client";
 
 const BLOG_IMAGE_BUCKET = "blog-images";
 const JOB_LOGOS_BUCKET = "job-logos";
-const SPEC_LOG_IMAGE_BUCKET = "spec-log-images";
 
 export function getStorageUrl(path: string): string {
   const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
