@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { BlogPost } from "@/lib/api";
+import { formatRelativeTime } from "@/lib/utils/relativeTime";
 
 type TrendingSidebarProps = {
   posts: BlogPost[];
@@ -55,7 +56,7 @@ export default function TrendingSidebar({ posts }: TrendingSidebarProps) {
                   )}
                 </span>
                 <span className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">
-                  {post.author} · {post.date}
+                  {post.author} · {formatRelativeTime(post.date)}
                 </span>
               </div>
             </div>

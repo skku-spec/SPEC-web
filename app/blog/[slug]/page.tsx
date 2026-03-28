@@ -17,6 +17,7 @@ import {
 } from "@/lib/api";
 import { getPublicAuthorHref } from "@/lib/public-profile";
 import { sanitizeHTML } from "@/lib/sanitize";
+import { formatRelativeTime } from "@/lib/utils/relativeTime";
 
 import AuthorBio from "@/components/blog/AuthorBio";
 import CopyLinkButton from "./CopyLinkButton";
@@ -170,7 +171,7 @@ export default async function BlogPostPage({
             </h1>
 
             <div className="mt-4 flex items-center gap-4 font-['Pretendard',sans-serif] text-[13px] text-[#6b6b5e]">
-              <span>{post.date}</span>
+              <span>{formatRelativeTime(post.date)}</span>
               <span className="flex items-center gap-1">
                 <Eye className="h-4 w-4" strokeWidth={1.5} />
                 {new Intl.NumberFormat("ko-KR").format(post.viewCount)}
@@ -178,8 +179,19 @@ export default async function BlogPostPage({
             </div>
 
             <div className="mt-4 flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#FF6C0F] font-['Pretendard',sans-serif] text-[14px] font-semibold text-white">
-                {authorInitials}
+              <div className="grid h-9 w-9 place-items-center rounded-full bg-[#e8e6dc] shrink-0 overflow-hidden">
+                {post.authorAvatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={post.authorAvatarUrl}
+                    alt={authorName}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#4a4a40]">
+                    {authorInitials}
+                  </span>
+                )}
               </div>
               <div>
                 {authorHref ? (
@@ -282,7 +294,7 @@ export default async function BlogPostPage({
                     {relatedPost.title}
                   </Link>
                   <p className="mb-2 font-['Pretendard',sans-serif] text-[13px] text-[#6b6b5e]">
-                    {relatedPost.author} &middot; {relatedPost.date}
+                    {relatedPost.author} &middot; {formatRelativeTime(relatedPost.date)}
                   </p>
                   <p className="mb-3 font-['Pretendard',sans-serif] text-[13px] font-normal leading-relaxed text-[#4a4a40] line-clamp-2">
                     {relatedPost.excerpt}
