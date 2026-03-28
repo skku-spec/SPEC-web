@@ -18,6 +18,31 @@
   margin: 1em 0 0.45em;
 }
 
+.prose-content h1 {
+  font-size: 1.875em;
+}
+
+.prose-content h2 {
+  font-size: 1.5em;
+}
+
+.prose-content h3 {
+  font-size: 1.25em;
+}
+
+.prose-content h4 {
+  font-size: 1.125em;
+}
+
+.prose-content h5 {
+  font-size: 1em;
+}
+
+.prose-content h6 {
+  font-size: 0.9375em;
+  color: #4a4a40;
+}
+
 .prose-content p {
   margin: 0.75em 0;
 }
