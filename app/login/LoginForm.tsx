@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { signIn } from "@/lib/actions/auth";
+import { useUser } from "@/hooks/useUser";
 
 type LoginFormProps = {
   registered: boolean;
@@ -15,6 +16,7 @@ type LoginFormProps = {
 
 export default function LoginForm({ registered, passwordReset, authError, redirect }: LoginFormProps) {
   const router = useRouter();
+  const { refreshUser } = useUser();
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -35,6 +37,7 @@ export default function LoginForm({ registered, passwordReset, authError, redire
       if (result?.error) {
         setError(result.error);
       } else {
+        await refreshUser();
         router.replace(target);
       }
     });
