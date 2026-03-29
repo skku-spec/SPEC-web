@@ -19,8 +19,7 @@ export default async function LearnerHomeworkPage() {
     );
   }
 
-  const { homeworks, submissions, learners } = result.data;
-  const currentLearner = learners[0]; // Since getTrackerData filters by current user ID for non-admins
+  const { homeworks, submissions, currentLearner } = result.data;
 
   return (
     <section className="space-y-8 pb-10">
