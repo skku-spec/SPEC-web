@@ -289,11 +289,7 @@ export default function BylawsPage() {
                 <strong>무단 결석 3회 초과</strong> 시 운영진 내에서{" "}
                 <strong>제명 심의 대상</strong>이 된다.
               </li>
-              <li>
-                전체 프로그램 기간 중 결석(공결 제외){" "}
-                <strong>5회 이상</strong> 누적 시 수료가 인정되지 않을 수
-                있다.
-              </li>
+
             </ul>
           </section>
 
