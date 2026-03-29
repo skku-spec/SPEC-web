@@ -45,6 +45,11 @@ export default function BylawsPage() {
               </a>
             </li>
             <li>
+              <a href="#completion" className="text-[#FF6C0F] hover:underline">
+                수료
+              </a>
+            </li>
+            <li>
               <a href="#assignments" className="text-[#FF6C0F] hover:underline">
                 과제
               </a>
@@ -74,7 +79,7 @@ export default function BylawsPage() {
               제1장 총칙
             </h2>
             <p className="mb-6 text-sm text-[#16140f]/60">
-              시행일: 2026년 3월 27일
+              시행일: 2026년 3월 30일
             </p>
 
             <h3 className="mb-3 font-['MaruBuri',serif] text-lg font-semibold">
@@ -111,7 +116,7 @@ export default function BylawsPage() {
               제4조 (회원 구분)
             </h3>
             <p className="mb-4">
-              학회의 회원은 다음과 같이 구분한다.
+              학회의 회원 및 참여자는 다음과 같이 구분한다.
             </p>
             <ul className="mb-6 list-disc space-y-2 pl-8">
               <li>
@@ -119,12 +124,16 @@ export default function BylawsPage() {
                 선발되어 해당 기수 프로그램에 참여하는 회원
               </li>
               <li>
-                <strong>프러너 (Preneur)</strong> &mdash; 러너 과정을 수료한
-                후 운영진으로 활동하는 회원
+                <strong>프러너 (Preneur)</strong> &mdash; 러너 과정을
+                수료하거나 그에 준하는 자로서, 운영진으로 활동하는 회원
               </li>
               <li>
                 <strong>알럼나이 (Alumni)</strong> &mdash; 프로그램을 수료하고
                 졸업한 회원
+              </li>
+              <li>
+                <strong>외부인 (Outsider)</strong> &mdash; 학회 회원이 아닌
+                자로서, 운영진의 승인을 받아 일부 활동에 참여할 수 있는 자
               </li>
             </ul>
 
@@ -148,7 +157,7 @@ export default function BylawsPage() {
             <h3 className="mb-3 font-['MaruBuri',serif] text-lg font-semibold">
               제6조 (회원 자격 유지)
             </h3>
-            <ul className="mb-8 list-decimal space-y-2 pl-8">
+            <ul className="mb-6 list-decimal space-y-2 pl-8">
               <li>
                 회원은 본 회칙을 준수하고, 정기 모임 및 학회 활동에 성실히
                 참여하여야 한다.
@@ -156,6 +165,40 @@ export default function BylawsPage() {
               <li>
                 회원 자격은 해당 기수 프로그램 종료(데모데이 포함) 시까지
                 유지되며, 수료 후 알럼나이로 전환된다.
+              </li>
+            </ul>
+
+            <h3 className="mb-3 font-['MaruBuri',serif] text-lg font-semibold">
+              제7조 (외부인 참여)
+            </h3>
+            <ul className="mb-6 list-decimal space-y-2 pl-8">
+              <li>
+                외부인은 운영진의 사전 승인을 받아 세션, 워크숍 등 학회
+                활동에 참여할 수 있다.
+              </li>
+              <li>
+                외부인은 운영진의 승인 하에 내부 프로젝트 또는 창업팀에
+                합류할 수 있다.
+              </li>
+              <li>
+                외부인의 참여 범위, 기간, 조건은 운영진이 재량으로 결정한다.
+              </li>
+              <li>
+                외부인에게는 회원으로서의 권리(수료, 의결권 등)가 부여되지
+                않는다.
+              </li>
+            </ul>
+
+            <h3 className="mb-3 font-['MaruBuri',serif] text-lg font-semibold">
+              제8조 (자발적 탈퇴)
+            </h3>
+            <ul className="mb-8 list-decimal space-y-2 pl-8">
+              <li>
+                탈퇴를 원하는 회원은 운영진에게 구두 또는 서면으로 의사를
+                밝히면 즉시 탈퇴 처리된다.
+              </li>
+              <li>
+                탈퇴 시 납부한 회비는 환불하지 않는다.
               </li>
             </ul>
           </section>
@@ -167,7 +210,7 @@ export default function BylawsPage() {
             </h2>
 
             <h3 className="mb-3 font-['MaruBuri',serif] text-lg font-semibold">
-              제7조 (회비 금액 및 납부)
+              제9조 (회비 금액 및 납부)
             </h3>
             <ul className="mb-6 list-decimal space-y-2 pl-8">
               <li>
@@ -182,7 +225,7 @@ export default function BylawsPage() {
             </ul>
 
             <h3 className="mb-3 font-['MaruBuri',serif] text-lg font-semibold">
-              제8조 (환불 정책)
+              제10조 (환불 정책)
             </h3>
             <div className="mb-4 rounded-lg border border-[#16140f]/10 bg-[#16140f]/[0.03] p-4">
               <p className="font-semibold">
@@ -208,7 +251,7 @@ export default function BylawsPage() {
             </h2>
 
             <h3 className="mb-3 font-['MaruBuri',serif] text-lg font-semibold">
-              제9조 (정기 모임)
+              제11조 (정기 모임)
             </h3>
             <ul className="mb-6 list-decimal space-y-2 pl-8">
               <li>
@@ -221,7 +264,7 @@ export default function BylawsPage() {
             </ul>
 
             <h3 className="mb-3 font-['MaruBuri',serif] text-lg font-semibold">
-              제10조 (출석 인정 기준)
+              제12조 (출석 인정 기준)
             </h3>
             <ul className="mb-6 list-decimal space-y-2 pl-8">
               <li>
@@ -246,7 +289,24 @@ export default function BylawsPage() {
             </ul>
 
             <h3 className="mb-3 font-['MaruBuri',serif] text-lg font-semibold">
-              제11조 (공결 사유)
+              제13조 (주요 행사 참석 의무)
+            </h3>
+            <ul className="mb-6 list-decimal space-y-2 pl-8">
+              <li>
+                아이디어톤, 해커톤, 데모데이 등 운영진이 지정한 주요 행사는{" "}
+                <strong>필수 참석</strong>이다.
+              </li>
+              <li>
+                주요 행사에 불참할 경우{" "}
+                <strong>결석 2회</strong>로 산정한다.
+              </li>
+              <li>
+                주요 행사의 공결 인정 여부는 운영진이 개별적으로 판단한다.
+              </li>
+            </ul>
+
+            <h3 className="mb-3 font-['MaruBuri',serif] text-lg font-semibold">
+              제14조 (공결 사유)
             </h3>
             <p className="mb-4">
               다음 각 호에 해당하는 경우 사전 신청을 통해 공결로 인정받을 수
@@ -262,7 +322,7 @@ export default function BylawsPage() {
             </ul>
 
             <h3 className="mb-3 font-['MaruBuri',serif] text-lg font-semibold">
-              제12조 (공결 신청 절차)
+              제15조 (공결 신청 절차)
             </h3>
             <ul className="mb-6 list-decimal space-y-2 pl-8">
               <li>
@@ -278,7 +338,7 @@ export default function BylawsPage() {
             </ul>
 
             <h3 className="mb-3 font-['MaruBuri',serif] text-lg font-semibold">
-              제13조 (출석 관련 제재)
+              제16조 (출석 관련 제재)
             </h3>
             <ul className="mb-8 list-decimal space-y-2 pl-8">
               <li>
@@ -289,18 +349,38 @@ export default function BylawsPage() {
                 <strong>무단 결석 3회 초과</strong> 시 운영진 내에서{" "}
                 <strong>제명 심의 대상</strong>이 된다.
               </li>
-
             </ul>
           </section>
 
-          {/* ==================== 제5장 과제 ==================== */}
-          <section id="assignments" className="scroll-mt-24">
+          {/* ==================== 제5장 수료 ==================== */}
+          <section id="completion" className="scroll-mt-24">
             <h2 className="mb-6 font-['MaruBuri',serif] text-2xl font-semibold">
-              제5장 과제
+              제5장 수료
             </h2>
 
             <h3 className="mb-3 font-['MaruBuri',serif] text-lg font-semibold">
-              제14조 (과제 수행 의무)
+              제17조 (수료 요건)
+            </h3>
+            <ul className="mb-8 list-decimal space-y-2 pl-8">
+              <li>
+                회원이 해당 기수 프로그램 기간 동안 본 회칙의 출석 규정을
+                준수하고, 제16조(출석 관련 제재)에 따른 제명 사유에 해당하지
+                않는 경우 수료를 인정한다.
+              </li>
+              <li>
+                수료 여부에 대한 최종 판단은 운영진이 한다.
+              </li>
+            </ul>
+          </section>
+
+          {/* ==================== 제6장 과제 ==================== */}
+          <section id="assignments" className="scroll-mt-24">
+            <h2 className="mb-6 font-['MaruBuri',serif] text-2xl font-semibold">
+              제6장 과제
+            </h2>
+
+            <h3 className="mb-3 font-['MaruBuri',serif] text-lg font-semibold">
+              제18조 (과제 수행 의무)
             </h3>
             <ul className="mb-6 list-decimal space-y-2 pl-8">
               <li>
@@ -318,7 +398,7 @@ export default function BylawsPage() {
             </ul>
 
             <h3 className="mb-3 font-['MaruBuri',serif] text-lg font-semibold">
-              제15조 (과제 불성실 이행에 대한 제재)
+              제19조 (과제 불성실 이행에 대한 제재)
             </h3>
             <ul className="mb-6 list-decimal space-y-2 pl-8">
               <li>
@@ -337,7 +417,7 @@ export default function BylawsPage() {
             </ul>
 
             <h3 className="mb-3 font-['MaruBuri',serif] text-lg font-semibold">
-              제16조 (과제 관련 공결 및 기한 연장)
+              제20조 (과제 관련 공결 및 기한 연장)
             </h3>
             <ul className="mb-8 list-decimal space-y-2 pl-8">
               <li>
@@ -351,14 +431,14 @@ export default function BylawsPage() {
             </ul>
           </section>
 
-          {/* ==================== 제6장 운영 ==================== */}
+          {/* ==================== 제7장 운영 ==================== */}
           <section id="operations" className="scroll-mt-24">
             <h2 className="mb-6 font-['MaruBuri',serif] text-2xl font-semibold">
-              제6장 운영
+              제7장 운영
             </h2>
 
             <h3 className="mb-3 font-['MaruBuri',serif] text-lg font-semibold">
-              제17조 (운영진 구성)
+              제21조 (운영진 구성)
             </h3>
             <ul className="mb-6 list-decimal space-y-2 pl-8">
               <li>
@@ -371,7 +451,7 @@ export default function BylawsPage() {
             </ul>
 
             <h3 className="mb-3 font-['MaruBuri',serif] text-lg font-semibold">
-              제18조 (의사결정)
+              제22조 (의사결정)
             </h3>
             <ul className="mb-8 list-decimal space-y-2 pl-8">
               <li>
@@ -385,14 +465,14 @@ export default function BylawsPage() {
             </ul>
           </section>
 
-          {/* ==================== 제7장 징계 및 제명 ==================== */}
+          {/* ==================== 제8장 징계 및 제명 ==================== */}
           <section id="discipline" className="scroll-mt-24">
             <h2 className="mb-6 font-['MaruBuri',serif] text-2xl font-semibold">
-              제7장 징계 및 제명
+              제8장 징계 및 제명
             </h2>
 
             <h3 className="mb-3 font-['MaruBuri',serif] text-lg font-semibold">
-              제19조 (징계 사유)
+              제23조 (징계 사유)
             </h3>
             <p className="mb-4">
               다음 각 호에 해당하는 경우 징계 대상이 된다.
@@ -412,7 +492,7 @@ export default function BylawsPage() {
             </ul>
 
             <h3 className="mb-3 font-['MaruBuri',serif] text-lg font-semibold">
-              제20조 (징계 절차)
+              제24조 (징계 절차)
             </h3>
             <ul className="mb-6 list-decimal space-y-2 pl-8">
               <li>징계 사유가 발생하면 운영진 회의를 소집한다.</li>
@@ -429,7 +509,7 @@ export default function BylawsPage() {
             </ul>
 
             <h3 className="mb-3 font-['MaruBuri',serif] text-lg font-semibold">
-              제21조 (징계 종류)
+              제25조 (징계 종류)
             </h3>
             <ul className="mb-6 list-decimal space-y-2 pl-8">
               <li>
@@ -446,21 +526,21 @@ export default function BylawsPage() {
             </ul>
 
             <h3 className="mb-3 font-['MaruBuri',serif] text-lg font-semibold">
-              제22조 (제명 시 회비)
+              제26조 (제명 시 회비)
             </h3>
             <p className="mb-8">
               제명된 회원의 회비는 환불하지 않는다.
             </p>
           </section>
 
-          {/* ==================== 제8장 기타 ==================== */}
+          {/* ==================== 제9장 기타 ==================== */}
           <section id="etc" className="scroll-mt-24">
             <h2 className="mb-6 font-['MaruBuri',serif] text-2xl font-semibold">
-              제8장 기타
+              제9장 기타
             </h2>
 
             <h3 className="mb-3 font-['MaruBuri',serif] text-lg font-semibold">
-              제23조 (개인정보)
+              제27조 (개인정보)
             </h3>
             <p className="mb-6">
               회원의 개인정보는 학회 운영 목적으로만 사용하며, 프로그램 종료
@@ -475,7 +555,7 @@ export default function BylawsPage() {
             </p>
 
             <h3 className="mb-3 font-['MaruBuri',serif] text-lg font-semibold">
-              제24조 (회칙 개정)
+              제28조 (회칙 개정)
             </h3>
             <p className="mb-6">
               본 회칙의 개정은 운영진 회의에서 2/3 이상 찬성으로 의결하며,
@@ -483,10 +563,10 @@ export default function BylawsPage() {
             </p>
 
             <h3 className="mb-3 font-['MaruBuri',serif] text-lg font-semibold">
-              제25조 (시행일)
+              제29조 (시행일)
             </h3>
             <p className="mb-8">
-              본 회칙은 2026년 3월 27일부터 시행한다.
+              본 회칙은 2026년 3월 30일부터 시행한다.
             </p>
           </section>
 
