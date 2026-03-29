@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { markAttendance, deleteAttendance, createSession, deleteSession, markAllPresent } from "@/lib/actions/tracker";
+import { MessageSquareText } from "lucide-react";
 
 type Profile = {
   id: string;
@@ -21,6 +22,7 @@ type AttendanceLog = {
   session_id: string;
   user_id: string;
   status: string;
+  notes?: string | null;
 }
 
 type Homework = {
@@ -74,6 +76,14 @@ export function AttendanceClient({
   const [logs, setLogs] = useState(initialLogs);
   const [submissions] = useState(initialSubmissions);
   const [newSessionTitle, setNewSessionTitle] = useState("");
+  const [reasonModal, setReasonModal] = useState<{
+    open: boolean;
+    userId: string;
+    sessionId: string;
+    status: Status;
+    userName: string;
+  } | null>(null);
+  const [reasonText, setReasonText] = useState("");
 
   const getAttendanceStatus = (userId: string, sessionId: string) => {
     return logs.find(l => l.user_id === userId && l.session_id === sessionId)?.status || "none";
@@ -100,15 +110,20 @@ export function AttendanceClient({
     const current = logs.find(l => l.user_id === userId && l.session_id === sessionId);
     const isToggleOff = current?.status === status;
 
-    startTransition(async () => {
-      if (isToggleOff) {
+    if (isToggleOff) {
+      startTransition(async () => {
         const result = await deleteAttendance(userId, sessionId);
         if (!result.success) {
           alert(result.error ?? "출석 상태 변경 중 오류가 발생했습니다.");
           return;
         }
         setLogs(prev => prev.filter(l => !(l.user_id === userId && l.session_id === sessionId)));
-      } else {
+      });
+      return;
+    }
+
+    if (status === "present") {
+      startTransition(async () => {
         const result = await markAttendance(userId, sessionId, status);
         if (!result.success) {
           alert(result.error ?? "출석 상태 변경 중 오류가 발생했습니다.");
@@ -116,11 +131,49 @@ export function AttendanceClient({
         }
         setLogs(prev => {
           const filtered = prev.filter(l => !(l.user_id === userId && l.session_id === sessionId));
-          return [...filtered, { id: crypto.randomUUID(), user_id: userId, session_id: sessionId, status }];
+          return [...filtered, { id: crypto.randomUUID(), user_id: userId, session_id: sessionId, status, notes: null }];
         });
+      });
+      return;
+    }
+
+    // 결석/공결/지각 — 모달 열기
+    const learner = learners.find(l => l.id === userId);
+    const existingNotes = current?.notes || "";
+    setReasonText(existingNotes);
+    setReasonModal({ open: true, userId, sessionId, status, userName: learner?.name ?? "" });
+  };
+
+  const handleSaveReason = () => {
+    if (!reasonModal) return;
+    const { userId, sessionId, status } = reasonModal;
+    const notes = reasonText.trim() || null;
+    startTransition(async () => {
+      const result = await markAttendance(userId, sessionId, status, notes);
+      if (!result.success) {
+        alert(result.error ?? "출석 상태 변경 중 오류가 발생했습니다.");
+        return;
       }
+      setLogs(prev => {
+        const filtered = prev.filter(l => !(l.user_id === userId && l.session_id === sessionId));
+        return [...filtered, { id: crypto.randomUUID(), user_id: userId, session_id: sessionId, status, notes }];
+      });
+      setReasonModal(null);
+      setReasonText("");
     });
   };
+
+  useEffect(() => {
+    if (!reasonModal?.open) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setReasonModal(null);
+        setReasonText("");
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [reasonModal?.open]);
 
   const handleMarkAllPresent = async (sessionId: string) => {
     if (!isAdminOrPreneur) return;
@@ -137,7 +190,8 @@ export function AttendanceClient({
           id: crypto.randomUUID(),
           user_id: r.id,
           session_id: sessionId,
-          status: "present"
+          status: "present",
+          notes: null as string | null
         }));
         return [...filtered, ...newLogs];
       });
@@ -286,6 +340,7 @@ export function AttendanceClient({
 
                   {sessions.map(session => {
                     const currentStatus = getAttendanceStatus(learner.id, session.id);
+                    const cellLog = logs.find(l => l.user_id === learner.id && l.session_id === session.id);
                     return (
                       <td key={session.id} className="px-2 py-3">
                         <div className="flex items-center justify-center gap-1">
@@ -307,6 +362,16 @@ export function AttendanceClient({
                             );
                           })}
                         </div>
+                        {cellLog?.notes && (
+                          <div className="mt-1 flex justify-center">
+                            <span title={cellLog.notes}>
+                              <MessageSquareText
+                                className="h-3 w-3 text-[#6b6b5e]"
+                                strokeWidth={1.5}
+                              />
+                            </span>
+                          </div>
+                        )}
                       </td>
                     );
                   })}
@@ -421,6 +486,48 @@ export function AttendanceClient({
           </div>
         )}
       </div>
+
+      {reasonModal?.open && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          onClick={() => { setReasonModal(null); setReasonText(""); }}
+        >
+          <div
+            className="w-full max-w-sm mx-4 rounded-lg border border-[#ddd9cc] bg-white p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="mb-1 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
+              {reasonModal.userName} — {STATUS_LABELS[reasonModal.status]} 사유
+            </h3>
+            <p className="mb-3 font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">
+              사유를 입력하지 않아도 저장할 수 있습니다.
+            </p>
+            <textarea
+              value={reasonText}
+              onChange={(e) => setReasonText(e.target.value)}
+              maxLength={200}
+              rows={3}
+              placeholder="사유를 입력하세요 (선택)"
+              className="w-full rounded-lg border border-[#ddd9cc] bg-white py-2.5 px-4 font-['Pretendard',sans-serif] text-sm text-[#16140f] outline-none transition-colors placeholder:text-[#16140f]/40 focus:border-[#FF6C0F]/50 focus:ring-2 focus:ring-[#FF6C0F]/10 resize-none"
+            />
+            <div className="mt-3 flex items-center justify-end gap-2">
+              <button
+                onClick={() => { setReasonModal(null); setReasonText(""); }}
+                className="inline-flex h-8 items-center rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f] transition-colors hover:bg-[#fcfcf8]"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleSaveReason}
+                disabled={isPending}
+                className="inline-flex h-8 items-center rounded-md bg-[#16140f] px-3 font-['Pretendard',sans-serif] text-xs font-semibold text-white transition-colors hover:bg-[#16140f]/80 disabled:opacity-50"
+              >
+                저장
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
