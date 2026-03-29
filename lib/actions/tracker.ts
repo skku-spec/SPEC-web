@@ -92,17 +92,37 @@ export async function markAttendance(
   try {
     await requireAdmin();
     const supabase = await createClient();
+    const payload = {
+      user_id: userId,
+      session_id: sessionId,
+      status,
+      notes: status === "present" ? null : (notes?.trim() || null),
+    };
 
-    const { error } = await supabase
+    let { error } = await supabase
       .from("attendance_logs")
-      .upsert({
-        user_id: userId,
-        session_id: sessionId,
-        status,
-        notes: status === "present" ? null : (notes?.trim() || null),
-      }, {
+      .upsert(payload, {
         onConflict: "user_id,session_id"
       });
+
+    const isNotesSchemaError =
+      !!error &&
+      /notes/i.test(error.message) &&
+      /(column|schema cache|could not find)/i.test(error.message);
+
+    if (isNotesSchemaError) {
+      const retry = await supabase
+        .from("attendance_logs")
+        .upsert({
+          user_id: userId,
+          session_id: sessionId,
+          status,
+        }, {
+          onConflict: "user_id,session_id"
+        });
+
+      error = retry.error;
+    }
 
     if (error) return { success: false as const, error: `출석 처리에 실패했습니다: ${error.message}` };
     revalidatePath("/admin/attendance");
