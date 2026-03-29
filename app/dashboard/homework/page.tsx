@@ -20,13 +20,16 @@ export default async function LearnerHomeworkPage() {
   }
 
   const { homeworks, submissions, currentLearner } = result.data;
+  const currentUserSubmissions = currentLearner
+    ? submissions.filter((submission) => submission.user_id === currentLearner.id)
+    : [];
 
   return (
     <section className="space-y-8 pb-10">
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
         <LearnerHomeworkClient 
           homeworks={homeworks}
-          submissions={submissions}
+          submissions={currentUserSubmissions}
           currentUserName={currentLearner?.first_name && currentLearner?.last_name ? `${currentLearner.last_name}${currentLearner.first_name}` : currentLearner?.name || ""}
           currentUserUsername={currentLearner?.username || ""}
         />
