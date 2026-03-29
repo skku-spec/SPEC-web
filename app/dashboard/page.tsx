@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { getTrackerData } from "@/lib/actions/tracker";
 import { LearnerDashboardClient } from "@/components/dashboard/LearnerDashboardClient";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "대시보드 | SPEC",
 };
