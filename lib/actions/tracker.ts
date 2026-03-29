@@ -18,7 +18,7 @@ export async function getTrackerData() {
 
     let learnersQuery = supabase
       .from("profiles")
-      .select("id, name, role, username")
+      .select("id, name, first_name, last_name, role, username")
       .eq("role", "learner");
 
     if (!isAdminOrPreneur) {

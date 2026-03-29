@@ -28,7 +28,7 @@ export default async function LearnerHomeworkPage() {
         <LearnerHomeworkClient 
           homeworks={homeworks}
           submissions={submissions}
-          currentUserName={currentLearner?.name || ""}
+          currentUserName={currentLearner?.first_name && currentLearner?.last_name ? `${currentLearner.last_name}${currentLearner.first_name}` : currentLearner?.name || ""}
           currentUserUsername={currentLearner?.username || ""}
         />
       </div>
