@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath, unstable_noStore } from "next/cache";
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin, requireRole } from "@/lib/auth";
 
@@ -10,7 +10,6 @@ import { requireAdmin, requireRole } from "@/lib/auth";
  * If the user is a Runner, fetches only their own data.
  */
 export async function getTrackerData() {
-  unstable_noStore();
   try {
     const { profile } = await requireRole("learner");
     const supabase = await createClient();

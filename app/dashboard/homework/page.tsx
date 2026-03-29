@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { getTrackerData } from "@/lib/actions/tracker";
 import { LearnerHomeworkClient } from "@/components/dashboard/LearnerHomeworkClient";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "과제 제출 | SPEC",
 };
