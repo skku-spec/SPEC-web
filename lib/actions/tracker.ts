@@ -86,7 +86,8 @@ export async function getTrackerData() {
 export async function markAttendance(
   userId: string,
   sessionId: string,
-  status: "present" | "absent" | "late" | "excused"
+  status: "present" | "absent" | "late" | "excused",
+  notes?: string | null
 ) {
   try {
     await requireAdmin();
@@ -98,6 +99,7 @@ export async function markAttendance(
         user_id: userId,
         session_id: sessionId,
         status,
+        notes: status === "present" ? null : (notes?.trim() || null),
       }, {
         onConflict: "user_id,session_id"
       });
