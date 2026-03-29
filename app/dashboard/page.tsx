@@ -19,10 +19,7 @@ export default async function LearnerDashboardPage() {
     );
   }
 
-  const { learners, sessions, homeworks, logs, submissions } = result.data;
-
-  // For learners, there's only 1 learner in the list (themselves)
-  const currentLearner = learners[0];
+  const { currentLearner, sessions, homeworks, logs, submissions } = result.data;
 
   if (!currentLearner) {
     return (

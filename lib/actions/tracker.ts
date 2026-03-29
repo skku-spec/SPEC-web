@@ -14,6 +14,17 @@ export async function getTrackerData() {
     const { profile } = await requireRole("learner");
     const supabase = await createClient();
 
+    const currentLearner = profile
+      ? {
+          id: profile.id,
+          name: profile.name,
+          first_name: profile.first_name,
+          last_name: profile.last_name,
+          role: profile.role,
+          username: profile.username,
+        }
+      : null;
+
     const isAdminOrPreneur = profile?.is_admin || profile?.role === "preneur";
 
     let learnersQuery = supabase
@@ -55,6 +66,7 @@ export async function getTrackerData() {
     return {
       success: true as const,
       data: {
+        currentLearner,
         learners,
         sessions,
         homeworks,
