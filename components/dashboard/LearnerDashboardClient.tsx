@@ -2,6 +2,8 @@
 import Link from "next/link";
 
 type LearnerProfile = {
+  first_name?: string | null;
+  last_name?: string | null;
   id: string;
   name: string;
   role: string | null;
@@ -69,7 +71,7 @@ export function LearnerDashboardClient({
     <div className="mx-auto max-w-4xl space-y-8">
       <div className="flex flex-col gap-1">
         <h1 className="font-[system-ui] text-[clamp(2.5rem,5vw,3.25rem)] font-black leading-tight text-[#16140f]">
-          반가워요, {learner.name}님 👋
+          반가워요, {learner.first_name && learner.last_name ? `${learner.last_name}${learner.first_name}` : learner.name}님 👋
         </h1>
         <p className="font-['Pretendard',sans-serif] text-sm text-[#6b6b5e]">
           이번 기수 나의 학업 성취도를 한눈에 확인해 보세요.
