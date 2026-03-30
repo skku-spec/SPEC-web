@@ -99,7 +99,8 @@ export default function BylawsPage() {
               제3조 (소재지)
             </h3>
             <p className="mb-8">
-              학회의 주된 활동 장소는 성균관대학교 인문사회과학캠퍼스로 한다.
+              학회의 주된 활동 장소는 성균관대학교 인문사회과학캠퍼스 또는
+              자연과학캠퍼스로 한다.
             </p>
           </section>
 
