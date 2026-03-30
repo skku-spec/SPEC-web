@@ -93,3 +93,24 @@ export async function uploadHomeworkImage(file: File): Promise<string> {
 
   return result.url;
 }
+
+export async function uploadHomeworkFile(file: File): Promise<{ name: string; url: string }> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch("/api/upload/homework-file", {
+    method: "POST",
+    body: formData,
+  });
+
+  const result = await response.json();
+
+  if (!response.ok || !result.success) {
+    throw new Error(result.error || "파일 업로드에 실패했습니다.");
+  }
+
+  return {
+    name: result.name,
+    url: result.url,
+  };
+}

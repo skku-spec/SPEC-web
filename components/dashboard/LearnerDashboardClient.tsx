@@ -65,8 +65,6 @@ export function LearnerDashboardClient({
     ? Math.round((userSubmissions.length / safeHomeworks.length) * 100) 
     : 0;
 
-  const totalScore = Math.round((personalAttRate + personalHwRate) / 2);
-
   return (
     <div className="mx-auto max-w-4xl space-y-8">
       <div className="flex flex-col gap-1">
@@ -74,32 +72,8 @@ export function LearnerDashboardClient({
           반가워요, {learner.first_name && learner.last_name ? `${learner.last_name}${learner.first_name}` : learner.name}님 👋
         </h1>
         <p className="font-['Pretendard',sans-serif] text-sm text-[#6b6b5e]">
-          이번 기수 나의 학업 성취도를 한눈에 확인해 보세요.
+          이번 기수 나의 출석과 과제 현황을 한눈에 확인해 보세요.
         </p>
-      </div>
-
-      {/* 종합 성적 카드 */}
-      <div className="rounded-lg border border-[#ddd9cc] bg-white p-6 md:p-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-1">
-            <p className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#6b6b5e]">종합 성취도</p>
-          </div>
-          <div className="flex-1 max-w-md">
-            <div className="flex justify-between font-['Pretendard',sans-serif] text-xs mb-2">
-              <span className="text-[#6b6b5e]">Pass Line (80%)</span>
-            </div>
-            <div className="h-3 w-full rounded-full bg-gray-100 overflow-hidden">
-              <div 
-                className={`h-full transition-all duration-1000 ease-out ${
-                  totalScore >= 80 ? "bg-[#2f9e44]" :
-                  totalScore >= 50 ? "bg-[#FF6C0F]" :
-                  "bg-[#b42318]"
-                }`}
-                style={{ width: `${totalScore}%` }} 
-              />
-            </div>
-          </div>
-        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { syncHomeworkSubmissions, upsertHomework, replaceHomeworkTeams } from "@/lib/actions/tracker";
-import { uploadHomeworkImage } from "@/lib/storage";
+import { uploadHomeworkFile, uploadHomeworkImage } from "@/lib/storage";
 import {
   User,
   Users,
@@ -17,6 +17,8 @@ import {
   X,
   Pencil,
   ImageIcon,
+  Paperclip,
+  ExternalLink,
 } from "lucide-react";
 
 type Homework = {
@@ -193,7 +195,7 @@ export function HomeworkClient() {
     }
   };
 
-  const handleSubmitHomework = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmitHomework = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
     if (!isIndividual && !isTeam) {
@@ -452,6 +454,44 @@ export function HomeworkClient() {
         </div>
       );
     }
+
+    if (task.startsWith("[file]")) {
+      const payload = task.slice(6);
+      const separatorIndex = payload.indexOf("|");
+      const encodedName = separatorIndex >= 0 ? payload.slice(0, separatorIndex) : "";
+      const url = separatorIndex >= 0 ? payload.slice(separatorIndex + 1) : "";
+      const fileName = encodedName
+        ? (() => {
+            try {
+              return decodeURIComponent(encodedName);
+            } catch {
+              return encodedName;
+            }
+          })()
+        : "첨부파일";
+
+      return (
+        <div key={tIdx} className="rounded-lg border border-[#ece8db] bg-white p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2">
+              <span className={`font-semibold ${accentColor}`}>#{tIdx + 1}</span>
+              <Paperclip className="h-4 w-4 shrink-0 text-[#6b6b5e]" strokeWidth={2} />
+              <span className="truncate font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">{fileName}</span>
+            </div>
+            <a
+              href={url}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex h-8 items-center gap-1 rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-semibold text-[#16140f] transition-colors hover:bg-[#fcfcf8]"
+            >
+              <ExternalLink className="h-3.5 w-3.5" strokeWidth={2} />
+              열기
+            </a>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div
         key={tIdx}
@@ -605,6 +645,39 @@ export function HomeworkClient() {
                               <div className="overflow-hidden rounded-lg border border-[#ddd9cc] bg-white">
                                 <img src={task.slice(5)} alt="첨부 이미지" className="max-h-48 w-full object-contain" />
                               </div>
+                            ) : task.startsWith("[file]") ? (
+                              <div className="rounded-lg border border-[#ddd9cc] bg-white p-3">
+                                <div className="flex items-center justify-between gap-2">
+                                  <div className="flex min-w-0 items-center gap-2">
+                                    <Paperclip className="h-4 w-4 shrink-0 text-[#6b6b5e]" strokeWidth={2} />
+                                    <span className="truncate font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">
+                                      {(() => {
+                                        const payload = task.slice(6);
+                                        const separatorIndex = payload.indexOf("|");
+                                        const encodedName = separatorIndex >= 0 ? payload.slice(0, separatorIndex) : payload;
+                                        try {
+                                          return decodeURIComponent(encodedName);
+                                        } catch {
+                                          return encodedName;
+                                        }
+                                      })()}
+                                    </span>
+                                  </div>
+                                  <a
+                                    href={(() => {
+                                      const payload = task.slice(6);
+                                      const separatorIndex = payload.indexOf("|");
+                                      return separatorIndex >= 0 ? payload.slice(separatorIndex + 1) : "#";
+                                    })()}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex h-7 items-center gap-1 rounded-md border border-[#ddd9cc] px-2.5 font-['Pretendard',sans-serif] text-[11px] font-semibold text-[#16140f] transition-colors hover:bg-[#fcfcf8]"
+                                  >
+                                    <ExternalLink className="h-3 w-3" strokeWidth={2} />
+                                    열기
+                                  </a>
+                                </div>
+                              </div>
                             ) : (
                               <textarea
                                 value={task}
@@ -648,6 +721,37 @@ export function HomeworkClient() {
                                 }}
                               />
                             </label>
+                            <label
+                              className={`absolute -right-2 top-16 cursor-pointer rounded-full border border-[#ddd9cc] bg-white p-1 transition-colors hover:border-[#FF6C0F] ${
+                                uploadingTaskIndex?.type === 'individual' && uploadingTaskIndex?.idx === idx
+                                  ? 'pointer-events-none opacity-50'
+                                  : ''
+                              }`}
+                            >
+                              <Paperclip className="h-3.5 w-3.5 text-[#6b6b5e]" strokeWidth={2} />
+                              <input
+                                type="file"
+                                accept=".pdf,.zip,.txt,.csv,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.hwp,application/pdf,application/zip,application/x-zip-compressed,text/plain,text/csv,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/x-hwp,application/haansofthwp"
+                                className="hidden"
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  setUploadingTaskIndex({ type: 'individual', idx });
+                                  try {
+                                    const uploaded = await uploadHomeworkFile(file);
+                                    const marker = `[file]${encodeURIComponent(uploaded.name)}|${uploaded.url}`;
+                                    const newTasks = [...individualTasks];
+                                    newTasks.splice(idx + 1, 0, marker);
+                                    setIndividualTasks(newTasks);
+                                  } catch (err) {
+                                    alert(err instanceof Error ? err.message : "파일 업로드에 실패했습니다.");
+                                  } finally {
+                                    setUploadingTaskIndex(null);
+                                    e.target.value = "";
+                                  }
+                                }}
+                              />
+                            </label>
                             {individualTasks.length > 1 && (
                               <button
                                 type="button"
@@ -683,6 +787,39 @@ export function HomeworkClient() {
                             {task.startsWith("[img]") ? (
                               <div className="overflow-hidden rounded-lg border border-[#ddd9cc] bg-white">
                                 <img src={task.slice(5)} alt="첨부 이미지" className="max-h-48 w-full object-contain" />
+                              </div>
+                            ) : task.startsWith("[file]") ? (
+                              <div className="rounded-lg border border-[#ddd9cc] bg-white p-3">
+                                <div className="flex items-center justify-between gap-2">
+                                  <div className="flex min-w-0 items-center gap-2">
+                                    <Paperclip className="h-4 w-4 shrink-0 text-[#6b6b5e]" strokeWidth={2} />
+                                    <span className="truncate font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">
+                                      {(() => {
+                                        const payload = task.slice(6);
+                                        const separatorIndex = payload.indexOf("|");
+                                        const encodedName = separatorIndex >= 0 ? payload.slice(0, separatorIndex) : payload;
+                                        try {
+                                          return decodeURIComponent(encodedName);
+                                        } catch {
+                                          return encodedName;
+                                        }
+                                      })()}
+                                    </span>
+                                  </div>
+                                  <a
+                                    href={(() => {
+                                      const payload = task.slice(6);
+                                      const separatorIndex = payload.indexOf("|");
+                                      return separatorIndex >= 0 ? payload.slice(separatorIndex + 1) : "#";
+                                    })()}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex h-7 items-center gap-1 rounded-md border border-[#ddd9cc] px-2.5 font-['Pretendard',sans-serif] text-[11px] font-semibold text-[#16140f] transition-colors hover:bg-[#fcfcf8]"
+                                  >
+                                    <ExternalLink className="h-3 w-3" strokeWidth={2} />
+                                    열기
+                                  </a>
+                                </div>
                               </div>
                             ) : (
                               <textarea
@@ -720,6 +857,37 @@ export function HomeworkClient() {
                                     setTeamTasks(newTasks);
                                   } catch (err) {
                                     alert(err instanceof Error ? err.message : "이미지 업로드에 실패했습니다.");
+                                  } finally {
+                                    setUploadingTaskIndex(null);
+                                    e.target.value = "";
+                                  }
+                                }}
+                              />
+                            </label>
+                            <label
+                              className={`absolute -right-2 top-16 cursor-pointer rounded-full border border-[#ddd9cc] bg-white p-1 transition-colors hover:border-[#FF6C0F] ${
+                                uploadingTaskIndex?.type === 'team' && uploadingTaskIndex?.idx === idx
+                                  ? 'pointer-events-none opacity-50'
+                                  : ''
+                              }`}
+                            >
+                              <Paperclip className="h-3.5 w-3.5 text-[#6b6b5e]" strokeWidth={2} />
+                              <input
+                                type="file"
+                                accept=".pdf,.zip,.txt,.csv,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.hwp,application/pdf,application/zip,application/x-zip-compressed,text/plain,text/csv,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/x-hwp,application/haansofthwp"
+                                className="hidden"
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  setUploadingTaskIndex({ type: 'team', idx });
+                                  try {
+                                    const uploaded = await uploadHomeworkFile(file);
+                                    const marker = `[file]${encodeURIComponent(uploaded.name)}|${uploaded.url}`;
+                                    const newTasks = [...teamTasks];
+                                    newTasks.splice(idx + 1, 0, marker);
+                                    setTeamTasks(newTasks);
+                                  } catch (err) {
+                                    alert(err instanceof Error ? err.message : "파일 업로드에 실패했습니다.");
                                   } finally {
                                     setUploadingTaskIndex(null);
                                     e.target.value = "";

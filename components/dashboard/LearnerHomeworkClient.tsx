@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react";
-import { CheckCircle2, Circle, ExternalLink, Loader2, BookOpen, X } from "lucide-react";
+import { CheckCircle2, Circle, ExternalLink, Loader2, BookOpen, X, Paperclip } from "lucide-react";
 import { toggleHomeworkSubmission } from "@/lib/actions/tracker";
 
 type Homework = {
@@ -243,6 +243,39 @@ export function LearnerHomeworkClient({
                           <li key={idx} className="overflow-hidden rounded-lg border border-[#ddd9cc]">
                             <img src={task.slice(5)} alt="과제 첨부 이미지" className="max-h-64 w-full object-contain" />
                           </li>
+                        ) : task.startsWith("[file]") ? (
+                          <li key={idx} className="rounded-lg border border-[#ddd9cc] bg-white p-3">
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex min-w-0 items-center gap-2">
+                                <Paperclip className="h-4 w-4 shrink-0 text-[#6b6b5e]" strokeWidth={2} />
+                                <span className="truncate font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">
+                                  {(() => {
+                                    const payload = task.slice(6);
+                                    const separatorIndex = payload.indexOf("|");
+                                    const encodedName = separatorIndex >= 0 ? payload.slice(0, separatorIndex) : payload;
+                                    try {
+                                      return decodeURIComponent(encodedName);
+                                    } catch {
+                                      return encodedName;
+                                    }
+                                  })()}
+                                </span>
+                              </div>
+                              <a
+                                href={(() => {
+                                  const payload = task.slice(6);
+                                  const separatorIndex = payload.indexOf("|");
+                                  return separatorIndex >= 0 ? payload.slice(separatorIndex + 1) : "#";
+                                })()}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex h-7 items-center gap-1 rounded-md border border-[#ddd9cc] px-2.5 font-['Pretendard',sans-serif] text-[11px] font-semibold text-[#16140f] transition-colors hover:bg-[#fcfcf8]"
+                              >
+                                <ExternalLink className="h-3 w-3" strokeWidth={2} />
+                                열기
+                              </a>
+                            </div>
+                          </li>
                         ) : (
                           <li key={idx} className="flex gap-2 font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">
                             <span className="text-[#FF6C0F]">•</span>
@@ -264,6 +297,39 @@ export function LearnerHomeworkClient({
                         task.startsWith("[img]") ? (
                           <li key={idx} className="overflow-hidden rounded-lg border border-[#ddd9cc]">
                             <img src={task.slice(5)} alt="과제 첨부 이미지" className="max-h-64 w-full object-contain" />
+                          </li>
+                        ) : task.startsWith("[file]") ? (
+                          <li key={idx} className="rounded-lg border border-[#ddd9cc] bg-white p-3">
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex min-w-0 items-center gap-2">
+                                <Paperclip className="h-4 w-4 shrink-0 text-[#6b6b5e]" strokeWidth={2} />
+                                <span className="truncate font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">
+                                  {(() => {
+                                    const payload = task.slice(6);
+                                    const separatorIndex = payload.indexOf("|");
+                                    const encodedName = separatorIndex >= 0 ? payload.slice(0, separatorIndex) : payload;
+                                    try {
+                                      return decodeURIComponent(encodedName);
+                                    } catch {
+                                      return encodedName;
+                                    }
+                                  })()}
+                                </span>
+                              </div>
+                              <a
+                                href={(() => {
+                                  const payload = task.slice(6);
+                                  const separatorIndex = payload.indexOf("|");
+                                  return separatorIndex >= 0 ? payload.slice(separatorIndex + 1) : "#";
+                                })()}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex h-7 items-center gap-1 rounded-md border border-[#ddd9cc] px-2.5 font-['Pretendard',sans-serif] text-[11px] font-semibold text-[#16140f] transition-colors hover:bg-[#fcfcf8]"
+                              >
+                                <ExternalLink className="h-3 w-3" strokeWidth={2} />
+                                열기
+                              </a>
+                            </div>
                           </li>
                         ) : (
                           <li key={idx} className="flex gap-2 font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">
