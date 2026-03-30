@@ -75,3 +75,21 @@ export async function uploadJobLogo(file: File): Promise<string> {
 
   return data.publicUrl;
 }
+
+export async function uploadHomeworkImage(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append("image", file);
+
+  const response = await fetch("/api/upload/homework-image", {
+    method: "POST",
+    body: formData,
+  });
+
+  const result = await response.json();
+
+  if (!response.ok || !result.success) {
+    throw new Error(result.error || "이미지 업로드에 실패했습니다.");
+  }
+
+  return result.url;
+}

@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { syncHomeworkSubmissions } from "@/lib/actions/tracker";
+import { syncHomeworkSubmissions, upsertHomework, replaceHomeworkTeams } from "@/lib/actions/tracker";
+import { uploadHomeworkImage } from "@/lib/storage";
 import {
   User,
   Users,
@@ -14,6 +15,8 @@ import {
   AlertCircle,
   Check,
   X,
+  Pencil,
+  ImageIcon,
 } from "lucide-react";
 
 type Homework = {
@@ -82,6 +85,10 @@ export function HomeworkClient() {
   const [dueDate, setDueDate] = useState("");
   const [teams, setTeams] = useState<TeamAssignment[]>([]);
   const [teamSearchQueries, setTeamSearchQueries] = useState<string[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isFormLoading, setIsFormLoading] = useState(false);
+  const [uploadingTaskIndex, setUploadingTaskIndex] = useState<{ type: 'individual' | 'team'; idx: number } | null>(null);
 
   const [viewingId, setViewingId] = useState<string | null>(null);
   const [viewingTeams, setViewingTeams] = useState<{
@@ -186,7 +193,7 @@ export function HomeworkClient() {
     }
   };
 
-  const handleAddHomework = async (e: React.FormEvent) => {
+  const handleSubmitHomework = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
     if (!isIndividual && !isTeam) {
@@ -194,48 +201,39 @@ export function HomeworkClient() {
       return;
     }
 
-    const { data: hwData, error: hwError } = await supabase
-      .from("homeworks")
-      .insert([
-        {
-          title: newTitle,
-          submission_link: submissionLink.trim() || null,
-          padlet_board_id: padletBoardId.trim() || null,
-          individual_content: isIndividual ? individualTasks.filter(t => t.trim() !== "") : [],
-          team_content: isTeam ? teamTasks.filter(t => t.trim() !== "") : [],
-          is_individual: isIndividual,
-          is_team: isTeam,
-          due_date: dueDate ? new Date(dueDate).toISOString() : null,
-        },
-      ])
-      .select()
-      .single();
+    const payload = {
+      ...(isEditing && editingId ? { id: editingId } : {}),
+      title: newTitle,
+      submission_link: submissionLink.trim() || null,
+      padlet_board_id: padletBoardId.trim() || null,
+      individual_content: isIndividual ? individualTasks.filter(t => t.trim() !== "") : [],
+      team_content: isTeam ? teamTasks.filter(t => t.trim() !== "") : [],
+      is_individual: isIndividual,
+      is_team: isTeam,
+      due_date: dueDate ? new Date(dueDate).toISOString() : null,
+    };
 
-    if (hwError || !hwData) {
-      alert("과제 생성 중 에러가 발생했습니다.");
+    const result = await upsertHomework(payload);
+    if (!result.success || !result.data) {
+      alert(result.error ?? "과제 저장 중 에러가 발생했습니다.");
       return;
     }
 
-    // Handle Team Assignments if Team is selected
-    if (isTeam && teams.length > 0) {
-      const assignments = teams.flatMap(t => 
-        t.memberIds.map(mId => ({
-          homework_id: hwData.id,
-          user_id: mId,
-          team_name: t.teamName
-        }))
-      );
+    const hwId = (result.data as { id: string }).id;
 
-      const { error: teamError } = await supabase
-        .from("homework_team_assignments")
-        .insert(assignments);
-
-      if (teamError) {
-        alert("팀 배정 중 일부 에러가 발생했습니다.");
+    if (isTeam) {
+      const teamResult = await replaceHomeworkTeams(hwId, teams);
+      if (!teamResult.success) {
+        alert(teamResult.error ?? "팀 배정 중 에러가 발생했습니다.");
       }
     }
 
-    setHomeworks([hwData as unknown as Homework, ...homeworks]);
+    if (isEditing) {
+      setHomeworks(homeworks.map(h => h.id === hwId ? result.data as unknown as Homework : h));
+    } else {
+      setHomeworks([result.data as unknown as Homework, ...homeworks]);
+    }
+
     resetForm();
     setIsAdding(false);
   };
@@ -251,6 +249,52 @@ export function HomeworkClient() {
     setIsTeam(false);
     setTeams([]);
     setTeamSearchQueries([]);
+    setEditingId(null);
+    setIsEditing(false);
+  };
+
+  const openEdit = async (hw: Homework) => {
+    setIsFormLoading(true);
+    setEditingId(hw.id);
+    setIsEditing(true);
+    setNewTitle(hw.title);
+    setSubmissionLink(hw.submission_link ?? "");
+    setPadletBoardId(hw.padlet_board_id ?? "");
+    setDueDate(hw.due_date ? new Date(hw.due_date).toISOString().slice(0, 16) : "");
+    setIndividualTasks(hw.individual_content.length ? hw.individual_content : [""]);
+    setTeamTasks(hw.team_content.length ? hw.team_content : [""]);
+    setIsIndividual(hw.is_individual);
+    setIsTeam(hw.is_team);
+
+    if (hw.is_team) {
+      const { data } = await supabase
+        .from("homework_team_assignments")
+        .select("team_name,user_id")
+        .eq("homework_id", hw.id);
+
+      if (data && data.length > 0) {
+        const teamMap = new Map<string, string[]>();
+        data.forEach((row: { team_name: string; user_id: string }) => {
+          if (!teamMap.has(row.team_name)) teamMap.set(row.team_name, []);
+          teamMap.get(row.team_name)!.push(row.user_id);
+        });
+        const rebuilt = Array.from(teamMap.entries()).map(([teamName, memberIds]) => ({
+          teamName,
+          memberIds,
+        }));
+        setTeams(rebuilt);
+        setTeamSearchQueries(rebuilt.map(() => ""));
+      } else {
+        setTeams([]);
+        setTeamSearchQueries([]);
+      }
+    } else {
+      setTeams([]);
+      setTeamSearchQueries([]);
+    }
+
+    setIsAdding(true);
+    setIsFormLoading(false);
   };
 
   const addTeam = () => {
@@ -399,6 +443,25 @@ export function HomeworkClient() {
     return rows;
   };
 
+  const renderTaskItem = (task: string, tIdx: number, accentColor: string) => {
+    if (task.startsWith("[img]")) {
+      const url = task.slice(5);
+      return (
+        <div key={tIdx} className="overflow-hidden rounded-lg border border-[#ece8db] bg-white">
+          <img src={url} alt="과제 첨부 이미지" className="max-h-96 w-full object-contain" />
+        </div>
+      );
+    }
+    return (
+      <div
+        key={tIdx}
+        className="whitespace-pre-wrap rounded-lg border border-[#ece8db] bg-white p-4 font-['Pretendard',sans-serif] text-sm leading-[1.8] text-[#4a4a40]"
+      >
+        <span className={`${accentColor} mr-2 font-semibold`}>#{tIdx + 1}</span> {task}
+      </div>
+    );
+  };
+
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 pb-20">
@@ -410,7 +473,14 @@ export function HomeworkClient() {
           <p className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e] sm:text-sm">과제를 생성하고 유형별 내용을 작성하세요.</p>
         </div>
         <button
-          onClick={() => setIsAdding(!isAdding)}
+          onClick={() => {
+            if (isEditing) {
+              setIsAdding(false);
+              resetForm();
+            } else {
+              setIsAdding(!isAdding);
+            }
+          }}
           className={`inline-flex h-8 items-center rounded-md px-3 font-['Pretendard',sans-serif] text-xs font-semibold text-white transition-colors ${
             isAdding ? "bg-[#6b6b5e]" : "bg-[#16140f] hover:bg-[#16140f]/80"
           }`}
@@ -422,7 +492,7 @@ export function HomeworkClient() {
       {/* Add Form */}
       {isAdding && (
         <form
-          onSubmit={handleAddHomework}
+          onSubmit={handleSubmitHomework}
           className="animate-in fade-in slide-in-from-top-4 rounded-lg border border-[#ddd9cc] bg-white p-4 sm:p-6 space-y-6 sm:space-y-8"
         >
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
@@ -531,17 +601,53 @@ export function HomeworkClient() {
                       <div className="space-y-3">
                         {individualTasks.map((task, idx) => (
                           <div key={idx} className="group relative">
-                            <textarea
-                              value={task}
-                              onChange={(e) => {
-                                const newTasks = [...individualTasks];
-                                newTasks[idx] = e.target.value;
-                                setIndividualTasks(newTasks);
-                              }}
-                              placeholder={`개인별 수행 과제 #${idx + 1}`}
-                              rows={3}
-                              className="w-full rounded-lg border border-[#ddd9cc] px-4 py-3 text-sm focus:border-[#FF6C0F]/50 focus:outline-none transition-all placeholder:text-[#16140f]/40 bg-white"
-                            />
+                            {task.startsWith("[img]") ? (
+                              <div className="overflow-hidden rounded-lg border border-[#ddd9cc] bg-white">
+                                <img src={task.slice(5)} alt="첨부 이미지" className="max-h-48 w-full object-contain" />
+                              </div>
+                            ) : (
+                              <textarea
+                                value={task}
+                                onChange={(e) => {
+                                  const newTasks = [...individualTasks];
+                                  newTasks[idx] = e.target.value;
+                                  setIndividualTasks(newTasks);
+                                }}
+                                placeholder={`개인별 수행 과제 #${idx + 1}`}
+                                rows={3}
+                                className="w-full rounded-lg border border-[#ddd9cc] bg-white px-4 py-3 text-sm transition-all placeholder:text-[#16140f]/40 focus:border-[#FF6C0F]/50 focus:outline-none"
+                              />
+                            )}
+                            <label
+                              className={`absolute -right-2 top-8 cursor-pointer rounded-full border border-[#ddd9cc] bg-white p-1 transition-colors hover:border-[#FF6C0F] ${
+                                uploadingTaskIndex?.type === 'individual' && uploadingTaskIndex?.idx === idx
+                                  ? 'pointer-events-none opacity-50'
+                                  : ''
+                              }`}
+                            >
+                              <ImageIcon className="h-3.5 w-3.5 text-[#6b6b5e]" strokeWidth={2} />
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                                className="hidden"
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  setUploadingTaskIndex({ type: 'individual', idx });
+                                  try {
+                                    const url = await uploadHomeworkImage(file);
+                                    const newTasks = [...individualTasks];
+                                    newTasks.splice(idx + 1, 0, `[img]${url}`);
+                                    setIndividualTasks(newTasks);
+                                  } catch (err) {
+                                    alert(err instanceof Error ? err.message : "이미지 업로드에 실패했습니다.");
+                                  } finally {
+                                    setUploadingTaskIndex(null);
+                                    e.target.value = "";
+                                  }
+                                }}
+                              />
+                            </label>
                             {individualTasks.length > 1 && (
                               <button
                                 type="button"
@@ -574,17 +680,53 @@ export function HomeworkClient() {
                       <div className="space-y-3">
                         {teamTasks.map((task, idx) => (
                           <div key={idx} className="group relative">
-                            <textarea
-                              value={task}
-                              onChange={(e) => {
-                                const newTasks = [...teamTasks];
-                                newTasks[idx] = e.target.value;
-                                setTeamTasks(newTasks);
-                              }}
-                              placeholder={`팀 단위 협동 과제 #${idx + 1}`}
-                              rows={3}
-                              className="w-full rounded-lg border border-[#ddd9cc] px-4 py-3 text-sm focus:border-[#FF6C0F]/50 focus:outline-none transition-all placeholder:text-[#16140f]/40 bg-white"
-                            />
+                            {task.startsWith("[img]") ? (
+                              <div className="overflow-hidden rounded-lg border border-[#ddd9cc] bg-white">
+                                <img src={task.slice(5)} alt="첨부 이미지" className="max-h-48 w-full object-contain" />
+                              </div>
+                            ) : (
+                              <textarea
+                                value={task}
+                                onChange={(e) => {
+                                  const newTasks = [...teamTasks];
+                                  newTasks[idx] = e.target.value;
+                                  setTeamTasks(newTasks);
+                                }}
+                                placeholder={`팀 단위 협동 과제 #${idx + 1}`}
+                                rows={3}
+                                className="w-full rounded-lg border border-[#ddd9cc] bg-white px-4 py-3 text-sm transition-all placeholder:text-[#16140f]/40 focus:border-[#FF6C0F]/50 focus:outline-none"
+                              />
+                            )}
+                            <label
+                              className={`absolute -right-2 top-8 cursor-pointer rounded-full border border-[#ddd9cc] bg-white p-1 transition-colors hover:border-[#FF6C0F] ${
+                                uploadingTaskIndex?.type === 'team' && uploadingTaskIndex?.idx === idx
+                                  ? 'pointer-events-none opacity-50'
+                                  : ''
+                              }`}
+                            >
+                              <ImageIcon className="h-3.5 w-3.5 text-[#6b6b5e]" strokeWidth={2} />
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                                className="hidden"
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  setUploadingTaskIndex({ type: 'team', idx });
+                                  try {
+                                    const url = await uploadHomeworkImage(file);
+                                    const newTasks = [...teamTasks];
+                                    newTasks.splice(idx + 1, 0, `[img]${url}`);
+                                    setTeamTasks(newTasks);
+                                  } catch (err) {
+                                    alert(err instanceof Error ? err.message : "이미지 업로드에 실패했습니다.");
+                                  } finally {
+                                    setUploadingTaskIndex(null);
+                                    e.target.value = "";
+                                  }
+                                }}
+                              />
+                            </label>
                             {teamTasks.length > 1 && (
                               <button
                                 type="button"
@@ -736,7 +878,7 @@ export function HomeworkClient() {
               type="submit"
               className="w-full sm:w-auto rounded-md bg-[#16140f] px-6 py-2.5 font-['Pretendard',sans-serif] text-sm font-semibold text-white transition-colors hover:bg-[#16140f]/80"
             >
-              과제 생성 및 배포
+              {isEditing ? "변경사항 저장" : "과제 생성 및 배포"}
             </button>
           </div>
         </form>
@@ -794,6 +936,14 @@ export function HomeworkClient() {
                     </p>
                   </div>
                   <div className="flex gap-2">
+                    <button
+                      onClick={() => openEdit(hw)}
+                      disabled={isFormLoading}
+                      className="inline-flex h-8 items-center gap-1 rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-semibold text-[#16140f] transition-colors hover:bg-[#fcfcf8] disabled:opacity-50"
+                    >
+                      <Pencil className="h-3.5 w-3.5" strokeWidth={2} />
+                      수정
+                    </button>
                     <button
                       onClick={() => handleFetchTeams(hw.id)}
                       className={`inline-flex h-8 items-center rounded-md px-3 font-['Pretendard',sans-serif] text-xs font-semibold transition-colors ${
@@ -859,11 +1009,9 @@ export function HomeworkClient() {
                                 <span className="h-2 w-2 rounded-full bg-[#16140f]" /> 개인 과제 목록
                               </h4>
                               <div className="space-y-4">
-                                {(Array.isArray(hw.individual_content) ? hw.individual_content : [hw.individual_content]).map((task: string, tIdx: number) => (
-                                  <div key={tIdx} className="rounded-lg bg-white p-4 border border-[#ece8db] whitespace-pre-wrap font-['Pretendard',sans-serif] text-sm text-[#4a4a40] leading-[1.8]">
-                                    <span className="text-[#2563EB] font-semibold mr-2">#{tIdx + 1}</span> {task}
-                                  </div>
-                                ))}
+                                {(Array.isArray(hw.individual_content) ? hw.individual_content : [hw.individual_content]).map(
+                                  (task: string, tIdx: number) => renderTaskItem(task, tIdx, "text-[#2563EB]"),
+                                )}
                               </div>
                             </div>
                           )}
@@ -873,11 +1021,9 @@ export function HomeworkClient() {
                                 <span className="h-2 w-2 rounded-full bg-[#16140f]" /> 팀 협동 과제 목록
                               </h4>
                               <div className="space-y-4">
-                                {(Array.isArray(hw.team_content) ? hw.team_content : [hw.team_content]).map((task: string, tIdx: number) => (
-                                  <div key={tIdx} className="rounded-lg bg-white p-4 border border-[#ece8db] whitespace-pre-wrap font-['Pretendard',sans-serif] text-sm text-[#4a4a40] leading-[1.8]">
-                                    <span className="text-[#FF6C0F] font-semibold mr-2">#{tIdx + 1}</span> {task}
-                                  </div>
-                                ))}
+                                {(Array.isArray(hw.team_content) ? hw.team_content : [hw.team_content]).map(
+                                  (task: string, tIdx: number) => renderTaskItem(task, tIdx, "text-[#FF6C0F]"),
+                                )}
                               </div>
                             </div>
                           )}
