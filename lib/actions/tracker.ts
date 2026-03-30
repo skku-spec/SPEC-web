@@ -351,3 +351,86 @@ export async function markAllPresent(sessionId: string) {
     return { success: false as const, error: err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다." };
   }
 }
+
+export async function upsertHomework(payload: {
+  id?: string;
+  title: string;
+  submission_link: string | null;
+  padlet_board_id: string | null;
+  individual_content: string[];
+  team_content: string[];
+  is_individual: boolean;
+  is_team: boolean;
+  due_date: string | null;
+}) {
+  try {
+    await requireAdmin();
+    const trimmedTitle = payload.title?.trim();
+    if (!trimmedTitle) return { success: false as const, error: "과제 제목을 입력해주세요." };
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+      .from("homeworks")
+      .upsert(
+        {
+          ...(payload.id ? { id: payload.id } : {}),
+          title: trimmedTitle,
+          submission_link: payload.submission_link,
+          padlet_board_id: payload.padlet_board_id,
+          individual_content: payload.individual_content,
+          team_content: payload.team_content,
+          is_individual: payload.is_individual,
+          is_team: payload.is_team,
+          due_date: payload.due_date,
+        },
+        { onConflict: "id" }
+      )
+      .select()
+      .single();
+
+    if (error) return { success: false as const, error: `과제 저장에 실패했습니다: ${error.message}` };
+    revalidatePath("/admin/homework");
+    revalidatePath("/dashboard/homework");
+    return { success: true as const, data };
+  } catch (err) {
+    return { success: false as const, error: err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다." };
+  }
+}
+
+export async function replaceHomeworkTeams(
+  homeworkId: string,
+  teams: { teamName: string; memberIds: string[] }[]
+) {
+  try {
+    await requireAdmin();
+    const supabase = await createClient();
+
+    const { error: deleteError } = await supabase
+      .from("homework_team_assignments")
+      .delete()
+      .eq("homework_id", homeworkId);
+
+    if (deleteError) return { success: false as const, error: `팀 배정 초기화에 실패했습니다: ${deleteError.message}` };
+
+    if (teams.length === 0) return { success: true as const };
+
+    const assignments = teams.flatMap(t =>
+      t.memberIds.map(mId => ({
+        homework_id: homeworkId,
+        user_id: mId,
+        team_name: t.teamName,
+      }))
+    );
+
+    if (assignments.length === 0) return { success: true as const };
+
+    const { error: insertError } = await supabase
+      .from("homework_team_assignments")
+      .insert(assignments);
+
+    if (insertError) return { success: false as const, error: `팀 배정 저장에 실패했습니다: ${insertError.message}` };
+    return { success: true as const };
+  } catch (err) {
+    return { success: false as const, error: err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다." };
+  }
+}

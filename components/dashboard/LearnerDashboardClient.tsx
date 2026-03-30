@@ -83,19 +83,10 @@ export function LearnerDashboardClient({
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-1">
             <p className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#6b6b5e]">종합 성취도</p>
-            <div className="flex items-baseline gap-2">
-              <span className={`font-['Pretendard',sans-serif] text-5xl font-black ${
-                totalScore >= 80 ? "text-[#2f9e44]" :
-                totalScore >= 50 ? "text-[#FF6C0F]" :
-                "text-[#b42318]"
-              }`}>{totalScore}%</span>
-              <span className="font-['Pretendard',sans-serif] text-sm text-[#6b6b5e]">기반 종합 점수</span>
-            </div>
           </div>
           <div className="flex-1 max-w-md">
             <div className="flex justify-between font-['Pretendard',sans-serif] text-xs mb-2">
               <span className="text-[#6b6b5e]">Pass Line (80%)</span>
-              <span className="font-semibold text-[#16140f]">{totalScore}%</span>
             </div>
             <div className="h-3 w-full rounded-full bg-gray-100 overflow-hidden">
               <div 

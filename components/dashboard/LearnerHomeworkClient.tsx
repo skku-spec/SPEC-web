@@ -239,10 +239,16 @@ export function LearnerHomeworkClient({
                   <div className="rounded-lg border border-[#ddd9cc] bg-[#fcfcf8] p-4">
                     <ul className="space-y-2">
                       {(selectedHomework.individual_content as string[]).map((task, idx) => (
-                        <li key={idx} className="flex gap-2 font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">
-                          <span className="text-[#FF6C0F]">•</span>
-                          {task}
-                        </li>
+                        task.startsWith("[img]") ? (
+                          <li key={idx} className="overflow-hidden rounded-lg border border-[#ddd9cc]">
+                            <img src={task.slice(5)} alt="과제 첨부 이미지" className="max-h-64 w-full object-contain" />
+                          </li>
+                        ) : (
+                          <li key={idx} className="flex gap-2 font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">
+                            <span className="text-[#FF6C0F]">•</span>
+                            {task}
+                          </li>
+                        )
                       ))}
                     </ul>
                   </div>
@@ -255,10 +261,16 @@ export function LearnerHomeworkClient({
                   <div className="rounded-lg border border-[#ddd9cc] bg-[#fcfcf8] p-4">
                     <ul className="space-y-2">
                       {(selectedHomework.team_content as string[]).map((task, idx) => (
-                        <li key={idx} className="flex gap-2 font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">
-                          <span className="text-[#2563EB]">•</span>
-                          {task}
-                        </li>
+                        task.startsWith("[img]") ? (
+                          <li key={idx} className="overflow-hidden rounded-lg border border-[#ddd9cc]">
+                            <img src={task.slice(5)} alt="과제 첨부 이미지" className="max-h-64 w-full object-contain" />
+                          </li>
+                        ) : (
+                          <li key={idx} className="flex gap-2 font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">
+                            <span className="text-[#2563EB]">•</span>
+                            {task}
+                          </li>
+                        )
                       ))}
                     </ul>
                   </div>
