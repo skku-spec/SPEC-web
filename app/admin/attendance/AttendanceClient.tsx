@@ -84,6 +84,11 @@ export function AttendanceClient({
     userName: string;
   } | null>(null);
   const [reasonText, setReasonText] = useState("");
+  const [viewNotesModal, setViewNotesModal] = useState<{
+    userName: string;
+    sessionTitle: string;
+    notes: string;
+  } | null>(null);
 
   const getAttendanceStatus = (userId: string, sessionId: string) => {
     return logs.find(l => l.user_id === userId && l.session_id === sessionId)?.status || "none";
@@ -164,16 +169,17 @@ export function AttendanceClient({
   };
 
   useEffect(() => {
-    if (!reasonModal?.open) return;
+    if (!reasonModal?.open && !viewNotesModal) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setReasonModal(null);
         setReasonText("");
+        setViewNotesModal(null);
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [reasonModal?.open]);
+  }, [reasonModal?.open, viewNotesModal]);
 
   const handleMarkAllPresent = async (sessionId: string) => {
     if (!isAdminOrPreneur) return;
@@ -364,12 +370,21 @@ export function AttendanceClient({
                         </div>
                         {cellLog?.notes && (
                           <div className="mt-1 flex justify-center">
-                            <span title={cellLog.notes}>
+                            <button
+                              type="button"
+                              onClick={() => setViewNotesModal({
+                                userName: learner.name,
+                                sessionTitle: session.title,
+                                notes: cellLog.notes ?? "",
+                              })}
+                              className="inline-flex items-center rounded-sm text-[#6b6b5e] transition-colors hover:text-[#16140f]"
+                              aria-label={`${learner.name} ${session.title} 사유 보기`}
+                            >
                               <MessageSquareText
                                 className="h-3 w-3 text-[#6b6b5e]"
                                 strokeWidth={1.5}
                               />
-                            </span>
+                            </button>
                           </div>
                         )}
                       </td>
@@ -421,6 +436,7 @@ export function AttendanceClient({
               <div className="space-y-2">
                 {sessions.map(session => {
                   const currentStatus = getAttendanceStatus(learner.id, session.id);
+                  const cellLog = logs.find(l => l.user_id === learner.id && l.session_id === session.id);
                   return (
                     <div key={session.id} className="flex items-center justify-between rounded-md bg-[#f5f5ee] px-3 py-2">
                       <span className="font-['Pretendard',sans-serif] text-xs font-medium text-[#4a4a40]">{session.title}</span>
@@ -442,6 +458,20 @@ export function AttendanceClient({
                             </button>
                           );
                         })}
+                        {cellLog?.notes && (
+                          <button
+                            type="button"
+                            onClick={() => setViewNotesModal({
+                              userName: learner.name,
+                              sessionTitle: session.title,
+                              notes: cellLog.notes ?? "",
+                            })}
+                            className="ml-1 inline-flex items-center rounded-sm text-[#6b6b5e] transition-colors hover:text-[#16140f]"
+                            aria-label={`${learner.name} ${session.title} 사유 보기`}
+                          >
+                            <MessageSquareText className="h-3.5 w-3.5 text-[#6b6b5e]" strokeWidth={1.5} />
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
@@ -486,6 +516,37 @@ export function AttendanceClient({
           </div>
         )}
       </div>
+
+      {viewNotesModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          onClick={() => setViewNotesModal(null)}
+        >
+          <div
+            className="mx-4 w-full max-w-sm rounded-lg border border-[#ddd9cc] bg-white p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="mb-1 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
+              {viewNotesModal.userName} — {viewNotesModal.sessionTitle} 사유
+            </h3>
+            <p className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">
+              저장된 출석 사유입니다.
+            </p>
+            <p className="mt-3 whitespace-pre-wrap font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">
+              {viewNotesModal.notes}
+            </p>
+            <div className="mt-4 flex items-center justify-end">
+              <button
+                type="button"
+                onClick={() => setViewNotesModal(null)}
+                className="inline-flex h-8 items-center rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f] transition-colors hover:bg-[#fcfcf8]"
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {reasonModal?.open && (
         <div
