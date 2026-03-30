@@ -75,12 +75,9 @@ export default function BylawsPage() {
         <article className="min-w-0 flex-1 font-['Pretendard',sans-serif] text-base leading-relaxed text-[#16140f]">
           {/* ==================== 제1장 총칙 ==================== */}
           <section id="general" className="scroll-mt-24">
-            <h2 className="mb-2 font-['MaruBuri',serif] text-2xl font-semibold">
+            <h2 className="mb-6 font-['MaruBuri',serif] text-2xl font-semibold">
               제1장 총칙
             </h2>
-            <p className="mb-6 text-sm text-[#16140f]/60">
-              시행일: 2026년 3월 30일
-            </p>
 
             <h3 className="mb-3 font-['MaruBuri',serif] text-lg font-semibold">
               제1조 (명칭)
@@ -562,12 +559,7 @@ export default function BylawsPage() {
               개정 즉시 전 회원에게 공지한다.
             </p>
 
-            <h3 className="mb-3 font-['MaruBuri',serif] text-lg font-semibold">
-              제29조 (시행일)
-            </h3>
-            <p className="mb-8">
-              본 회칙은 2026년 3월 30일부터 시행한다.
-            </p>
+
           </section>
 
           <section className="scroll-mt-24">
