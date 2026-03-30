@@ -98,11 +98,6 @@ export function LearnerDashboardClient({
                 style={{ width: `${totalScore}%` }} 
               />
             </div>
-            {totalScore < 80 && (
-              <p className="mt-2 text-[11px] text-[#FF6C0F] font-medium font-['Pretendard',sans-serif]">
-                졸업 기준(80%)까지 {80 - totalScore}% 남았습니다. 조금만 더 힘내세요!
-              </p>
-            )}
           </div>
         </div>
       </div>
