@@ -32,7 +32,13 @@ type Homework = {
   is_team: boolean;
   due_date?: string | null;
   created_at: string;
+  section_type_config?: Record<string, SectionConfig>;
 };
+
+// Per-section type config stored in homeworks.section_type_config
+type SectionConfig =
+  | { type: "individual" }
+  | { type: "team"; task_index: number };
 
 type PadletSection = {
   id: string;
@@ -66,6 +72,7 @@ type Profile = {
 type TeamAssignment = {
   teamName: string;
   memberIds: string[];
+  taskIndex: number; // which team_content item this team belongs to
 };
 
 const supabase = createClient();
@@ -86,17 +93,15 @@ export function HomeworkClient() {
   const [isTeam, setIsTeam] = useState(false);
   const [dueDate, setDueDate] = useState("");
   const [teams, setTeams] = useState<TeamAssignment[]>([]);
-  const [teamSearchQueries, setTeamSearchQueries] = useState<string[]>([]);
+  // key: `${taskIndex}-${teamArrayIndex}` → search query string
+  const [teamSearchQueries, setTeamSearchQueries] = useState<Record<string, string>>({});
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isFormLoading, setIsFormLoading] = useState(false);
   const [uploadingTaskIndex, setUploadingTaskIndex] = useState<{ type: 'individual' | 'team'; idx: number } | null>(null);
 
   const [viewingId, setViewingId] = useState<string | null>(null);
-  const [viewingTeams, setViewingTeams] = useState<{
-    team_name: string;
-    user_id: string;
-  }[]>([]);
+  const [teamsByHomework, setTeamsByHomework] = useState<Record<string, { team_name: string; user_id: string; task_index: number }[]>>({});
   const [activeTab, setActiveTab] = useState<Record<string, 'content' | 'status'>>({});
   const [padletData, setPadletData] = useState<Record<string, { sections: PadletSection[]; posts: PadletPost[]; loading: boolean; error: string | null }>>({});
 
@@ -140,7 +145,8 @@ export function HomeworkClient() {
           if (pData && !pData.loading && !pData.error && availableLearners.length > 0) {
             const hw = homeworks.find(h => h.id === hwId);
             if (hw) {
-              const rows = buildSubmissionRows(hw);
+              const hwTeams = teamsByHomework[hwId] ?? [];
+              const rows = buildSubmissionRows(hw, hwTeams);
               const syncData = availableLearners.map(learner => {
                 const row = rows.find(r => r.label === learner.name);
                 const isCompleted = row ? Object.values(row.sectionStatus).some(v => v === true) : false;
@@ -161,38 +167,35 @@ export function HomeworkClient() {
     if (Object.keys(padletData).length > 0) {
       syncAll();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- buildSubmissionRows is a pure function whose deps (padletData) are already listed
-  }, [padletData, availableLearners, homeworks]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- buildSubmissionRows is a pure function whose deps (padletData, teamsByHomework) are already listed
+  }, [padletData, availableLearners, homeworks, teamsByHomework]);
+
+  const loadTeamData = async (homeworkId: string) => {
+    const { data, error } = await supabase
+      .from("homework_team_assignments")
+      .select("team_name,user_id,task_index")
+      .eq("homework_id", homeworkId);
+
+    setTeamsByHomework(prev => ({
+      ...prev,
+      [homeworkId]: (!error && data) ? data as { team_name: string; user_id: string; task_index: number }[] : [],
+    }));
+  };
 
   const handleFetchTeams = async (homeworkId: string) => {
     if (viewingId === homeworkId) {
       setViewingId(null);
       return;
     }
-
     setViewingId(homeworkId);
-    const { data, error } = await supabase
-      .from("homework_team_assignments")
-      .select("team_name,user_id")
-      .eq("homework_id", homeworkId);
-
-    if (!error && data) {
-      setViewingTeams(data as { team_name: string; user_id: string }[]);
-    } else {
-      setViewingTeams([]);
-    }
+    // Always reload to ensure latest team data is shown
+    await loadTeamData(homeworkId);
   };
 
-  // Silently fetch team data for a homework without toggling viewingId (used by status tab)
+  // Silently fetch team data for a homework (used by status tab — skip if already loaded)
   const fetchTeamData = async (homeworkId: string) => {
-    const { data, error } = await supabase
-      .from("homework_team_assignments")
-      .select("team_name,user_id")
-      .eq("homework_id", homeworkId);
-
-    if (!error && data) {
-      setViewingTeams(data as { team_name: string; user_id: string }[]);
-    }
+    if (teamsByHomework[homeworkId] !== undefined) return; // already loaded
+    await loadTeamData(homeworkId);
   };
 
   const handleSubmitHomework = async (e: { preventDefault: () => void }) => {
@@ -227,7 +230,16 @@ export function HomeworkClient() {
       const teamResult = await replaceHomeworkTeams(hwId, teams);
       if (!teamResult.success) {
         alert(teamResult.error ?? "팀 배정 중 에러가 발생했습니다.");
+      } else {
+        // Reflect the new team assignments in the local cache immediately
+        const freshTeams = teams.flatMap(t =>
+          t.memberIds.map(uid => ({ team_name: t.teamName, user_id: uid, task_index: t.taskIndex }))
+        );
+        setTeamsByHomework(prev => ({ ...prev, [hwId]: freshTeams }));
       }
+    } else {
+      // Team was turned off — clear any cached assignments
+      setTeamsByHomework(prev => ({ ...prev, [hwId]: [] }));
     }
 
     if (isEditing) {
@@ -250,7 +262,7 @@ export function HomeworkClient() {
     setIsIndividual(true);
     setIsTeam(false);
     setTeams([]);
-    setTeamSearchQueries([]);
+    setTeamSearchQueries({});
     setEditingId(null);
     setIsEditing(false);
   };
@@ -271,58 +283,71 @@ export function HomeworkClient() {
     if (hw.is_team) {
       const { data } = await supabase
         .from("homework_team_assignments")
-        .select("team_name,user_id")
+        .select("team_name,user_id,task_index")
         .eq("homework_id", hw.id);
 
       if (data && data.length > 0) {
-        const teamMap = new Map<string, string[]>();
-        data.forEach((row: { team_name: string; user_id: string }) => {
-          if (!teamMap.has(row.team_name)) teamMap.set(row.team_name, []);
-          teamMap.get(row.team_name)!.push(row.user_id);
+        // Group by (task_index, team_name)
+        const teamMap = new Map<string, { taskIndex: number; memberIds: string[] }>();
+        data.forEach((row: { team_name: string; user_id: string; task_index: number }) => {
+          const key = `${row.task_index}__${row.team_name}`;
+          if (!teamMap.has(key)) teamMap.set(key, { taskIndex: row.task_index, memberIds: [] });
+          teamMap.get(key)!.memberIds.push(row.user_id);
         });
-        const rebuilt = Array.from(teamMap.entries()).map(([teamName, memberIds]) => ({
-          teamName,
-          memberIds,
+        const rebuilt: TeamAssignment[] = Array.from(teamMap.entries()).map(([key, val]) => ({
+          teamName: key.split("__").slice(1).join("__"),
+          memberIds: val.memberIds,
+          taskIndex: val.taskIndex,
         }));
         setTeams(rebuilt);
-        setTeamSearchQueries(rebuilt.map(() => ""));
+        setTeamSearchQueries({});
       } else {
         setTeams([]);
-        setTeamSearchQueries([]);
+        setTeamSearchQueries({});
       }
     } else {
       setTeams([]);
-      setTeamSearchQueries([]);
+      setTeamSearchQueries({});
     }
 
     setIsAdding(true);
     setIsFormLoading(false);
   };
 
-  const addTeam = () => {
-    setTeams([...teams, { teamName: `Team ${teams.length + 1}`, memberIds: [] }]);
-    setTeamSearchQueries([...teamSearchQueries, ""]);
+  const addTeam = (taskIndex: number) => {
+    const teamsForTask = teams.filter(t => t.taskIndex === taskIndex);
+    setTeams([...teams, { teamName: `Team ${teamsForTask.length + 1}`, memberIds: [], taskIndex }]);
   };
 
-  const removeTeam = (index: number) => {
-    setTeams(teams.filter((_, i) => i !== index));
-    setTeamSearchQueries(teamSearchQueries.filter((_, i) => i !== index));
+  const removeTeam = (teamArrayIndex: number) => {
+    setTeams(teams.filter((_, i) => i !== teamArrayIndex));
   };
 
-  const toggleMemberInTeam = (teamIndex: number, userId: string) => {
+  const toggleMemberInTeam = (teamArrayIndex: number, userId: string) => {
     const newTeams = [...teams];
-    const memberIds = newTeams[teamIndex].memberIds;
+    const memberIds = newTeams[teamArrayIndex].memberIds;
     if (memberIds.includes(userId)) {
-      newTeams[teamIndex].memberIds = memberIds.filter(id => id !== userId);
+      newTeams[teamArrayIndex].memberIds = memberIds.filter(id => id !== userId);
     } else {
-      newTeams[teamIndex].memberIds = [...memberIds, userId];
+      newTeams[teamArrayIndex].memberIds = [...memberIds, userId];
     }
     setTeams(newTeams);
-    
-    // Clear search after adding
-    const newQueries = [...teamSearchQueries];
-    newQueries[teamIndex] = "";
-    setTeamSearchQueries(newQueries);
+
+    // Clear search query for this slot after adding
+    const key = `${newTeams[teamArrayIndex].taskIndex}-${teamArrayIndex}`;
+    setTeamSearchQueries(prev => ({ ...prev, [key]: "" }));
+  };
+
+  const copyTeamsFromPrevTask = (taskIndex: number) => {
+    if (taskIndex === 0) return;
+    const prevTeams = teams.filter(t => t.taskIndex === taskIndex - 1);
+    const alreadyHasTeams = teams.some(t => t.taskIndex === taskIndex);
+    if (alreadyHasTeams) {
+      if (!confirm(`과제 #${taskIndex + 1}의 기존 팀 배정을 삭제하고 이전 과제의 팀을 복사할까요?`)) return;
+      setTeams([...teams.filter(t => t.taskIndex !== taskIndex), ...prevTeams.map(t => ({ ...t, taskIndex }))]);
+    } else {
+      setTeams([...teams, ...prevTeams.map(t => ({ ...t, taskIndex }))]);
+    }
   };
 
   const handleDeleteHomework = async (id: string) => {
@@ -359,26 +384,69 @@ export function HomeworkClient() {
   };
 
 
-  const buildSubmissionRows = (hw: Homework): SubmissionRow[] => {
+  // Determine the effective SectionConfig for a section.
+  // Falls back to homework-level flags if not explicitly configured.
+  const getSectionConfig = (hw: Homework, sectionId: string): SectionConfig => {
+    const config = hw.section_type_config ?? {};
+    if (config[sectionId]) return config[sectionId];
+    if (hw.is_team) return { type: "team", task_index: 0 };
+    return { type: "individual" };
+  };
+
+  // Convenience: just the type string for badge display
+  const getSectionType = (hw: Homework, sectionId: string): "individual" | "team" => {
+    return getSectionConfig(hw, sectionId).type;
+  };
+
+  // Cycle team section through task indices, or toggle to individual
+  const handleSectionTypeToggle = async (hw: Homework, sectionId: string) => {
+    const current = getSectionConfig(hw, sectionId);
+    let next: SectionConfig;
+    if (current.type === "individual") {
+      next = { type: "team", task_index: 0 };
+    } else {
+      // Advance to next task_index, wrap back to individual when past the last task
+      const nextIdx = current.task_index + 1;
+      next = nextIdx < hw.team_content.length
+        ? { type: "team", task_index: nextIdx }
+        : { type: "individual" };
+    }
+    const newConfig: Record<string, SectionConfig> = { ...(hw.section_type_config ?? {}), [sectionId]: next };
+
+    // Optimistic local update
+    setHomeworks(prev => prev.map(h => h.id === hw.id ? { ...h, section_type_config: newConfig } : h));
+
+    // Persist
+    await upsertHomework({
+      id: hw.id,
+      title: hw.title,
+      submission_link: hw.submission_link ?? null,
+      padlet_board_id: hw.padlet_board_id ?? null,
+      individual_content: hw.individual_content,
+      team_content: hw.team_content,
+      is_individual: hw.is_individual,
+      is_team: hw.is_team,
+      due_date: hw.due_date ?? null,
+      section_type_config: newConfig,
+    });
+  };
+
+  const buildSubmissionRows = (hw: Homework, hwTeams: { team_name: string; user_id: string; task_index: number }[]): SubmissionRow[] => {
     const pData = padletData[hw.id];
     if (!pData) return [];
     const { sections, posts } = pData;
 
-    // Build a map: learnerId -> { teamName, allTeamMemberNames }
-    // so we can check if any team member submitted for team sections
+    // Build a map: learnerId + taskIndex -> { teamName, memberNames, memberUsernames }
+    // Key: `${userId}:${taskIndex}`
     const learnerTeamMap = new Map<string, { teamName: string; memberNames: string[]; memberUsernames: string[] }>();
-    if (hw.is_team && viewingTeams.length > 0) {
-      // Create a map of user_id to profile for quick lookup
+    if (hw.is_team && hwTeams.length > 0) {
       const learnerLookup = new Map(availableLearners.map(r => [r.id, r]));
 
-      viewingTeams.forEach(vt => {
-        const teamMembers = viewingTeams
-          .filter(m => m.team_name === vt.team_name);
-        
+      hwTeams.forEach(vt => {
+        const teamMembers = hwTeams.filter(m => m.team_name === vt.team_name && m.task_index === vt.task_index);
         const memberNames = teamMembers.map(m => learnerLookup.get(m.user_id)?.name || 'Unknown');
         const memberUsernames = teamMembers.map(m => learnerLookup.get(m.user_id)?.username || '');
-        
-        learnerTeamMap.set(vt.user_id, { teamName: vt.team_name, memberNames, memberUsernames });
+        learnerTeamMap.set(`${vt.user_id}:${vt.task_index}`, { teamName: vt.team_name, memberNames, memberUsernames });
       });
     }
 
@@ -389,8 +457,8 @@ export function HomeworkClient() {
         if (!sMatch) return false;
 
         const authorName = (p.author?.name || '').toLowerCase();
-        const authorUsername = (p.author?.username || '').toLowerCase().replace(/^@/, ''); // Remove leading @ if present
-        
+        const authorUsername = (p.author?.username || '').toLowerCase().replace(/^@/, '');
+
         const matchesName = targetNames.some(n => {
           const nl = n.toLowerCase();
           return nl && (authorName.includes(nl) || nl.includes(authorName));
@@ -398,7 +466,7 @@ export function HomeworkClient() {
 
         const matchesUsername = targetUsernames.some(u => {
           const ul = u.toLowerCase().replace(/^@/, '');
-          return ul && (authorUsername === ul); // Exact match for username is safer
+          return ul && (authorUsername === ul);
         });
 
         return matchesName || matchesUsername;
@@ -406,37 +474,35 @@ export function HomeworkClient() {
 
     const rows: SubmissionRow[] = [];
 
-    // Show every available learner as a row
     availableLearners.forEach(learner => {
       const sectionStatus: Record<string, boolean> = {};
-      const teamInfo = learnerTeamMap.get(learner.id);
 
-      // Collect all names and usernames to search for (including team members)
-      const targetNames = [learner.name];
-      const targetUsernames = [learner.username];
-
-      if (teamInfo) {
-        teamInfo.memberNames.forEach(name => {
-          if (!targetNames.includes(name)) targetNames.push(name);
-        });
-        teamInfo.memberUsernames.forEach(username => {
-          if (!targetUsernames.includes(username)) targetUsernames.push(username);
-        });
-      }
+      // First team assignment (task_index 0) is used for the teamLabel badge
+      const firstTeamInfo = learnerTeamMap.get(`${learner.id}:0`);
 
       sections.forEach(s => {
-        sectionStatus[s.id] = anyPostedInSection(targetNames, targetUsernames, s.id);
+        const sConfig = getSectionConfig(hw, s.id);
+
+        if (sConfig.type === "individual") {
+          sectionStatus[s.id] = anyPostedInSection([learner.name], [learner.username], s.id);
+        } else {
+          // team section: look up this learner's team for the specific task_index
+          const teamInfo = learnerTeamMap.get(`${learner.id}:${sConfig.task_index}`);
+          const targetNames = teamInfo ? teamInfo.memberNames : [learner.name];
+          const targetUsernames = teamInfo ? teamInfo.memberUsernames : [learner.username];
+          sectionStatus[s.id] = anyPostedInSection(targetNames, targetUsernames, s.id);
+        }
       });
 
       if (sections.length === 0) {
-        sectionStatus['__none__'] = anyPostedInSection(targetNames, targetUsernames, undefined);
+        sectionStatus['__none__'] = anyPostedInSection([learner.name], [learner.username], undefined);
       }
 
-      const teamLabel = teamInfo ? `(${teamInfo.teamName})` : '';
+      const teamLabel = firstTeamInfo ? `(${firstTeamInfo.teamName})` : '';
       rows.push({
         label: learner.name,
-        isTeam: !!teamInfo,
-        memberNames: teamInfo?.memberNames ?? [learner.name],
+        isTeam: !!firstTeamInfo,
+        memberNames: firstTeamInfo?.memberNames ?? [learner.name],
         sectionStatus,
         teamLabel,
       });
@@ -781,129 +847,222 @@ export function HomeworkClient() {
                           +
                         </button>
                       </div>
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         {teamTasks.map((task, idx) => (
-                          <div key={idx} className="group relative">
-                            {task.startsWith("[img]") ? (
-                              <div className="overflow-hidden rounded-lg border border-[#ddd9cc] bg-white">
-                                <img src={task.slice(5)} alt="첨부 이미지" className="max-h-48 w-full object-contain" />
-                              </div>
-                            ) : task.startsWith("[file]") ? (
-                              <div className="rounded-lg border border-[#ddd9cc] bg-white p-3">
-                                <div className="flex items-center justify-between gap-2">
-                                  <div className="flex min-w-0 items-center gap-2">
-                                    <Paperclip className="h-4 w-4 shrink-0 text-[#6b6b5e]" strokeWidth={2} />
-                                    <span className="truncate font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">
-                                      {(() => {
+                          <div key={idx} className="space-y-2">
+                            {/* Task input */}
+                            <div className="group relative">
+                              {task.startsWith("[img]") ? (
+                                <div className="overflow-hidden rounded-lg border border-[#ddd9cc] bg-white">
+                                  <img src={task.slice(5)} alt="첨부 이미지" className="max-h-48 w-full object-contain" />
+                                </div>
+                              ) : task.startsWith("[file]") ? (
+                                <div className="rounded-lg border border-[#ddd9cc] bg-white p-3">
+                                  <div className="flex items-center justify-between gap-2">
+                                    <div className="flex min-w-0 items-center gap-2">
+                                      <Paperclip className="h-4 w-4 shrink-0 text-[#6b6b5e]" strokeWidth={2} />
+                                      <span className="truncate font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">
+                                        {(() => {
+                                          const payload = task.slice(6);
+                                          const separatorIndex = payload.indexOf("|");
+                                          const encodedName = separatorIndex >= 0 ? payload.slice(0, separatorIndex) : payload;
+                                          try { return decodeURIComponent(encodedName); } catch { return encodedName; }
+                                        })()}
+                                      </span>
+                                    </div>
+                                    <a
+                                      href={(() => {
                                         const payload = task.slice(6);
                                         const separatorIndex = payload.indexOf("|");
-                                        const encodedName = separatorIndex >= 0 ? payload.slice(0, separatorIndex) : payload;
-                                        try {
-                                          return decodeURIComponent(encodedName);
-                                        } catch {
-                                          return encodedName;
-                                        }
+                                        return separatorIndex >= 0 ? payload.slice(separatorIndex + 1) : "#";
                                       })()}
-                                    </span>
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="inline-flex h-7 items-center gap-1 rounded-md border border-[#ddd9cc] px-2.5 font-['Pretendard',sans-serif] text-[11px] font-semibold text-[#16140f] transition-colors hover:bg-[#fcfcf8]"
+                                    >
+                                      <ExternalLink className="h-3 w-3" strokeWidth={2} />
+                                      열기
+                                    </a>
                                   </div>
-                                  <a
-                                    href={(() => {
-                                      const payload = task.slice(6);
-                                      const separatorIndex = payload.indexOf("|");
-                                      return separatorIndex >= 0 ? payload.slice(separatorIndex + 1) : "#";
-                                    })()}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="inline-flex h-7 items-center gap-1 rounded-md border border-[#ddd9cc] px-2.5 font-['Pretendard',sans-serif] text-[11px] font-semibold text-[#16140f] transition-colors hover:bg-[#fcfcf8]"
+                                </div>
+                              ) : (
+                                <textarea
+                                  value={task}
+                                  onChange={(e) => {
+                                    const newTasks = [...teamTasks];
+                                    newTasks[idx] = e.target.value;
+                                    setTeamTasks(newTasks);
+                                  }}
+                                  placeholder={`팀 단위 협동 과제 #${idx + 1}`}
+                                  rows={3}
+                                  className="w-full rounded-lg border border-[#ddd9cc] bg-white px-4 py-3 text-sm transition-all placeholder:text-[#16140f]/40 focus:border-[#FF6C0F]/50 focus:outline-none"
+                                />
+                              )}
+                              <label className={`absolute -right-2 top-8 cursor-pointer rounded-full border border-[#ddd9cc] bg-white p-1 transition-colors hover:border-[#FF6C0F] ${uploadingTaskIndex?.type === 'team' && uploadingTaskIndex?.idx === idx ? 'pointer-events-none opacity-50' : ''}`}>
+                                <ImageIcon className="h-3.5 w-3.5 text-[#6b6b5e]" strokeWidth={2} />
+                                <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" className="hidden"
+                                  onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file) return;
+                                    setUploadingTaskIndex({ type: 'team', idx });
+                                    try {
+                                      const url = await uploadHomeworkImage(file);
+                                      const newTasks = [...teamTasks];
+                                      newTasks.splice(idx + 1, 0, `[img]${url}`);
+                                      setTeamTasks(newTasks);
+                                    } catch (err) {
+                                      alert(err instanceof Error ? err.message : "이미지 업로드에 실패했습니다.");
+                                    } finally { setUploadingTaskIndex(null); e.target.value = ""; }
+                                  }}
+                                />
+                              </label>
+                              <label className={`absolute -right-2 top-16 cursor-pointer rounded-full border border-[#ddd9cc] bg-white p-1 transition-colors hover:border-[#FF6C0F] ${uploadingTaskIndex?.type === 'team' && uploadingTaskIndex?.idx === idx ? 'pointer-events-none opacity-50' : ''}`}>
+                                <Paperclip className="h-3.5 w-3.5 text-[#6b6b5e]" strokeWidth={2} />
+                                <input type="file" accept=".pdf,.zip,.txt,.csv,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.hwp,application/pdf,application/zip,application/x-zip-compressed,text/plain,text/csv,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/x-hwp,application/haansofthwp" className="hidden"
+                                  onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file) return;
+                                    setUploadingTaskIndex({ type: 'team', idx });
+                                    try {
+                                      const uploaded = await uploadHomeworkFile(file);
+                                      const marker = `[file]${encodeURIComponent(uploaded.name)}|${uploaded.url}`;
+                                      const newTasks = [...teamTasks];
+                                      newTasks.splice(idx + 1, 0, marker);
+                                      setTeamTasks(newTasks);
+                                    } catch (err) {
+                                      alert(err instanceof Error ? err.message : "파일 업로드에 실패했습니다.");
+                                    } finally { setUploadingTaskIndex(null); e.target.value = ""; }
+                                  }}
+                                />
+                              </label>
+                              {teamTasks.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setTeamTasks(teamTasks.filter((_, i) => i !== idx));
+                                    setTeams(teams.filter(t => t.taskIndex !== idx).map(t => ({
+                                      ...t,
+                                      taskIndex: t.taskIndex > idx ? t.taskIndex - 1 : t.taskIndex,
+                                    })));
+                                  }}
+                                  className="absolute -right-2 -top-2 h-5 w-5 rounded-full bg-[#b42318] text-white text-[10px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  ×
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Inline Team Builder for this task */}
+                            <div className="rounded-lg border border-[#FF6C0F]/20 bg-[#FFFAF5] p-4 space-y-3">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[11px] font-semibold text-[#FF6C0F] flex items-center gap-1.5">
+                                  <Users className="h-3.5 w-3.5" strokeWidth={2} />
+                                  팀 배정 — 과제 #{idx + 1}
+                                </span>
+                                <div className="flex gap-2">
+                                  {idx > 0 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => copyTeamsFromPrevTask(idx)}
+                                      className="text-[10px] font-semibold text-[#6b6b5e] border border-[#ddd9cc] rounded-md px-2 py-1 hover:border-[#FF6C0F] hover:text-[#FF6C0F] transition-colors"
+                                    >
+                                      이전 과제에서 복사 ↓
+                                    </button>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => addTeam(idx)}
+                                    className="text-[10px] font-semibold text-white bg-[#FF6C0F] rounded-md px-2 py-1 hover:bg-[#FF6C0F]/90 transition-colors"
                                   >
-                                    <ExternalLink className="h-3 w-3" strokeWidth={2} />
-                                    열기
-                                  </a>
+                                    + 새 팀
+                                  </button>
                                 </div>
                               </div>
-                            ) : (
-                              <textarea
-                                value={task}
-                                onChange={(e) => {
-                                  const newTasks = [...teamTasks];
-                                  newTasks[idx] = e.target.value;
-                                  setTeamTasks(newTasks);
-                                }}
-                                placeholder={`팀 단위 협동 과제 #${idx + 1}`}
-                                rows={3}
-                                className="w-full rounded-lg border border-[#ddd9cc] bg-white px-4 py-3 text-sm transition-all placeholder:text-[#16140f]/40 focus:border-[#FF6C0F]/50 focus:outline-none"
-                              />
-                            )}
-                            <label
-                              className={`absolute -right-2 top-8 cursor-pointer rounded-full border border-[#ddd9cc] bg-white p-1 transition-colors hover:border-[#FF6C0F] ${
-                                uploadingTaskIndex?.type === 'team' && uploadingTaskIndex?.idx === idx
-                                  ? 'pointer-events-none opacity-50'
-                                  : ''
-                              }`}
-                            >
-                              <ImageIcon className="h-3.5 w-3.5 text-[#6b6b5e]" strokeWidth={2} />
-                              <input
-                                type="file"
-                                accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
-                                className="hidden"
-                                onChange={async (e) => {
-                                  const file = e.target.files?.[0];
-                                  if (!file) return;
-                                  setUploadingTaskIndex({ type: 'team', idx });
-                                  try {
-                                    const url = await uploadHomeworkImage(file);
-                                    const newTasks = [...teamTasks];
-                                    newTasks.splice(idx + 1, 0, `[img]${url}`);
-                                    setTeamTasks(newTasks);
-                                  } catch (err) {
-                                    alert(err instanceof Error ? err.message : "이미지 업로드에 실패했습니다.");
-                                  } finally {
-                                    setUploadingTaskIndex(null);
-                                    e.target.value = "";
-                                  }
-                                }}
-                              />
-                            </label>
-                            <label
-                              className={`absolute -right-2 top-16 cursor-pointer rounded-full border border-[#ddd9cc] bg-white p-1 transition-colors hover:border-[#FF6C0F] ${
-                                uploadingTaskIndex?.type === 'team' && uploadingTaskIndex?.idx === idx
-                                  ? 'pointer-events-none opacity-50'
-                                  : ''
-                              }`}
-                            >
-                              <Paperclip className="h-3.5 w-3.5 text-[#6b6b5e]" strokeWidth={2} />
-                              <input
-                                type="file"
-                                accept=".pdf,.zip,.txt,.csv,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.hwp,application/pdf,application/zip,application/x-zip-compressed,text/plain,text/csv,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/x-hwp,application/haansofthwp"
-                                className="hidden"
-                                onChange={async (e) => {
-                                  const file = e.target.files?.[0];
-                                  if (!file) return;
-                                  setUploadingTaskIndex({ type: 'team', idx });
-                                  try {
-                                    const uploaded = await uploadHomeworkFile(file);
-                                    const marker = `[file]${encodeURIComponent(uploaded.name)}|${uploaded.url}`;
-                                    const newTasks = [...teamTasks];
-                                    newTasks.splice(idx + 1, 0, marker);
-                                    setTeamTasks(newTasks);
-                                  } catch (err) {
-                                    alert(err instanceof Error ? err.message : "파일 업로드에 실패했습니다.");
-                                  } finally {
-                                    setUploadingTaskIndex(null);
-                                    e.target.value = "";
-                                  }
-                                }}
-                              />
-                            </label>
-                            {teamTasks.length > 1 && (
-                              <button
-                                type="button"
-                                onClick={() => setTeamTasks(teamTasks.filter((_, i) => i !== idx))}
-                                className="absolute -right-2 -top-2 h-5 w-5 rounded-full bg-[#b42318] text-white text-[10px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity"
-                              >
-                                ×
-                              </button>
-                            )}
+
+                              {teams.filter(t => t.taskIndex === idx).length === 0 ? (
+                                <p className="text-[11px] text-[#6b6b5e] text-center py-3 border border-dashed border-[#ddd9cc] rounded-lg bg-white">
+                                  팀을 추가해주세요.
+                                </p>
+                              ) : (
+                                <div className="space-y-3">
+                                  {teams.map((t, teamArrayIdx) => {
+                                    if (t.taskIndex !== idx) return null;
+                                    const searchKey = `${idx}-${teamArrayIdx}`;
+                                    const query = teamSearchQueries[searchKey] ?? "";
+                                    return (
+                                      <div key={teamArrayIdx} className="group/team rounded-lg border border-[#ddd9cc] bg-white p-3">
+                                        <div className="flex items-center justify-between mb-2">
+                                          <input
+                                            type="text"
+                                            value={t.teamName}
+                                            onChange={(e) => {
+                                              const newTeams = [...teams];
+                                              newTeams[teamArrayIdx].teamName = e.target.value;
+                                              setTeams(newTeams);
+                                            }}
+                                            className="text-xs font-semibold text-[#FF6C0F] bg-transparent border-none p-0 focus:ring-0 w-1/2"
+                                          />
+                                          <button
+                                            type="button"
+                                            onClick={() => removeTeam(teamArrayIdx)}
+                                            className="text-[10px] font-semibold text-[#b42318] opacity-0 group-hover/team:opacity-100 hover:underline transition-all"
+                                          >
+                                            삭제
+                                          </button>
+                                        </div>
+                                        <div className="flex flex-wrap gap-1.5 mb-2">
+                                          {t.memberIds.map(mId => {
+                                            const learner = availableLearners.find(r => r.id === mId);
+                                            return (
+                                              <div key={mId} className="flex items-center gap-1 rounded-md bg-[#f5f5ee] px-2 py-1 text-[11px] font-semibold text-[#16140f] border border-[#ddd9cc]">
+                                                {learner?.name}
+                                                <button type="button" onClick={() => toggleMemberInTeam(teamArrayIdx, mId)} className="text-[#6b6b5e] hover:text-[#b42318] transition-colors">×</button>
+                                              </div>
+                                            );
+                                          })}
+                                          {t.memberIds.length === 0 && (
+                                            <p className="text-[10px] text-[#6b6b5e] italic">배정된 팀원 없음</p>
+                                          )}
+                                        </div>
+                                        <input
+                                          type="text"
+                                          placeholder="이름 검색..."
+                                          value={query}
+                                          onChange={(e) => setTeamSearchQueries(prev => ({ ...prev, [searchKey]: e.target.value }))}
+                                          className="w-full rounded-md border border-[#f0efe6] bg-[#fcfcfb] px-3 py-1.5 text-[11px] focus:border-[#FF6C0F] focus:outline-none transition-all"
+                                        />
+                                        {query && (
+                                          <div className="mt-1.5 space-y-0.5 max-h-28 overflow-y-auto rounded-md border border-dashed border-[#ddd9cc] bg-[#fcfcfb] p-1">
+                                            {availableLearners
+                                              .filter(r =>
+                                                r.name.toLowerCase().includes(query.toLowerCase()) &&
+                                                !teams.filter(tt => tt.taskIndex === idx).some(tt => tt.memberIds.includes(r.id))
+                                              )
+                                              .map(learner => (
+                                                <button
+                                                  key={learner.id}
+                                                  type="button"
+                                                  onClick={() => toggleMemberInTeam(teamArrayIdx, learner.id)}
+                                                  className="flex w-full items-center justify-between rounded-md px-3 py-1.5 text-[11px] font-semibold hover:bg-[#FF6C0F] hover:text-white transition-all"
+                                                >
+                                                  <span>{learner.name}</span>
+                                                  <span className="text-[9px] opacity-70">{learner.role}</span>
+                                                </button>
+                                              ))}
+                                            {availableLearners.filter(r =>
+                                              r.name.toLowerCase().includes(query.toLowerCase()) &&
+                                              !teams.filter(tt => tt.taskIndex === idx).some(tt => tt.memberIds.includes(r.id))
+                                            ).length === 0 && (
+                                              <p className="py-1.5 text-center text-[10px] text-[#6b6b5e]">검색 결과 없음</p>
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -911,126 +1070,6 @@ export function HomeworkClient() {
                   )}
                 </section>
               )}
-            </div>
-
-            {/* Right Column: Team Builder */}
-            <div className={`flex flex-col rounded-lg p-4 sm:p-6 lg:p-8 border-2 transition-all ${isTeam ? "bg-[#fcfcfb] border-[#ddd9cc]" : "bg-[#f5f5ee] border-transparent opacity-50 grayscale pointer-events-none"}`}>
-              <div className="mb-8">
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-lg font-semibold text-[#16140f] flex items-center gap-2">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#16140f] text-white text-sm">4</span>
-                    Team Assignment
-                  </h4>
-                  <button
-                    type="button"
-                    onClick={addTeam}
-                    className="flex items-center gap-1.5 rounded-md bg-[#FF6C0F] px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#FF6C0F]/90"
-                  >
-                    <span>+</span> 새 팀 생성
-                  </button>
-                </div>
-                <p className="text-xs font-medium text-[#6b6b5e]">생성된 팀에 멤버를 배정하거나 이름을 수정할 수 있습니다.</p>
-              </div>
-
-              <div className="flex-1 space-y-6 overflow-y-visible">
-                {teams.map((t, idx) => (
-                  <div key={idx} className="group relative rounded-lg border border-[#ddd9cc] bg-white p-5 transition-colors hover:border-[#FF6C0F]">
-                    <div className="flex items-center justify-between mb-4">
-                      <input
-                        type="text"
-                        value={t.teamName}
-                        onChange={(e) => {
-                          const newTeams = [...teams];
-                          newTeams[idx].teamName = e.target.value;
-                          setTeams(newTeams);
-                        }}
-                        className="text-sm font-semibold text-[#FF6C0F] bg-transparent border-none p-0 focus:ring-0 w-2/3"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeTeam(idx)}
-                        className="rounded-lg bg-[#FEE2E2] p-1.5 text-[#b42318] opacity-0 group-hover:opacity-100 transition-all hover:bg-[#b42318] hover:text-white"
-                      >
-                        <span className="text-[10px] font-semibold">삭제</span>
-                      </button>
-                    </div>
-
-                    {/* Member Chips */}
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {t.memberIds.map(mId => {
-                        const learner = availableLearners.find(r => r.id === mId);
-                        return (
-                          <div key={mId} className="flex items-center gap-2 rounded-lg bg-[#f5f5ee] px-3 py-1.5 text-[11px] font-semibold text-[#16140f] border border-[#ddd9cc]">
-                            {learner?.name}
-                            <button 
-                              type="button" 
-                              onClick={() => toggleMemberInTeam(idx, mId)}
-                              className="text-[#6b6b5e] hover:text-[#b42318] transition-colors"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        );
-                      })}
-                      {t.memberIds.length === 0 && (
-                        <p className="text-[11px] font-medium text-[#6b6b5e] italic bg-[#fcfcfb] border border-dashed border-[#ddd9cc] rounded-lg px-4 py-2 w-full text-center">배정된 팀원이 없습니다.</p>
-                      )}
-                    </div>
-
-                    {/* Member Search - REDESIGNED to prevent clipping */}
-                    <div className="space-y-2">
-                       <label className="text-[10px] font-semibold text-[#6b6b5e]">Add Member</label>
-                       <div className="flex items-center gap-2">
-                         <input
-                          type="text"
-                          placeholder="이름 검색..."
-                          value={teamSearchQueries[idx] || ""}
-                          onChange={(e) => {
-                            const newQueries = [...teamSearchQueries];
-                            newQueries[idx] = e.target.value;
-                            setTeamSearchQueries(newQueries);
-                          }}
-                          className="flex-1 rounded-lg border border-[#f0efe6] bg-[#fcfcfb] px-3 py-2 text-xs focus:border-[#FF6C0F] focus:outline-none transition-all"
-                        />
-                       </div>
-                       
-                       {/* Result List - INTEGRATED (not absolute) to prevent clipping */}
-                       {teamSearchQueries[idx] && (
-                         <div className="mt-2 space-y-1 max-h-32 overflow-y-auto rounded-lg border border-dashed border-[#ddd9cc] bg-[#fcfcfb] p-2 animate-in fade-in duration-200">
-                          {availableLearners
-                            .filter(r => 
-                              r.name.toLowerCase().includes(teamSearchQueries[idx].toLowerCase()) &&
-                              !teams.some(team => team.memberIds.includes(r.id))
-                            )
-                            .map(learner => (
-                              <button
-                                key={learner.id}
-                                type="button"
-                                onClick={() => toggleMemberInTeam(idx, learner.id)}
-                                className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-[11px] font-semibold hover:bg-[#FF6C0F] hover:text-white transition-all"
-                              >
-                                <span>{learner.name}</span>
-                                <span className="text-[9px] opacity-70">{learner.role}</span>
-                              </button>
-                            ))}
-                          {availableLearners.filter(r => 
-                            r.name.toLowerCase().includes(teamSearchQueries[idx].toLowerCase()) &&
-                            !teams.some(team => team.memberIds.includes(r.id))
-                          ).length === 0 && (
-                            <p className="py-2 text-center text-[10px] text-[#6b6b5e]">검색 결과가 없습니다.</p>
-                          )}
-                        </div>
-                       )}
-                    </div>
-                  </div>
-                ))}
-                {teams.length === 0 && isTeam && (
-                  <div className="flex flex-col items-center justify-center py-20 bg-white rounded-lg border-2 border-dashed border-[#ddd9cc]">
-                    <FolderOpen className="h-10 w-10 mb-4 text-[#6b6b5e]" strokeWidth={1.5} />
-                    <p className="text-sm font-semibold text-[#6b6b5e]">배정할 팀을 만들어주세요.</p>
-                  </div>
-                )}
-              </div>
             </div>
           </div>
 
@@ -1151,7 +1190,7 @@ export function HomeworkClient() {
                         setActiveTab(prev => ({ ...prev, [hw.id]: 'status' }));
                         fetchPadletSubmissions(hw);
                         // Auto-load team assignments if not loaded yet (without toggling the details panel)
-                        if (hw.is_team && viewingTeams.length === 0) {
+                        if (hw.is_team && !teamsByHomework[hw.id]) {
                           fetchTeamData(hw.id);
                         }
                       }}
@@ -1196,34 +1235,37 @@ export function HomeworkClient() {
                             </div>
                           )}
                         </div>
-                        {hw.is_team && viewingTeams.length > 0 && (
+                        {hw.is_team && (teamsByHomework[hw.id] ?? []).length > 0 && (
                           <div className="lg:col-span-12 xl:col-span-4 mt-4 xl:mt-0">
                             <div className="sticky top-10 space-y-6">
                               <h4 className="flex items-center gap-2.5 text-sm font-semibold text-[#FF6C0F]">
                                 <span className="h-2 w-2 rounded-full bg-[#FF6C0F]" /> 팀 빌딩 현황
                               </h4>
                               <div className="space-y-5 rounded-lg bg-white p-5 border border-[#ddd9cc]">
-                                {Array.from(new Set(viewingTeams.map(vt => vt.team_name))).map(teamName => (
-                                  <div key={teamName} className="group/item">
-                                    <p className="text-sm font-semibold text-[#FF6C0F] mb-3 flex items-center justify-between">
-                                      {teamName}
-                                      <span className="text-[10px] font-semibold text-[#6b6b5e] bg-[#f5f5ee] px-2 py-0.5 rounded-lg">
-                                        {viewingTeams.filter(vt => vt.team_name === teamName).length} 명
-                                      </span>
-                                    </p>
-                                    <div className="flex flex-wrap gap-2">
-                                      {viewingTeams.filter(vt => vt.team_name === teamName).map((member) => {
-                                        const learner = availableLearners.find(r => r.id === member.user_id);
-                                        return (
-                                          <span key={member.user_id} className="inline-flex items-center rounded-lg bg-[#f5f5ee] px-3 py-1.5 text-[11px] font-semibold text-[#16140f] border border-transparent transition-all group-hover/item:border-[#FF6C0F] group-hover/item:bg-white">
-                                            {learner?.name || 'Unknown'}
-                                          </span>
-                                        );
-                                      })}
+                                {Array.from(new Set((teamsByHomework[hw.id] ?? []).map(vt => vt.team_name))).map(teamName => {
+                                  const hwTeamsForHw = teamsByHomework[hw.id] ?? [];
+                                  return (
+                                    <div key={teamName} className="group/item">
+                                      <p className="text-sm font-semibold text-[#FF6C0F] mb-3 flex items-center justify-between">
+                                        {teamName}
+                                        <span className="text-[10px] font-semibold text-[#6b6b5e] bg-[#f5f5ee] px-2 py-0.5 rounded-lg">
+                                          {hwTeamsForHw.filter(vt => vt.team_name === teamName).length} 명
+                                        </span>
+                                      </p>
+                                      <div className="flex flex-wrap gap-2">
+                                        {hwTeamsForHw.filter(vt => vt.team_name === teamName).map((member) => {
+                                          const learner = availableLearners.find(r => r.id === member.user_id);
+                                          return (
+                                            <span key={member.user_id} className="inline-flex items-center rounded-lg bg-[#f5f5ee] px-3 py-1.5 text-[11px] font-semibold text-[#16140f] border border-transparent transition-all group-hover/item:border-[#FF6C0F] group-hover/item:bg-white">
+                                              {learner?.name || 'Unknown'}
+                                            </span>
+                                          );
+                                        })}
+                                      </div>
+                                      <div className="mt-4 border-b border-[#f0efe6] last:border-0" />
                                     </div>
-                                    <div className="mt-4 border-b border-[#f0efe6] last:border-0" />
-                                  </div>
-                                ))}
+                                  );
+                                })}
                               </div>
                             </div>
                           </div>
@@ -1245,10 +1287,16 @@ export function HomeworkClient() {
                       if (pData?.loading) return <div className="text-center py-20 text-xs font-semibold text-[#6b6b5e] animate-pulse">PADLET 부르는 중...</div>;
                       if (pData?.error) return <div className="text-center py-20 text-[#b42318] text-xs font-semibold">{pData.error}</div>;
 
-                      const rows = buildSubmissionRows(hw);
+                      // Team data still loading (undefined = not yet fetched)
+                      if (hw.is_team && teamsByHomework[hw.id] === undefined) {
+                        return <div className="text-center py-20 text-xs font-semibold text-[#6b6b5e] animate-pulse">팀 배정 정보 로딩 중...</div>;
+                      }
 
-                      // Team homework but no team data loaded
-                      if (hw.is_team && viewingTeams.length === 0 && rows.length === 0) {
+                      const hwTeams = teamsByHomework[hw.id] ?? [];
+                      const rows = buildSubmissionRows(hw, hwTeams);
+
+                      // Team homework but no team assignments exist
+                      if (hw.is_team && hwTeams.length === 0 && rows.length === 0) {
                         return (
                           <div className="flex flex-col items-center justify-center py-20 bg-white rounded-lg border-2 border-dashed border-[#ddd9cc]">
                             <Users className="h-10 w-10 mb-4 text-[#6b6b5e]" strokeWidth={1.5} />
@@ -1265,11 +1313,33 @@ export function HomeworkClient() {
                               <thead className="bg-[#f0efe6] text-left">
                                 <tr>
                                   <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold w-1/4">대상</th>
-                                  {pData.sections.length > 0 ? pData.sections.map(s => (
-                                    <th key={s.id} className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-center">
-                                      {s.title}
-                                    </th>
-                                  )) : (
+                                  {pData.sections.length > 0 ? pData.sections.map(s => {
+                                    const sConfig = getSectionConfig(hw, s.id);
+                                    const isTeamSection = sConfig.type === "team";
+                                    const badgeLabel = isTeamSection
+                                      ? hw.team_content.length > 1
+                                        ? `팀 과제 #${sConfig.task_index + 1}`
+                                        : "팀"
+                                      : "개인";
+                                    return (
+                                      <th key={s.id} className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-center">
+                                        <div className="flex flex-col items-center gap-1.5">
+                                          <span>{s.title}</span>
+                                          <button
+                                            onClick={() => handleSectionTypeToggle(hw, s.id)}
+                                            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold transition-colors ${
+                                              isTeamSection
+                                                ? "bg-[#FFF0E5] text-[#FF6C0F] hover:bg-[#FFE0CC]"
+                                                : "bg-[#E8F0FE] text-[#2563EB] hover:bg-[#D0E3FF]"
+                                            }`}
+                                            title="클릭하여 섹션 타입 순환 (개인 → 팀 과제 #1 → 팀 과제 #2 → ...)"
+                                          >
+                                            {badgeLabel}
+                                          </button>
+                                        </div>
+                                      </th>
+                                    );
+                                  }) : (
                                     <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-center">전체</th>
                                   )}
                                 </tr>
@@ -1321,9 +1391,28 @@ export function HomeworkClient() {
                                 <div className="space-y-2">
                                   {(pData.sections.length > 0 ? pData.sections : [{ id: '__none__', title: '전체' }]).map(s => {
                                     const submitted = row.sectionStatus[s.id] ?? false;
+                                    const sConfig = s.id !== '__none__' ? getSectionConfig(hw, s.id) : null;
+                                    const isTeamSection = sConfig?.type === "team";
+                                    const badgeLabel = isTeamSection
+                                      ? hw.team_content.length > 1 ? `팀 #${(sConfig as { type: "team"; task_index: number }).task_index + 1}` : "팀"
+                                      : "개인";
                                     return (
                                       <div key={s.id} className="flex items-center justify-between rounded-lg bg-[#f5f5ee] px-3 py-2">
-                                        <span className="font-['Pretendard',sans-serif] text-xs text-[#4a4a40]">{s.title}</span>
+                                        <div className="flex items-center gap-2">
+                                          <span className="font-['Pretendard',sans-serif] text-xs text-[#4a4a40]">{s.title}</span>
+                                          {sConfig && (
+                                            <button
+                                              onClick={() => handleSectionTypeToggle(hw, s.id)}
+                                              className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-semibold transition-colors ${
+                                                isTeamSection
+                                                  ? "bg-[#FFF0E5] text-[#FF6C0F] hover:bg-[#FFE0CC]"
+                                                  : "bg-[#E8F0FE] text-[#2563EB] hover:bg-[#D0E3FF]"
+                                              }`}
+                                            >
+                                              {badgeLabel}
+                                            </button>
+                                          )}
+                                        </div>
                                         {submitted ? (
                                           <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#E6F9E6] text-[#2f9e44]"><Check className="h-3.5 w-3.5" strokeWidth={3} /></span>
                                         ) : (
