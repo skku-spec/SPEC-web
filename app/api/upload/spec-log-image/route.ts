@@ -55,7 +55,12 @@ async function ensureSpecLogImageBucket() {
     return;
   }
 
-  if (!bucket.public) {
+  const mimesSynced =
+    bucket.allowed_mime_types &&
+    bucket.allowed_mime_types.length === ALLOWED_IMAGE_MIME_TYPES.length &&
+    ALLOWED_IMAGE_MIME_TYPES.every((m) => bucket.allowed_mime_types!.includes(m));
+
+  if (!bucket.public || !mimesSynced) {
     const { error: updateBucketError } = await adminClient.storage.updateBucket(SPEC_LOG_IMAGE_BUCKET, {
       public: true,
       fileSizeLimit: MAX_IMAGE_SIZE_BYTES,
@@ -146,7 +151,10 @@ export async function POST(request: Request) {
     const buffer = await image.arrayBuffer();
     if (!validateMagicBytes(buffer, image.type)) {
       return NextResponse.json(
-        { success: false, error: "파일 형식이 올바르지 않습니다." },
+        {
+          success: false,
+          error: `파일의 실제 내용이 ${image.type} 형식과 일치하지 않아요. 파일이 손상되었거나, 확장자만 변경된 파일일 수 있어요.`,
+        },
         { status: 400 },
       );
     }

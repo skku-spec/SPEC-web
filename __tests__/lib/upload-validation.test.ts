@@ -49,6 +49,17 @@ describe("validateMagicBytes", () => {
     expect(validateMagicBytes(buffer, "image/jpeg")).toBe(false);
   });
 
+  it("accepts valid AVIF header (ftyp box)", () => {
+    const avifBytes = [0x00, 0x00, 0x00, 0x1c, 0x66, 0x74, 0x79, 0x70, 0x61, 0x76, 0x69, 0x66];
+    const buffer = new Uint8Array(avifBytes).buffer;
+    expect(validateMagicBytes(buffer, "image/avif")).toBe(true);
+  });
+
+  it("rejects non-AVIF with AVIF MIME", () => {
+    const buffer = toBuffer([0x89, 0x50, 0x4e, 0x47]);
+    expect(validateMagicBytes(buffer, "image/avif")).toBe(false);
+  });
+
   it("rejects unsupported MIME type", () => {
     const buffer = toBuffer([0xff, 0xd8, 0xff]);
     expect(validateMagicBytes(buffer, "application/pdf")).toBe(false);

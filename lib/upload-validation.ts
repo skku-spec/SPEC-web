@@ -5,6 +5,16 @@ const MAGIC_BYTES: Record<string, number[][]> = {
   "image/webp": [[0x52, 0x49, 0x46, 0x46]],
 };
 
+function isAvifFile(bytes: Uint8Array): boolean {
+  if (bytes.length < 12) return false;
+  return (
+    bytes[4] === 0x66 &&
+    bytes[5] === 0x74 &&
+    bytes[6] === 0x79 &&
+    bytes[7] === 0x70
+  );
+}
+
 export function validateMagicBytes(
   buffer: ArrayBuffer,
   declaredMime: string,
@@ -12,6 +22,11 @@ export function validateMagicBytes(
   if (buffer.byteLength < 12) return false;
 
   const bytes = new Uint8Array(buffer.slice(0, 12));
+
+  if (declaredMime === "image/avif") {
+    return isAvifFile(bytes);
+  }
+
   const signatures = MAGIC_BYTES[declaredMime];
 
   if (!signatures || signatures.length === 0) return false;
