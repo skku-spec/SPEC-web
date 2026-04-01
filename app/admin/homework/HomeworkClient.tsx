@@ -601,7 +601,7 @@ export function HomeworkClient() {
           onSubmit={handleSubmitHomework}
           className="animate-in fade-in slide-in-from-top-4 rounded-lg border border-[#ddd9cc] bg-white p-4 sm:p-6 space-y-6 sm:space-y-8"
         >
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
             {/* Left Column: Basic Info & Mode Selection */}
             <div className="space-y-6 sm:space-y-8">
               <section className="space-y-4">
@@ -685,9 +685,13 @@ export function HomeworkClient() {
                 </div>
               </section>
 
-              {/* Mode-specific Content Sections */}
+              {/* Mode-specific Content Sections handled in second column */}
+            </div>
+
+            {/* Right Column: Detailed Instructions (Step 3) */}
+            <div className="space-y-6 sm:space-y-8">
               {(isIndividual || isTeam) && (
-                <section className="space-y-6 animate-in slide-in-from-left-4">
+                <section className="space-y-6 animate-in slide-in-from-right-4">
                   <h3 className="font-['Pretendard',sans-serif] text-xs font-semibold text-[#6b6b5e] border-b border-[#f0efe6] pb-2">Step 3. Detailed Instructions</h3>
                   
                   {isIndividual && (
