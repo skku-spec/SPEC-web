@@ -105,7 +105,9 @@ export async function middleware(request: NextRequest) {
 
   const needsAdmin = isAdminRoute(pathname);
   const needsWriter = isBlogWriteRoute(pathname) || isBlogEditRoute(pathname);
-  const needsAuth = isPrivateProfileRoute(pathname) || isResetPasswordRoute(pathname);
+  const isApplyRoute = (pathname === "/apply" || pathname.startsWith("/apply/")) && 
+                       !pathname.startsWith("/apply/status");
+  const needsAuth = isPrivateProfileRoute(pathname) || isResetPasswordRoute(pathname) || isApplyRoute;
 
   if (!needsAdmin && !needsWriter && !needsAuth) {
     return response;
@@ -113,7 +115,9 @@ export async function middleware(request: NextRequest) {
 
   if (!user) {
     if (needsWriter || needsAuth) {
-      return redirectWithCookies(request, response, "/login");
+      const redirectUrl = new URL("/login", request.url);
+      redirectUrl.searchParams.set("redirect", pathname);
+      return redirectWithCookies(request, response, redirectUrl.pathname + redirectUrl.search);
     }
 
     return redirectWithCookies(request, response, "/");

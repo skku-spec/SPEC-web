@@ -33,10 +33,6 @@ export default async function ApplyPage() {
   const { user } = await getCurrentUser();
   const recruitmentTimeline = getRecruitmentTimeline();
 
-  if (!user) {
-    redirect("/login?redirect=/apply");
-  }
-
   // Check if logged-in user already has a linked application
   let hasApplication = false;
   let applicationData: { status: string; name: string; batch: string; created_at: string } | undefined;

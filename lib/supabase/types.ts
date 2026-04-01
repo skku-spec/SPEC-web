@@ -563,6 +563,8 @@ export type Database = {
           padlet_board_id: string | null;
           is_individual: boolean;
           is_team: boolean;
+          due_date: string | null;
+          section_type_config: Json | null;
           created_at: string;
         };
         Insert: {
@@ -574,6 +576,8 @@ export type Database = {
           padlet_board_id?: string | null;
           is_individual?: boolean;
           is_team?: boolean;
+          due_date?: string | null;
+          section_type_config?: Json | null;
           created_at?: string;
         };
         Update: {
@@ -585,6 +589,8 @@ export type Database = {
           padlet_board_id?: string | null;
           is_individual?: boolean;
           is_team?: boolean;
+          due_date?: string | null;
+          section_type_config?: Json | null;
           created_at?: string;
         };
         Relationships: [];
@@ -594,18 +600,21 @@ export type Database = {
           homework_id: string;
           user_id: string;
           team_name: string;
+          task_index: number;
           created_at: string;
         };
         Insert: {
           homework_id: string;
           user_id: string;
           team_name: string;
+          task_index?: number;
           created_at?: string;
         };
         Update: {
           homework_id?: string;
           user_id?: string;
           team_name?: string;
+          task_index?: number;
           created_at?: string;
         };
         Relationships: [];
