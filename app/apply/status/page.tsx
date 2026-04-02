@@ -79,12 +79,12 @@ export default async function ApplicationStatusPage() {
         )}
 
         <div className="mt-10 text-center">
-          <Link
+          <a
             href="/apply"
             className="font-['Pretendard',sans-serif] text-sm text-[#6b6b5e] underline underline-offset-2 hover:text-[#16140f]"
           >
             ← 지원 페이지로 돌아가기
-          </Link>
+          </a>
         </div>
       </section>
     </div>

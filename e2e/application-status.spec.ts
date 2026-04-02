@@ -31,6 +31,7 @@ test("status page loads without errors for unauthenticated users", async ({ page
 
 test("status check form renders correctly", async ({ page }) => {
   await page.goto("/apply/status");
+  await page.waitForLoadState("networkidle");
 
   await expect(page.getByPlaceholder("지원 시 입력한 이메일")).toBeVisible();
   await expect(page.getByPlaceholder("8~10자리 숫자")).toBeVisible();
@@ -39,6 +40,7 @@ test("status check form renders correctly", async ({ page }) => {
 
 test("form requires both email and student_id", async ({ page }) => {
   await page.goto("/apply/status");
+  await page.waitForLoadState("networkidle");
 
   const emailInput = page.getByPlaceholder("지원 시 입력한 이메일");
   const studentIdInput = page.getByPlaceholder("8~10자리 숫자");
