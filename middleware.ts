@@ -115,9 +115,7 @@ export async function middleware(request: NextRequest) {
 
   if (!user) {
     if (needsWriter || needsAuth) {
-      const redirectUrl = new URL("/login", request.url);
-      redirectUrl.searchParams.set("redirect", pathname);
-      return redirectWithCookies(request, response, redirectUrl.pathname + redirectUrl.search);
+      return redirectWithCookies(request, response, `/login?redirect=${pathname}`);
     }
 
     return redirectWithCookies(request, response, "/");
