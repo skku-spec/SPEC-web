@@ -105,7 +105,7 @@ export async function middleware(request: NextRequest) {
 
   const needsAdmin = isAdminRoute(pathname);
   const needsWriter = isBlogWriteRoute(pathname) || isBlogEditRoute(pathname);
-  const isApplyRoute = (pathname === "/apply" || pathname.startsWith("/apply/")) && 
+  const isApplyRoute = (pathname === "/apply" || pathname.startsWith("/apply/")) &&
                        !pathname.startsWith("/apply/status");
   const needsAuth = isPrivateProfileRoute(pathname) || isResetPasswordRoute(pathname) || isApplyRoute;
 
