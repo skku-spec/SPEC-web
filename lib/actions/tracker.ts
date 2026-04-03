@@ -362,6 +362,7 @@ export async function upsertHomework(payload: {
   is_individual: boolean;
   is_team: boolean;
   due_date: string | null;
+  section_type_config?: Record<string, { type: "individual" } | { type: "team"; task_index: number }>;
 }) {
   try {
     await requireAdmin();
@@ -382,6 +383,7 @@ export async function upsertHomework(payload: {
           is_individual: payload.is_individual,
           is_team: payload.is_team,
           due_date: payload.due_date,
+          ...(payload.section_type_config !== undefined ? { section_type_config: payload.section_type_config } : {}),
         },
         { onConflict: "id" }
       )
@@ -399,7 +401,7 @@ export async function upsertHomework(payload: {
 
 export async function replaceHomeworkTeams(
   homeworkId: string,
-  teams: { teamName: string; memberIds: string[] }[]
+  teams: { teamName: string; memberIds: string[]; taskIndex: number }[]
 ) {
   try {
     await requireAdmin();
@@ -419,6 +421,7 @@ export async function replaceHomeworkTeams(
         homework_id: homeworkId,
         user_id: mId,
         team_name: t.teamName,
+        task_index: t.taskIndex,
       }))
     );
 
