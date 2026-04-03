@@ -21,6 +21,8 @@ import {
   ExternalLink,
 } from "lucide-react";
 
+type SectionConfig = { type: "individual" } | { type: "team"; task_index: number };
+
 type Homework = {
   id: string;
   title: string;
@@ -32,6 +34,7 @@ type Homework = {
   is_team: boolean;
   due_date?: string | null;
   created_at: string;
+  section_type_config?: Record<string, SectionConfig>;
 };
 
 type PadletSection = {
@@ -66,6 +69,7 @@ type Profile = {
 type TeamAssignment = {
   teamName: string;
   memberIds: string[];
+  taskIndex: number;
 };
 
 const supabase = createClient();
@@ -86,17 +90,15 @@ export function HomeworkClient() {
   const [isTeam, setIsTeam] = useState(false);
   const [dueDate, setDueDate] = useState("");
   const [teams, setTeams] = useState<TeamAssignment[]>([]);
-  const [teamSearchQueries, setTeamSearchQueries] = useState<string[]>([]);
+  // key: `${taskIndex}-${teamArrayIndex}` → search query
+  const [teamSearchQueries, setTeamSearchQueries] = useState<Record<string, string>>({});
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isFormLoading, setIsFormLoading] = useState(false);
   const [uploadingTaskIndex, setUploadingTaskIndex] = useState<{ type: 'individual' | 'team'; idx: number } | null>(null);
 
   const [viewingId, setViewingId] = useState<string | null>(null);
-  const [viewingTeams, setViewingTeams] = useState<{
-    team_name: string;
-    user_id: string;
-  }[]>([]);
+  const [teamsByHomework, setTeamsByHomework] = useState<Record<string, { team_name: string; user_id: string; task_index: number }[]>>({});
   const [activeTab, setActiveTab] = useState<Record<string, 'content' | 'status'>>({});
   const [padletData, setPadletData] = useState<Record<string, { sections: PadletSection[]; posts: PadletPost[]; loading: boolean; error: string | null }>>({});
 
@@ -140,7 +142,8 @@ export function HomeworkClient() {
           if (pData && !pData.loading && !pData.error && availableLearners.length > 0) {
             const hw = homeworks.find(h => h.id === hwId);
             if (hw) {
-              const rows = buildSubmissionRows(hw);
+              const hwTeams = teamsByHomework[hwId] ?? [];
+              const rows = buildSubmissionRows(hw, hwTeams);
               const syncData = availableLearners.map(learner => {
                 const row = rows.find(r => r.label === learner.name);
                 const isCompleted = row ? Object.values(row.sectionStatus).some(v => v === true) : false;
@@ -164,34 +167,79 @@ export function HomeworkClient() {
   // eslint-disable-next-line react-hooks/exhaustive-deps -- buildSubmissionRows is a pure function whose deps (padletData) are already listed
   }, [padletData, availableLearners, homeworks]);
 
+  const loadTeamData = async (homeworkId: string) => {
+    const { data, error } = await supabase
+      .from("homework_team_assignments")
+      .select("team_name,user_id,task_index")
+      .eq("homework_id", homeworkId);
+    setTeamsByHomework(prev => ({
+      ...prev,
+      [homeworkId]: (!error && data) ? data as { team_name: string; user_id: string; task_index: number }[] : [],
+    }));
+  };
+
   const handleFetchTeams = async (homeworkId: string) => {
     if (viewingId === homeworkId) {
       setViewingId(null);
       return;
     }
-
     setViewingId(homeworkId);
-    const { data, error } = await supabase
-      .from("homework_team_assignments")
-      .select("team_name,user_id")
-      .eq("homework_id", homeworkId);
-
-    if (!error && data) {
-      setViewingTeams(data as { team_name: string; user_id: string }[]);
-    } else {
-      setViewingTeams([]);
-    }
+    await loadTeamData(homeworkId);
   };
 
   // Silently fetch team data for a homework without toggling viewingId (used by status tab)
   const fetchTeamData = async (homeworkId: string) => {
-    const { data, error } = await supabase
-      .from("homework_team_assignments")
-      .select("team_name,user_id")
-      .eq("homework_id", homeworkId);
+    if (teamsByHomework[homeworkId] !== undefined) return;
+    await loadTeamData(homeworkId);
+  };
 
-    if (!error && data) {
-      setViewingTeams(data as { team_name: string; user_id: string }[]);
+  const getSectionConfig = (hw: Homework, sectionId: string): SectionConfig => {
+    const config = hw.section_type_config ?? {};
+    if (config[sectionId]) return config[sectionId];
+    if (hw.is_team) return { type: "team", task_index: 0 };
+    return { type: "individual" };
+  };
+
+  const getSectionType = (hw: Homework, sectionId: string): "individual" | "team" => {
+    return getSectionConfig(hw, sectionId).type;
+  };
+
+  const handleSectionTypeToggle = async (hw: Homework, sectionId: string) => {
+    const current = getSectionConfig(hw, sectionId);
+    let next: SectionConfig;
+    if (current.type === "individual") {
+      next = { type: "team", task_index: 0 };
+    } else {
+      const nextIdx = current.task_index + 1;
+      next = nextIdx < hw.team_content.length
+        ? { type: "team", task_index: nextIdx }
+        : { type: "individual" };
+    }
+    const newConfig: Record<string, SectionConfig> = { ...(hw.section_type_config ?? {}), [sectionId]: next };
+    setHomeworks(prev => prev.map(h => h.id === hw.id ? { ...h, section_type_config: newConfig } : h));
+    await upsertHomework({
+      id: hw.id,
+      title: hw.title,
+      submission_link: hw.submission_link ?? null,
+      padlet_board_id: hw.padlet_board_id ?? null,
+      individual_content: hw.individual_content,
+      team_content: hw.team_content,
+      is_individual: hw.is_individual,
+      is_team: hw.is_team,
+      due_date: hw.due_date ?? null,
+      section_type_config: newConfig,
+    });
+  };
+
+  const copyTeamsFromPrevTask = (taskIndex: number) => {
+    if (taskIndex === 0) return;
+    const prevTeams = teams.filter(t => t.taskIndex === taskIndex - 1);
+    const alreadyHasTeams = teams.some(t => t.taskIndex === taskIndex);
+    if (alreadyHasTeams) {
+      if (!confirm(`과제 #${taskIndex + 1}의 기존 팀 배정을 삭제하고 이전 과제의 팀을 복사할까요?`)) return;
+      setTeams([...teams.filter(t => t.taskIndex !== taskIndex), ...prevTeams.map(t => ({ ...t, taskIndex }))]);
+    } else {
+      setTeams([...teams, ...prevTeams.map(t => ({ ...t, taskIndex }))]);
     }
   };
 
@@ -227,6 +275,11 @@ export function HomeworkClient() {
       const teamResult = await replaceHomeworkTeams(hwId, teams);
       if (!teamResult.success) {
         alert(teamResult.error ?? "팀 배정 중 에러가 발생했습니다.");
+      } else {
+        const freshTeams = teams.flatMap(t =>
+          t.memberIds.map(uid => ({ team_name: t.teamName, user_id: uid, task_index: t.taskIndex }))
+        );
+        setTeamsByHomework(prev => ({ ...prev, [hwId]: freshTeams }));
       }
     }
 
@@ -250,7 +303,7 @@ export function HomeworkClient() {
     setIsIndividual(true);
     setIsTeam(false);
     setTeams([]);
-    setTeamSearchQueries([]);
+    setTeamSearchQueries({});
     setEditingId(null);
     setIsEditing(false);
   };
@@ -271,58 +324,57 @@ export function HomeworkClient() {
     if (hw.is_team) {
       const { data } = await supabase
         .from("homework_team_assignments")
-        .select("team_name,user_id")
+        .select("team_name,user_id,task_index")
         .eq("homework_id", hw.id);
 
       if (data && data.length > 0) {
-        const teamMap = new Map<string, string[]>();
-        data.forEach((row: { team_name: string; user_id: string }) => {
-          if (!teamMap.has(row.team_name)) teamMap.set(row.team_name, []);
-          teamMap.get(row.team_name)!.push(row.user_id);
+        // Group by (task_index, team_name)
+        const teamMap = new Map<string, { taskIndex: number; memberIds: string[] }>();
+        (data as { team_name: string; user_id: string; task_index: number }[]).forEach(row => {
+          const key = `${row.task_index}::${row.team_name}`;
+          if (!teamMap.has(key)) teamMap.set(key, { taskIndex: row.task_index, memberIds: [] });
+          teamMap.get(key)!.memberIds.push(row.user_id);
         });
-        const rebuilt = Array.from(teamMap.entries()).map(([teamName, memberIds]) => ({
-          teamName,
-          memberIds,
+        const rebuilt = Array.from(teamMap.entries()).map(([key, val]) => ({
+          teamName: key.split("::").slice(1).join("::"),
+          memberIds: val.memberIds,
+          taskIndex: val.taskIndex,
         }));
         setTeams(rebuilt);
-        setTeamSearchQueries(rebuilt.map(() => ""));
+        setTeamSearchQueries({});
       } else {
         setTeams([]);
-        setTeamSearchQueries([]);
+        setTeamSearchQueries({});
       }
     } else {
       setTeams([]);
-      setTeamSearchQueries([]);
+      setTeamSearchQueries({});
     }
 
     setIsAdding(true);
     setIsFormLoading(false);
   };
 
-  const addTeam = () => {
-    setTeams([...teams, { teamName: `Team ${teams.length + 1}`, memberIds: [] }]);
-    setTeamSearchQueries([...teamSearchQueries, ""]);
+  const addTeam = (taskIndex: number) => {
+    const teamsForTask = teams.filter(t => t.taskIndex === taskIndex);
+    setTeams([...teams, { teamName: `Team ${teamsForTask.length + 1}`, memberIds: [], taskIndex }]);
   };
 
   const removeTeam = (index: number) => {
     setTeams(teams.filter((_, i) => i !== index));
-    setTeamSearchQueries(teamSearchQueries.filter((_, i) => i !== index));
   };
 
-  const toggleMemberInTeam = (teamIndex: number, userId: string) => {
+  const toggleMemberInTeam = (teamArrayIndex: number, userId: string) => {
     const newTeams = [...teams];
-    const memberIds = newTeams[teamIndex].memberIds;
+    const memberIds = newTeams[teamArrayIndex].memberIds;
     if (memberIds.includes(userId)) {
-      newTeams[teamIndex].memberIds = memberIds.filter(id => id !== userId);
+      newTeams[teamArrayIndex].memberIds = memberIds.filter(id => id !== userId);
     } else {
-      newTeams[teamIndex].memberIds = [...memberIds, userId];
+      newTeams[teamArrayIndex].memberIds = [...memberIds, userId];
     }
     setTeams(newTeams);
-    
-    // Clear search after adding
-    const newQueries = [...teamSearchQueries];
-    newQueries[teamIndex] = "";
-    setTeamSearchQueries(newQueries);
+    const key = `${newTeams[teamArrayIndex].taskIndex}-${teamArrayIndex}`;
+    setTeamSearchQueries(prev => ({ ...prev, [key]: "" }));
   };
 
   const handleDeleteHomework = async (id: string) => {
@@ -359,26 +411,21 @@ export function HomeworkClient() {
   };
 
 
-  const buildSubmissionRows = (hw: Homework): SubmissionRow[] => {
+  const buildSubmissionRows = (hw: Homework, hwTeams: { team_name: string; user_id: string; task_index: number }[]): SubmissionRow[] => {
     const pData = padletData[hw.id];
     if (!pData) return [];
     const { sections, posts } = pData;
 
-    // Build a map: learnerId -> { teamName, allTeamMemberNames }
-    // so we can check if any team member submitted for team sections
+    // Build a map: `${userId}:${taskIndex}` -> { teamName, memberNames, memberUsernames }
+    // so we can check team membership per section (each section may map to a different task_index)
     const learnerTeamMap = new Map<string, { teamName: string; memberNames: string[]; memberUsernames: string[] }>();
-    if (hw.is_team && viewingTeams.length > 0) {
-      // Create a map of user_id to profile for quick lookup
+    if (hw.is_team && hwTeams.length > 0) {
       const learnerLookup = new Map(availableLearners.map(r => [r.id, r]));
-
-      viewingTeams.forEach(vt => {
-        const teamMembers = viewingTeams
-          .filter(m => m.team_name === vt.team_name);
-        
+      hwTeams.forEach(vt => {
+        const teamMembers = hwTeams.filter(m => m.team_name === vt.team_name && m.task_index === vt.task_index);
         const memberNames = teamMembers.map(m => learnerLookup.get(m.user_id)?.name || 'Unknown');
         const memberUsernames = teamMembers.map(m => learnerLookup.get(m.user_id)?.username || '');
-        
-        learnerTeamMap.set(vt.user_id, { teamName: vt.team_name, memberNames, memberUsernames });
+        learnerTeamMap.set(`${vt.user_id}:${vt.task_index}`, { teamName: vt.team_name, memberNames, memberUsernames });
       });
     }
 
@@ -390,7 +437,7 @@ export function HomeworkClient() {
 
         const authorName = (p.author?.name || '').toLowerCase();
         const authorUsername = (p.author?.username || '').toLowerCase().replace(/^@/, ''); // Remove leading @ if present
-        
+
         const matchesName = targetNames.some(n => {
           const nl = n.toLowerCase();
           return nl && (authorName.includes(nl) || nl.includes(authorName));
@@ -409,34 +456,31 @@ export function HomeworkClient() {
     // Show every available learner as a row
     availableLearners.forEach(learner => {
       const sectionStatus: Record<string, boolean> = {};
-      const teamInfo = learnerTeamMap.get(learner.id);
-
-      // Collect all names and usernames to search for (including team members)
-      const targetNames = [learner.name];
-      const targetUsernames = [learner.username];
-
-      if (teamInfo) {
-        teamInfo.memberNames.forEach(name => {
-          if (!targetNames.includes(name)) targetNames.push(name);
-        });
-        teamInfo.memberUsernames.forEach(username => {
-          if (!targetUsernames.includes(username)) targetUsernames.push(username);
-        });
-      }
 
       sections.forEach(s => {
-        sectionStatus[s.id] = anyPostedInSection(targetNames, targetUsernames, s.id);
+        const sConfig = getSectionConfig(hw, s.id);
+        if (sConfig.type === "team") {
+          // For team sections, look up team by (userId, task_index)
+          const teamInfo = learnerTeamMap.get(`${learner.id}:${sConfig.task_index}`);
+          const targetNames = teamInfo ? teamInfo.memberNames : [learner.name];
+          const targetUsernames = teamInfo ? teamInfo.memberUsernames : [learner.username];
+          sectionStatus[s.id] = anyPostedInSection(targetNames, targetUsernames, s.id);
+        } else {
+          sectionStatus[s.id] = anyPostedInSection([learner.name], [learner.username], s.id);
+        }
       });
 
       if (sections.length === 0) {
-        sectionStatus['__none__'] = anyPostedInSection(targetNames, targetUsernames, undefined);
+        sectionStatus['__none__'] = anyPostedInSection([learner.name], [learner.username], undefined);
       }
 
-      const teamLabel = teamInfo ? `(${teamInfo.teamName})` : '';
+      // For the teamLabel, use task_index 0 by default (first team task)
+      const defaultTeamInfo = learnerTeamMap.get(`${learner.id}:0`);
+      const teamLabel = defaultTeamInfo ? `(${defaultTeamInfo.teamName})` : '';
       rows.push({
         label: learner.name,
-        isTeam: !!teamInfo,
-        memberNames: teamInfo?.memberNames ?? [learner.name],
+        isTeam: !!defaultTeamInfo,
+        memberNames: defaultTeamInfo?.memberNames ?? [learner.name],
         sectionStatus,
         teamLabel,
       });
@@ -535,8 +579,8 @@ export function HomeworkClient() {
           onSubmit={handleSubmitHomework}
           className="animate-in fade-in slide-in-from-top-4 rounded-lg border border-[#ddd9cc] bg-white p-4 sm:p-6 space-y-6 sm:space-y-8"
         >
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
-            {/* Left Column: Basic Info & Mode Selection */}
+          <div className="space-y-6 sm:space-y-8">
+            {/* Basic Info & Mode Selection */}
             <div className="space-y-6 sm:space-y-8">
               <section className="space-y-4">
                 <h3 className="text-xs font-semibold text-[#6b6b5e] border-b border-[#f0efe6] pb-2">Step 1. Basic Info</h3>
@@ -781,9 +825,10 @@ export function HomeworkClient() {
                           +
                         </button>
                       </div>
-                      <div className="space-y-3">
+                      <div className="space-y-6">
                         {teamTasks.map((task, idx) => (
-                          <div key={idx} className="group relative">
+                          <div key={idx} className="space-y-3">
+                          <div className="group relative">
                             {task.startsWith("[img]") ? (
                               <div className="overflow-hidden rounded-lg border border-[#ddd9cc] bg-white">
                                 <img src={task.slice(5)} alt="첨부 이미지" className="max-h-48 w-full object-contain" />
@@ -905,6 +950,111 @@ export function HomeworkClient() {
                               </button>
                             )}
                           </div>
+                          {/* Inline Team Builder for this task */}
+                          <div className="rounded-lg border border-[#ddd9cc] bg-white p-4 space-y-3">
+                            <div className="flex items-center justify-between">
+                              <p className="text-[11px] font-semibold text-[#FF6C0F]">과제 #{idx + 1} 팀 배정</p>
+                              <div className="flex gap-2">
+                                {idx > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => copyTeamsFromPrevTask(idx)}
+                                    className="text-[10px] font-semibold text-[#6b6b5e] border border-[#ddd9cc] rounded-md px-2 py-1 hover:bg-[#f5f5ee] transition-colors"
+                                  >
+                                    이전 과제에서 복사 ↓
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => addTeam(idx)}
+                                  className="text-[10px] font-semibold text-white bg-[#FF6C0F] rounded-md px-2 py-1 hover:bg-[#FF6C0F]/90 transition-colors"
+                                >
+                                  + 새 팀
+                                </button>
+                              </div>
+                            </div>
+                            {teams.filter(t => t.taskIndex === idx).length === 0 ? (
+                              <p className="text-[11px] text-[#6b6b5e] italic text-center py-3 border border-dashed border-[#ddd9cc] rounded-lg">팀이 없습니다. &quot;+ 새 팀&quot;을 눌러 추가하세요.</p>
+                            ) : (
+                              <div className="space-y-3">
+                                {teams.map((t, teamArrayIdx) => {
+                                  if (t.taskIndex !== idx) return null;
+                                  const searchKey = `${idx}-${teamArrayIdx}`;
+                                  return (
+                                    <div key={teamArrayIdx} className="group/team rounded-lg border border-[#ece8db] bg-[#fcfcfb] p-3 space-y-2">
+                                      <div className="flex items-center justify-between">
+                                        <input
+                                          type="text"
+                                          value={t.teamName}
+                                          onChange={(e) => {
+                                            const newTeams = [...teams];
+                                            newTeams[teamArrayIdx].teamName = e.target.value;
+                                            setTeams(newTeams);
+                                          }}
+                                          className="text-xs font-semibold text-[#FF6C0F] bg-transparent border-none p-0 focus:ring-0 w-2/3"
+                                        />
+                                        <button
+                                          type="button"
+                                          onClick={() => removeTeam(teamArrayIdx)}
+                                          className="text-[10px] font-semibold text-[#b42318] opacity-0 group-hover/team:opacity-100 transition-opacity"
+                                        >
+                                          삭제
+                                        </button>
+                                      </div>
+                                      <div className="flex flex-wrap gap-1.5">
+                                        {t.memberIds.map(mId => {
+                                          const learner = availableLearners.find(r => r.id === mId);
+                                          return (
+                                            <div key={mId} className="flex items-center gap-1 rounded-md bg-[#f5f5ee] px-2 py-1 text-[10px] font-semibold text-[#16140f] border border-[#ddd9cc]">
+                                              {learner?.name}
+                                              <button type="button" onClick={() => toggleMemberInTeam(teamArrayIdx, mId)} className="text-[#6b6b5e] hover:text-[#b42318]">×</button>
+                                            </div>
+                                          );
+                                        })}
+                                        {t.memberIds.length === 0 && (
+                                          <p className="text-[10px] text-[#6b6b5e] italic">팀원 없음</p>
+                                        )}
+                                      </div>
+                                      <input
+                                        type="text"
+                                        placeholder="이름 검색..."
+                                        value={teamSearchQueries[searchKey] || ""}
+                                        onChange={(e) => setTeamSearchQueries(prev => ({ ...prev, [searchKey]: e.target.value }))}
+                                        className="w-full rounded-md border border-[#f0efe6] bg-white px-2 py-1.5 text-xs focus:border-[#FF6C0F] focus:outline-none transition-all"
+                                      />
+                                      {teamSearchQueries[searchKey] && (
+                                        <div className="space-y-1 max-h-28 overflow-y-auto rounded-md border border-dashed border-[#ddd9cc] bg-white p-1.5">
+                                          {availableLearners
+                                            .filter(r =>
+                                              r.name.toLowerCase().includes((teamSearchQueries[searchKey] || "").toLowerCase()) &&
+                                              !teams.filter(tt => tt.taskIndex === idx).some(tt => tt.memberIds.includes(r.id))
+                                            )
+                                            .map(learner => (
+                                              <button
+                                                key={learner.id}
+                                                type="button"
+                                                onClick={() => toggleMemberInTeam(teamArrayIdx, learner.id)}
+                                                className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-[10px] font-semibold hover:bg-[#FF6C0F] hover:text-white transition-all"
+                                              >
+                                                <span>{learner.name}</span>
+                                                <span className="text-[9px] opacity-70">{learner.role}</span>
+                                              </button>
+                                            ))}
+                                          {availableLearners.filter(r =>
+                                            r.name.toLowerCase().includes((teamSearchQueries[searchKey] || "").toLowerCase()) &&
+                                            !teams.filter(tt => tt.taskIndex === idx).some(tt => tt.memberIds.includes(r.id))
+                                          ).length === 0 && (
+                                            <p className="py-1 text-center text-[10px] text-[#6b6b5e]">검색 결과가 없습니다.</p>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -913,125 +1063,6 @@ export function HomeworkClient() {
               )}
             </div>
 
-            {/* Right Column: Team Builder */}
-            <div className={`flex flex-col rounded-lg p-4 sm:p-6 lg:p-8 border-2 transition-all ${isTeam ? "bg-[#fcfcfb] border-[#ddd9cc]" : "bg-[#f5f5ee] border-transparent opacity-50 grayscale pointer-events-none"}`}>
-              <div className="mb-8">
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-lg font-semibold text-[#16140f] flex items-center gap-2">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#16140f] text-white text-sm">4</span>
-                    Team Assignment
-                  </h4>
-                  <button
-                    type="button"
-                    onClick={addTeam}
-                    className="flex items-center gap-1.5 rounded-md bg-[#FF6C0F] px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#FF6C0F]/90"
-                  >
-                    <span>+</span> 새 팀 생성
-                  </button>
-                </div>
-                <p className="text-xs font-medium text-[#6b6b5e]">생성된 팀에 멤버를 배정하거나 이름을 수정할 수 있습니다.</p>
-              </div>
-
-              <div className="flex-1 space-y-6 overflow-y-visible">
-                {teams.map((t, idx) => (
-                  <div key={idx} className="group relative rounded-lg border border-[#ddd9cc] bg-white p-5 transition-colors hover:border-[#FF6C0F]">
-                    <div className="flex items-center justify-between mb-4">
-                      <input
-                        type="text"
-                        value={t.teamName}
-                        onChange={(e) => {
-                          const newTeams = [...teams];
-                          newTeams[idx].teamName = e.target.value;
-                          setTeams(newTeams);
-                        }}
-                        className="text-sm font-semibold text-[#FF6C0F] bg-transparent border-none p-0 focus:ring-0 w-2/3"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeTeam(idx)}
-                        className="rounded-lg bg-[#FEE2E2] p-1.5 text-[#b42318] opacity-0 group-hover:opacity-100 transition-all hover:bg-[#b42318] hover:text-white"
-                      >
-                        <span className="text-[10px] font-semibold">삭제</span>
-                      </button>
-                    </div>
-
-                    {/* Member Chips */}
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {t.memberIds.map(mId => {
-                        const learner = availableLearners.find(r => r.id === mId);
-                        return (
-                          <div key={mId} className="flex items-center gap-2 rounded-lg bg-[#f5f5ee] px-3 py-1.5 text-[11px] font-semibold text-[#16140f] border border-[#ddd9cc]">
-                            {learner?.name}
-                            <button 
-                              type="button" 
-                              onClick={() => toggleMemberInTeam(idx, mId)}
-                              className="text-[#6b6b5e] hover:text-[#b42318] transition-colors"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        );
-                      })}
-                      {t.memberIds.length === 0 && (
-                        <p className="text-[11px] font-medium text-[#6b6b5e] italic bg-[#fcfcfb] border border-dashed border-[#ddd9cc] rounded-lg px-4 py-2 w-full text-center">배정된 팀원이 없습니다.</p>
-                      )}
-                    </div>
-
-                    {/* Member Search - REDESIGNED to prevent clipping */}
-                    <div className="space-y-2">
-                       <label className="text-[10px] font-semibold text-[#6b6b5e]">Add Member</label>
-                       <div className="flex items-center gap-2">
-                         <input
-                          type="text"
-                          placeholder="이름 검색..."
-                          value={teamSearchQueries[idx] || ""}
-                          onChange={(e) => {
-                            const newQueries = [...teamSearchQueries];
-                            newQueries[idx] = e.target.value;
-                            setTeamSearchQueries(newQueries);
-                          }}
-                          className="flex-1 rounded-lg border border-[#f0efe6] bg-[#fcfcfb] px-3 py-2 text-xs focus:border-[#FF6C0F] focus:outline-none transition-all"
-                        />
-                       </div>
-                       
-                       {/* Result List - INTEGRATED (not absolute) to prevent clipping */}
-                       {teamSearchQueries[idx] && (
-                         <div className="mt-2 space-y-1 max-h-32 overflow-y-auto rounded-lg border border-dashed border-[#ddd9cc] bg-[#fcfcfb] p-2 animate-in fade-in duration-200">
-                          {availableLearners
-                            .filter(r => 
-                              r.name.toLowerCase().includes(teamSearchQueries[idx].toLowerCase()) &&
-                              !teams.some(team => team.memberIds.includes(r.id))
-                            )
-                            .map(learner => (
-                              <button
-                                key={learner.id}
-                                type="button"
-                                onClick={() => toggleMemberInTeam(idx, learner.id)}
-                                className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-[11px] font-semibold hover:bg-[#FF6C0F] hover:text-white transition-all"
-                              >
-                                <span>{learner.name}</span>
-                                <span className="text-[9px] opacity-70">{learner.role}</span>
-                              </button>
-                            ))}
-                          {availableLearners.filter(r => 
-                            r.name.toLowerCase().includes(teamSearchQueries[idx].toLowerCase()) &&
-                            !teams.some(team => team.memberIds.includes(r.id))
-                          ).length === 0 && (
-                            <p className="py-2 text-center text-[10px] text-[#6b6b5e]">검색 결과가 없습니다.</p>
-                          )}
-                        </div>
-                       )}
-                    </div>
-                  </div>
-                ))}
-                {teams.length === 0 && isTeam && (
-                  <div className="flex flex-col items-center justify-center py-20 bg-white rounded-lg border-2 border-dashed border-[#ddd9cc]">
-                    <FolderOpen className="h-10 w-10 mb-4 text-[#6b6b5e]" strokeWidth={1.5} />
-                    <p className="text-sm font-semibold text-[#6b6b5e]">배정할 팀을 만들어주세요.</p>
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
 
           <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-8 border-t border-[#ece8db]">
@@ -1151,7 +1182,7 @@ export function HomeworkClient() {
                         setActiveTab(prev => ({ ...prev, [hw.id]: 'status' }));
                         fetchPadletSubmissions(hw);
                         // Auto-load team assignments if not loaded yet (without toggling the details panel)
-                        if (hw.is_team && viewingTeams.length === 0) {
+                        if (hw.is_team) {
                           fetchTeamData(hw.id);
                         }
                       }}
@@ -1196,35 +1227,45 @@ export function HomeworkClient() {
                             </div>
                           )}
                         </div>
-                        {hw.is_team && viewingTeams.length > 0 && (
+                        {hw.is_team && (teamsByHomework[hw.id] ?? []).length > 0 && (
                           <div className="lg:col-span-12 xl:col-span-4 mt-4 xl:mt-0">
                             <div className="sticky top-10 space-y-6">
                               <h4 className="flex items-center gap-2.5 text-sm font-semibold text-[#FF6C0F]">
                                 <span className="h-2 w-2 rounded-full bg-[#FF6C0F]" /> 팀 빌딩 현황
                               </h4>
-                              <div className="space-y-5 rounded-lg bg-white p-5 border border-[#ddd9cc]">
-                                {Array.from(new Set(viewingTeams.map(vt => vt.team_name))).map(teamName => (
-                                  <div key={teamName} className="group/item">
-                                    <p className="text-sm font-semibold text-[#FF6C0F] mb-3 flex items-center justify-between">
-                                      {teamName}
-                                      <span className="text-[10px] font-semibold text-[#6b6b5e] bg-[#f5f5ee] px-2 py-0.5 rounded-lg">
-                                        {viewingTeams.filter(vt => vt.team_name === teamName).length} 명
-                                      </span>
-                                    </p>
-                                    <div className="flex flex-wrap gap-2">
-                                      {viewingTeams.filter(vt => vt.team_name === teamName).map((member) => {
-                                        const learner = availableLearners.find(r => r.id === member.user_id);
-                                        return (
-                                          <span key={member.user_id} className="inline-flex items-center rounded-lg bg-[#f5f5ee] px-3 py-1.5 text-[11px] font-semibold text-[#16140f] border border-transparent transition-all group-hover/item:border-[#FF6C0F] group-hover/item:bg-white">
-                                            {learner?.name || 'Unknown'}
-                                          </span>
-                                        );
-                                      })}
-                                    </div>
-                                    <div className="mt-4 border-b border-[#f0efe6] last:border-0" />
+                              {Array.from(new Set((teamsByHomework[hw.id] ?? []).map(vt => vt.task_index))).sort().map(taskIdx => (
+                                <div key={taskIdx} className="space-y-3">
+                                  {hw.team_content.length > 1 && (
+                                    <p className="text-[11px] font-semibold text-[#6b6b5e] uppercase tracking-wide">팀 과제 #{taskIdx + 1}</p>
+                                  )}
+                                  <div className="space-y-4 rounded-lg bg-white p-5 border border-[#ddd9cc]">
+                                    {Array.from(new Set((teamsByHomework[hw.id] ?? []).filter(vt => vt.task_index === taskIdx).map(vt => vt.team_name))).map(teamName => {
+                                      const hwTeamsForTask = (teamsByHomework[hw.id] ?? []).filter(vt => vt.task_index === taskIdx && vt.team_name === teamName);
+                                      return (
+                                        <div key={teamName} className="group/item">
+                                          <p className="text-sm font-semibold text-[#FF6C0F] mb-3 flex items-center justify-between">
+                                            {teamName}
+                                            <span className="text-[10px] font-semibold text-[#6b6b5e] bg-[#f5f5ee] px-2 py-0.5 rounded-lg">
+                                              {hwTeamsForTask.length} 명
+                                            </span>
+                                          </p>
+                                          <div className="flex flex-wrap gap-2">
+                                            {hwTeamsForTask.map((member) => {
+                                              const learner = availableLearners.find(r => r.id === member.user_id);
+                                              return (
+                                                <span key={member.user_id} className="inline-flex items-center rounded-lg bg-[#f5f5ee] px-3 py-1.5 text-[11px] font-semibold text-[#16140f] border border-transparent transition-all group-hover/item:border-[#FF6C0F] group-hover/item:bg-white">
+                                                  {learner?.name || 'Unknown'}
+                                                </span>
+                                              );
+                                            })}
+                                          </div>
+                                          <div className="mt-4 border-b border-[#f0efe6] last:border-0" />
+                                        </div>
+                                      );
+                                    })}
                                   </div>
-                                ))}
-                              </div>
+                                </div>
+                              ))}
                             </div>
                           </div>
                         )}
@@ -1245,10 +1286,11 @@ export function HomeworkClient() {
                       if (pData?.loading) return <div className="text-center py-20 text-xs font-semibold text-[#6b6b5e] animate-pulse">PADLET 부르는 중...</div>;
                       if (pData?.error) return <div className="text-center py-20 text-[#b42318] text-xs font-semibold">{pData.error}</div>;
 
-                      const rows = buildSubmissionRows(hw);
+                      const hwTeams = teamsByHomework[hw.id] ?? [];
+                      const rows = buildSubmissionRows(hw, hwTeams);
 
                       // Team homework but no team data loaded
-                      if (hw.is_team && viewingTeams.length === 0 && rows.length === 0) {
+                      if (hw.is_team && hwTeams.length === 0 && rows.length === 0) {
                         return (
                           <div className="flex flex-col items-center justify-center py-20 bg-white rounded-lg border-2 border-dashed border-[#ddd9cc]">
                             <Users className="h-10 w-10 mb-4 text-[#6b6b5e]" strokeWidth={1.5} />
@@ -1265,11 +1307,29 @@ export function HomeworkClient() {
                               <thead className="bg-[#f0efe6] text-left">
                                 <tr>
                                   <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold w-1/4">대상</th>
-                                  {pData.sections.length > 0 ? pData.sections.map(s => (
-                                    <th key={s.id} className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-center">
-                                      {s.title}
-                                    </th>
-                                  )) : (
+                                  {pData.sections.length > 0 ? pData.sections.map(s => {
+                                    const sConfig = getSectionConfig(hw, s.id);
+                                    const badgeLabel = sConfig.type === "individual"
+                                      ? "👤 개인"
+                                      : `👥 팀 #${sConfig.task_index + 1}`;
+                                    return (
+                                      <th key={s.id} className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-center">
+                                        <div className="flex flex-col items-center gap-1">
+                                          <span>{s.title}</span>
+                                          {(hw.is_individual && hw.is_team) && (
+                                            <button
+                                              type="button"
+                                              onClick={() => handleSectionTypeToggle(hw, s.id)}
+                                              className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold transition-colors cursor-pointer bg-[#e8e6dc] hover:bg-[#FF6C0F] hover:text-white"
+                                              title="클릭하여 개인/팀 전환"
+                                            >
+                                              {badgeLabel}
+                                            </button>
+                                          )}
+                                        </div>
+                                      </th>
+                                    );
+                                  }) : (
                                     <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-center">전체</th>
                                   )}
                                 </tr>

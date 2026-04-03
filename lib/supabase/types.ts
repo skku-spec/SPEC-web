@@ -564,6 +564,8 @@ export type Database = {
           is_individual: boolean;
           is_team: boolean;
           created_at: string;
+          due_date: string | null;
+          section_type_config: Json | null;
         };
         Insert: {
           id?: string;
@@ -575,6 +577,8 @@ export type Database = {
           is_individual?: boolean;
           is_team?: boolean;
           created_at?: string;
+          due_date?: string | null;
+          section_type_config?: Json | null;
         };
         Update: {
           id?: string;
@@ -586,6 +590,8 @@ export type Database = {
           is_individual?: boolean;
           is_team?: boolean;
           created_at?: string;
+          due_date?: string | null;
+          section_type_config?: Json | null;
         };
         Relationships: [];
       };
@@ -595,18 +601,21 @@ export type Database = {
           user_id: string;
           team_name: string;
           created_at: string;
+          task_index: number;
         };
         Insert: {
           homework_id: string;
           user_id: string;
           team_name: string;
           created_at?: string;
+          task_index?: number;
         };
         Update: {
           homework_id?: string;
           user_id?: string;
           team_name?: string;
           created_at?: string;
+          task_index?: number;
         };
         Relationships: [];
       };
