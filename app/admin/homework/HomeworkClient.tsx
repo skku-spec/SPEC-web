@@ -1316,12 +1316,12 @@ export function HomeworkClient() {
                                       <th key={s.id} className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-center">
                                         <div className="flex flex-col items-center gap-1">
                                           <span>{s.title}</span>
-                                          {(hw.is_individual && hw.is_team) && (
+                                          {((hw.is_individual && hw.is_team) || (hw.is_team && hw.team_content.length > 1)) && (
                                             <button
                                               type="button"
                                               onClick={() => handleSectionTypeToggle(hw, s.id)}
                                               className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold transition-colors cursor-pointer bg-[#e8e6dc] hover:bg-[#FF6C0F] hover:text-white"
-                                              title="클릭하여 개인/팀 전환"
+                                              title="클릭하여 개인/팀 과제 전환"
                                             >
                                               {badgeLabel}
                                             </button>
