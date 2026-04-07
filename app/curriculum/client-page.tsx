@@ -353,10 +353,10 @@ function LearnerTrack({ weeks }: { weeks: any[] }) {
                   <th className="min-w-[200px] px-4 py-3 text-left font-['Pretendard',sans-serif] text-[13px] font-bold uppercase tracking-wider text-[#f5f5ee]/70">
                     주제
                   </th>
-                  <th className="px-4 py-3 text-left font-['Pretendard',sans-serif] text-[13px] font-bold uppercase tracking-wider text-[#f5f5ee]/70">
+                  <th className="hidden px-4 py-3 text-left font-['Pretendard',sans-serif] text-[13px] font-bold uppercase tracking-wider text-[#f5f5ee]/70 md:table-cell">
                     실행 목표
                   </th>
-                  <th className="w-[220px] px-4 py-3 text-left font-['Pretendard',sans-serif] text-[13px] font-bold uppercase tracking-wider text-[#f5f5ee]/70">
+                  <th className="hidden w-[220px] px-4 py-3 text-left font-['Pretendard',sans-serif] text-[13px] font-bold uppercase tracking-wider text-[#f5f5ee]/70 md:table-cell">
                     챌린지 KPI
                   </th>
                 </tr>
@@ -388,17 +388,17 @@ function LearnerTrack({ weeks }: { weeks: any[] }) {
                       </td>
 
                       {/* Topic */}
-                      <td className="px-4 py-3.5 font-['Pretendard',sans-serif] text-[14px] font-semibold text-[#16140f]">
+                      <td className="px-4 py-3.5 font-['Pretendard',sans-serif] text-[13px] font-semibold text-[#16140f] md:text-[14px]">
                         {row.topic}
                       </td>
 
                       {/* Learning Objectives */}
-                      <td className="px-4 py-3.5 font-['MaruBuri',serif] text-[14px] leading-[1.6] text-[#16140f]/70">
+                      <td className="hidden px-4 py-3.5 font-['MaruBuri',serif] text-[14px] leading-[1.6] text-[#16140f]/70 md:table-cell">
                         {row.objectives}
                       </td>
 
                       {/* Assignment */}
-                      <td className="whitespace-pre-line px-4 py-3.5 font-['MaruBuri',serif] text-[14px] leading-[1.6] text-[#16140f]/70">
+                      <td className="hidden whitespace-pre-line px-4 py-3.5 font-['MaruBuri',serif] text-[14px] leading-[1.6] text-[#16140f]/70 md:table-cell">
                         {row.assignment}
                       </td>
 
