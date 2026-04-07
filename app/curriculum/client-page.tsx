@@ -714,6 +714,11 @@ function LearnerTrack({ weeks }: { weeks: any[] }) {
           * 매출 목표는 팀별로 조정될 수 있습니다
         </p>
       </div>
+
+      {/* ── Calendar View ── */}
+      <div className="mt-8">
+        <CurriculumCalendar events={parseCurriculumDatesForCalendar(weeks)} />
+      </div>
     </div>
   );
 }
