@@ -22,6 +22,8 @@ export type CurriculumWeek = {
   sort_order: number;
   created_at: string;
   updated_at: string;
+  start_date: string | null;
+  end_date: string | null;
 };
 
 export type CurriculumArea = {
