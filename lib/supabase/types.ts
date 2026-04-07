@@ -1032,6 +1032,8 @@ export type Database = {
           sort_order: number;
           created_at: string;
           updated_at: string;
+          start_date: string | null;
+          end_date: string | null;
         };
         Insert: {
           id?: string;
@@ -1046,6 +1048,8 @@ export type Database = {
           sort_order: number;
           created_at?: string;
           updated_at?: string;
+          start_date?: string | null;
+          end_date?: string | null;
         };
         Update: {
           id?: string;
@@ -1060,6 +1064,8 @@ export type Database = {
           sort_order?: number;
           created_at?: string;
           updated_at?: string;
+          start_date?: string | null;
+          end_date?: string | null;
         };
         Relationships: [];
       };
