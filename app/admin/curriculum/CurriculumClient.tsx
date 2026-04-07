@@ -23,6 +23,8 @@ type WeekForm = {
   objectives: string;
   assignment: string;
   notes: string;
+  start_date: string;
+  end_date: string;
   batch: string;
   sort_order: string;
 };
@@ -33,7 +35,7 @@ type AreaForm = {
   title: string;
   subtitle: string;
   description: string;
-  activities: string[];
+  activities: { id: string; value: string }[];
   batch: string;
   sort_order: string;
 };
@@ -46,6 +48,8 @@ const EMPTY_WEEK: WeekForm = {
   objectives: "",
   assignment: "",
   notes: "",
+  start_date: "",
+  end_date: "",
   batch: "default",
   sort_order: "0",
 };
@@ -70,6 +74,8 @@ function weekToForm(w: CurriculumWeek): WeekForm {
     objectives: w.objectives ?? "",
     assignment: w.assignment ?? "",
     notes: w.notes ?? "",
+    start_date: w.start_date ?? "",
+    end_date: w.end_date ?? "",
     batch: w.batch,
     sort_order: w.sort_order.toString(),
   };
@@ -82,7 +88,9 @@ function areaToForm(a: CurriculumArea): AreaForm {
     title: a.title,
     subtitle: a.subtitle ?? "",
     description: a.description ?? "",
-    activities: Array.isArray(a.activities) ? a.activities : [],
+    activities: Array.isArray(a.activities)
+      ? a.activities.map((activity) => ({ id: crypto.randomUUID(), value: activity }))
+      : [],
     batch: a.batch,
     sort_order: a.sort_order.toString(),
   };
@@ -174,6 +182,8 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Props) 
         objectives: weekForm.objectives || null,
         assignment: weekForm.assignment || null,
         notes: weekForm.notes || null,
+        start_date: weekForm.start_date || null,
+        end_date: weekForm.end_date || null,
         batch: weekForm.batch || "default",
         sort_order: parseInt(weekForm.sort_order, 10) || 0,
       });
@@ -224,7 +234,7 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Props) 
         title: areaForm.title,
         subtitle: areaForm.subtitle || null,
         description: areaForm.description || null,
-        activities: areaForm.activities.filter((a) => a.trim()),
+        activities: areaForm.activities.map((a) => a.value).filter((a) => a.trim()),
         batch: areaForm.batch || "default",
         sort_order: parseInt(areaForm.sort_order, 10) || 0,
       });
@@ -269,21 +279,23 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Props) 
   };
 
   const addActivity = () => {
-    setAreaForm((prev) => ({ ...prev, activities: [...prev.activities, ""] }));
+    setAreaForm((prev) => ({
+      ...prev,
+      activities: [...prev.activities, { id: crypto.randomUUID(), value: "" }],
+    }));
   };
 
-  const updateActivity = (index: number, value: string) => {
+  const updateActivity = (id: string, value: string) => {
     setAreaForm((prev) => {
-      const next = [...prev.activities];
-      next[index] = value;
+      const next = prev.activities.map((activity) => (activity.id === id ? { ...activity, value } : activity));
       return { ...prev, activities: next };
     });
   };
 
-  const removeActivity = (index: number) => {
+  const removeActivity = (id: string) => {
     setAreaForm((prev) => ({
       ...prev,
-      activities: prev.activities.filter((_, i) => i !== index),
+      activities: prev.activities.filter((activity) => activity.id !== id),
     }));
   };
 
@@ -302,7 +314,10 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Props) 
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
+              aria-hidden="true"
+              focusable="false"
             >
+              <title>처리 중</title>
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path
                 className="opacity-75"
@@ -326,7 +341,7 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Props) 
           }`}
         >
           {toast.message}
-          <button onClick={() => setToast(null)} className="ml-2 text-current opacity-60 hover:opacity-100">
+          <button type="button" onClick={() => setToast(null)} className="ml-2 text-current opacity-60 hover:opacity-100">
             <X className="h-4 w-4" strokeWidth={2} />
           </button>
         </div>
@@ -343,6 +358,7 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Props) 
             </p>
             <div className="flex justify-end gap-2">
               <button
+                type="button"
                 onClick={() => {
                   setShowDeleteDialog(false);
                   setDeleteTarget(null);
@@ -352,6 +368,7 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Props) 
                 취소
               </button>
               <button
+                type="button"
                 onClick={handleDelete}
                 className="h-8 rounded-md bg-[#b42318] px-3 font-['Pretendard',sans-serif] text-xs font-semibold text-white"
               >
@@ -368,10 +385,11 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Props) 
         </h1>
 
         <div className="mb-6 flex gap-1 rounded-lg border border-[#ddd9cc] bg-[#f0efe6] p-1">
-          {TABS.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
+            {TABS.map((tab) => (
+              <button
+                type="button"
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
               className={`flex-1 rounded-md px-4 py-2 font-['Pretendard',sans-serif] text-sm font-semibold transition-colors ${
                 activeTab === tab.key
                   ? "bg-white text-[#16140f]"
@@ -390,6 +408,7 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Props) 
                 총 {weeks.length}개 주차
               </p>
               <button
+                type="button"
                 onClick={openCreateWeek}
                 className="flex h-8 items-center gap-1.5 rounded-md bg-[#16140f] px-3 font-['Pretendard',sans-serif] text-xs font-semibold text-white"
               >
@@ -405,10 +424,11 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Props) 
                 </h3>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1 block font-['Pretendard',sans-serif] text-xs font-semibold text-[#4a4a40]">
+                    <label htmlFor="curriculum-week-number" className="mb-1 block font-['Pretendard',sans-serif] text-xs font-semibold text-[#4a4a40]">
                       주차 번호
                     </label>
                     <input
+                      id="curriculum-week-number"
                       type="number"
                       value={weekForm.week_number}
                       onChange={(e) => setWeekForm((p) => ({ ...p, week_number: e.target.value }))}
@@ -417,10 +437,11 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Props) 
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block font-['Pretendard',sans-serif] text-xs font-semibold text-[#4a4a40]">
+                    <label htmlFor="curriculum-week-label" className="mb-1 block font-['Pretendard',sans-serif] text-xs font-semibold text-[#4a4a40]">
                       주차 라벨 *
                     </label>
                     <input
+                      id="curriculum-week-label"
                       type="text"
                       value={weekForm.week_label}
                       onChange={(e) => setWeekForm((p) => ({ ...p, week_label: e.target.value }))}
@@ -429,10 +450,11 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Props) 
                     />
                   </div>
                   <div className="sm:col-span-2">
-                    <label className="mb-1 block font-['Pretendard',sans-serif] text-xs font-semibold text-[#4a4a40]">
+                    <label htmlFor="curriculum-week-topic" className="mb-1 block font-['Pretendard',sans-serif] text-xs font-semibold text-[#4a4a40]">
                       주제 *
                     </label>
                     <input
+                      id="curriculum-week-topic"
                       type="text"
                       value={weekForm.topic}
                       onChange={(e) => setWeekForm((p) => ({ ...p, topic: e.target.value }))}
@@ -441,10 +463,11 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Props) 
                     />
                   </div>
                   <div className="sm:col-span-2">
-                    <label className="mb-1 block font-['Pretendard',sans-serif] text-xs font-semibold text-[#4a4a40]">
+                    <label htmlFor="curriculum-week-objectives" className="mb-1 block font-['Pretendard',sans-serif] text-xs font-semibold text-[#4a4a40]">
                       학습 목표
                     </label>
                     <textarea
+                      id="curriculum-week-objectives"
                       value={weekForm.objectives}
                       onChange={(e) => setWeekForm((p) => ({ ...p, objectives: e.target.value }))}
                       placeholder="학습 목표를 입력하세요"
@@ -453,10 +476,11 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Props) 
                     />
                   </div>
                   <div className="sm:col-span-2">
-                    <label className="mb-1 block font-['Pretendard',sans-serif] text-xs font-semibold text-[#4a4a40]">
+                    <label htmlFor="curriculum-week-assignment" className="mb-1 block font-['Pretendard',sans-serif] text-xs font-semibold text-[#4a4a40]">
                       과제
                     </label>
                     <textarea
+                      id="curriculum-week-assignment"
                       value={weekForm.assignment}
                       onChange={(e) => setWeekForm((p) => ({ ...p, assignment: e.target.value }))}
                       placeholder="과제 내용을 입력하세요"
@@ -465,10 +489,11 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Props) 
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block font-['Pretendard',sans-serif] text-xs font-semibold text-[#4a4a40]">
+                    <label htmlFor="curriculum-week-notes" className="mb-1 block font-['Pretendard',sans-serif] text-xs font-semibold text-[#4a4a40]">
                       비고
                     </label>
                     <input
+                      id="curriculum-week-notes"
                       type="text"
                       value={weekForm.notes}
                       onChange={(e) => setWeekForm((p) => ({ ...p, notes: e.target.value }))}
@@ -477,10 +502,45 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Props) 
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block font-['Pretendard',sans-serif] text-xs font-semibold text-[#4a4a40]">
+                    <label htmlFor="curriculum-week-start-date" className="mb-1 block font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
+                      시작 날짜
+                    </label>
+                    <input
+                      id="curriculum-week-start-date"
+                      type="date"
+                      value={weekForm.start_date}
+                      onChange={(e) =>
+                        setWeekForm((p) => ({
+                          ...p,
+                          start_date: e.target.value,
+                          end_date: e.target.value ? p.end_date : "",
+                        }))
+                      }
+                      className="w-full rounded-lg border border-[#ddd9cc] bg-white py-2.5 px-4 font-['Pretendard',sans-serif] text-sm text-[#16140f] focus:border-[#FF6C0F]/50 focus:outline-none focus:ring-2 focus:ring-[#FF6C0F]/10"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="curriculum-week-end-date" className="mb-1 block font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
+                      종료 날짜 (선택)
+                    </label>
+                    <input
+                      id="curriculum-week-end-date"
+                      type="date"
+                      value={weekForm.end_date}
+                      disabled={!weekForm.start_date}
+                      onChange={(e) => setWeekForm((p) => ({ ...p, end_date: e.target.value }))}
+                      className="w-full rounded-lg border border-[#ddd9cc] bg-white py-2.5 px-4 font-['Pretendard',sans-serif] text-sm text-[#16140f] focus:border-[#FF6C0F]/50 focus:outline-none focus:ring-2 focus:ring-[#FF6C0F]/10 disabled:cursor-not-allowed disabled:bg-[#f5f5ee] disabled:text-[#6b6b5e]"
+                    />
+                    <p className="mt-1 font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">
+                      여러 날에 걸친 이벤트만 설정 (예: 해커톤)
+                    </p>
+                  </div>
+                  <div>
+                    <label htmlFor="curriculum-week-sort-order" className="mb-1 block font-['Pretendard',sans-serif] text-xs font-semibold text-[#4a4a40]">
                       정렬 순서
                     </label>
                     <input
+                      id="curriculum-week-sort-order"
                       type="number"
                       value={weekForm.sort_order}
                       onChange={(e) => setWeekForm((p) => ({ ...p, sort_order: e.target.value }))}
@@ -490,12 +550,14 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Props) 
                 </div>
                 <div className="mt-4 flex justify-end gap-2">
                   <button
+                    type="button"
                     onClick={closeWeekEditor}
                     className="h-8 rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f]"
                   >
                     취소
                   </button>
                   <button
+                    type="button"
                     onClick={handleSaveWeek}
                     disabled={isPending}
                     className="h-8 rounded-md bg-[#16140f] px-3 font-['Pretendard',sans-serif] text-xs font-semibold text-white disabled:opacity-50"
@@ -558,6 +620,7 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Props) 
                       </div>
                       <div className="flex shrink-0 gap-1">
                         <button
+                          type="button"
                           onClick={() => openEditWeek(w)}
                           className="flex h-8 items-center gap-1 rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f]"
                         >
@@ -565,6 +628,7 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Props) 
                           수정
                         </button>
                         <button
+                          type="button"
                           onClick={() => confirmDelete("week", w.id, w.week_label)}
                           className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#b42318] hover:underline px-2"
                         >
@@ -586,6 +650,7 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Props) 
                 총 {areas.length}개 영역
               </p>
               <button
+                type="button"
                 onClick={openCreateArea}
                 className="flex h-8 items-center gap-1.5 rounded-md bg-[#16140f] px-3 font-['Pretendard',sans-serif] text-xs font-semibold text-white"
               >
@@ -601,10 +666,11 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Props) 
                 </h3>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1 block font-['Pretendard',sans-serif] text-xs font-semibold text-[#4a4a40]">
+                    <label htmlFor="curriculum-area-number" className="mb-1 block font-['Pretendard',sans-serif] text-xs font-semibold text-[#4a4a40]">
                       영역 번호 *
                     </label>
                     <input
+                      id="curriculum-area-number"
                       type="text"
                       value={areaForm.area_number}
                       onChange={(e) => setAreaForm((p) => ({ ...p, area_number: e.target.value }))}
@@ -613,10 +679,11 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Props) 
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block font-['Pretendard',sans-serif] text-xs font-semibold text-[#4a4a40]">
+                    <label htmlFor="curriculum-area-title" className="mb-1 block font-['Pretendard',sans-serif] text-xs font-semibold text-[#4a4a40]">
                       제목 *
                     </label>
                     <input
+                      id="curriculum-area-title"
                       type="text"
                       value={areaForm.title}
                       onChange={(e) => setAreaForm((p) => ({ ...p, title: e.target.value }))}
@@ -625,10 +692,11 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Props) 
                     />
                   </div>
                   <div className="sm:col-span-2">
-                    <label className="mb-1 block font-['Pretendard',sans-serif] text-xs font-semibold text-[#4a4a40]">
+                    <label htmlFor="curriculum-area-subtitle" className="mb-1 block font-['Pretendard',sans-serif] text-xs font-semibold text-[#4a4a40]">
                       부제
                     </label>
                     <input
+                      id="curriculum-area-subtitle"
                       type="text"
                       value={areaForm.subtitle}
                       onChange={(e) => setAreaForm((p) => ({ ...p, subtitle: e.target.value }))}
@@ -637,10 +705,11 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Props) 
                     />
                   </div>
                   <div className="sm:col-span-2">
-                    <label className="mb-1 block font-['Pretendard',sans-serif] text-xs font-semibold text-[#4a4a40]">
+                    <label htmlFor="curriculum-area-description" className="mb-1 block font-['Pretendard',sans-serif] text-xs font-semibold text-[#4a4a40]">
                       설명
                     </label>
                     <textarea
+                      id="curriculum-area-description"
                       value={areaForm.description}
                       onChange={(e) => setAreaForm((p) => ({ ...p, description: e.target.value }))}
                       placeholder="영역 설명을 입력하세요"
@@ -649,28 +718,30 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Props) 
                     />
                   </div>
                   <div className="sm:col-span-2">
-                    <label className="mb-1 block font-['Pretendard',sans-serif] text-xs font-semibold text-[#4a4a40]">
+                    <div className="mb-1 block font-['Pretendard',sans-serif] text-xs font-semibold text-[#4a4a40]">
                       활동 목록
-                    </label>
+                    </div>
                     <div className="space-y-2">
-                      {areaForm.activities.map((activity, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <input
-                            type="text"
-                            value={activity}
-                            onChange={(e) => updateActivity(i, e.target.value)}
-                            placeholder={`활동 ${i + 1}`}
-                            className="flex-1 rounded-lg border border-[#ddd9cc] bg-white px-4 py-2.5 font-['Pretendard',sans-serif] text-sm text-[#16140f] placeholder:text-[#16140f]/40 focus:border-[#FF6C0F]/50 focus:outline-none focus:ring-2 focus:ring-[#FF6C0F]/10"
-                          />
-                          <button
-                            onClick={() => removeActivity(i)}
-                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-[#ddd9cc] text-[#b42318]"
-                          >
+                            {areaForm.activities.map((activity) => (
+                          <div key={activity.id} className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={activity.value}
+                              onChange={(e) => updateActivity(activity.id, e.target.value)}
+                              placeholder="활동"
+                              className="flex-1 rounded-lg border border-[#ddd9cc] bg-white px-4 py-2.5 font-['Pretendard',sans-serif] text-sm text-[#16140f] placeholder:text-[#16140f]/40 focus:border-[#FF6C0F]/50 focus:outline-none focus:ring-2 focus:ring-[#FF6C0F]/10"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeActivity(activity.id)}
+                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-[#ddd9cc] text-[#b42318]"
+                            >
                             <Trash2 className="h-3.5 w-3.5" strokeWidth={2} />
                           </button>
                         </div>
                       ))}
                       <button
+                        type="button"
                         onClick={addActivity}
                         className="flex h-8 items-center gap-1.5 rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f]"
                       >
@@ -680,10 +751,11 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Props) 
                     </div>
                   </div>
                   <div>
-                    <label className="mb-1 block font-['Pretendard',sans-serif] text-xs font-semibold text-[#4a4a40]">
+                    <label htmlFor="curriculum-area-sort-order" className="mb-1 block font-['Pretendard',sans-serif] text-xs font-semibold text-[#4a4a40]">
                       정렬 순서
                     </label>
                     <input
+                      id="curriculum-area-sort-order"
                       type="number"
                       value={areaForm.sort_order}
                       onChange={(e) => setAreaForm((p) => ({ ...p, sort_order: e.target.value }))}
@@ -693,12 +765,14 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Props) 
                 </div>
                 <div className="mt-4 flex justify-end gap-2">
                   <button
+                    type="button"
                     onClick={closeAreaEditor}
                     className="h-8 rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f]"
                   >
                     취소
                   </button>
                   <button
+                    type="button"
                     onClick={handleSaveArea}
                     disabled={isPending}
                     className="h-8 rounded-md bg-[#16140f] px-3 font-['Pretendard',sans-serif] text-xs font-semibold text-white disabled:opacity-50"
@@ -745,9 +819,9 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Props) 
                         )}
                         {Array.isArray(a.activities) && a.activities.length > 0 && (
                           <ul className="mt-2 space-y-1">
-                            {a.activities.map((act, i) => (
+                            {a.activities.map((act) => (
                               <li
-                                key={i}
+                                key={act}
                                 className="flex items-start gap-2 font-['Pretendard',sans-serif] text-xs text-[#4a4a40]"
                               >
                                 <span className="mt-1 block h-1 w-1 shrink-0 rounded-full bg-[#6b6b5e]" />
@@ -759,6 +833,7 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Props) 
                       </div>
                       <div className="flex shrink-0 gap-1">
                         <button
+                          type="button"
                           onClick={() => openEditArea(a)}
                           className="flex h-8 items-center gap-1 rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f]"
                         >
@@ -766,6 +841,7 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Props) 
                           수정
                         </button>
                         <button
+                          type="button"
                           onClick={() => confirmDelete("area", a.id, a.title)}
                           className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#b42318] hover:underline px-2"
                         >

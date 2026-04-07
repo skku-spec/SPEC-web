@@ -585,6 +585,128 @@ function PatternsSection() {
           </ol>
         </Rule>
       </SubSection>
+
+      {/* ── Calendar / Schedule Pattern ── */}
+      <SubSection title="캘린더 / 일정 패턴">
+        <p className="font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">
+          월간 캘린더 및 일정 표시에 사용되는 시각 패턴입니다. 커리큘럼 캘린더 등에서 사용됩니다.
+        </p>
+
+        {/* Month header */}
+        <div className="space-y-2">
+          <p className="font-['Pretendard',sans-serif] text-xs font-semibold text-[#FF6C0F]">월 헤더</p>
+          <div className="rounded-lg border border-[#ddd9cc] bg-white">
+            <div className="flex items-center justify-between border-b border-[#ece8db] px-4 py-3">
+              <button type="button" className="h-8 rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f] transition-colors hover:bg-[#f0efe6]">
+                <span className="text-sm">&lsaquo;</span>
+              </button>
+              <span className="font-['Pretendard',sans-serif] text-base font-semibold text-[#16140f]">2026년 4월</span>
+              <button type="button" className="h-8 rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f] transition-colors hover:bg-[#f0efe6]">
+                <span className="text-sm">&rsaquo;</span>
+              </button>
+            </div>
+          </div>
+          <CodeBlock>{`제목:  font-['Pretendard',sans-serif] text-base font-semibold text-[#16140f]
+네비:  h-8 rounded-md border border-[#ddd9cc] px-3
+       font-['Pretendard',sans-serif] text-xs font-medium
+       hover:bg-[#f0efe6]`}</CodeBlock>
+        </div>
+
+        {/* Day header row */}
+        <div className="space-y-2">
+          <p className="font-['Pretendard',sans-serif] text-xs font-semibold text-[#FF6C0F]">요일 헤더</p>
+          <div className="rounded-lg border border-[#ddd9cc] bg-white">
+            <div className="grid grid-cols-7 border-b border-[#ece8db]">
+              {(['일', '월', '화', '수', '목', '금', '토'] as const).map((d) => (
+                <div key={d} className="px-1 py-2 text-center font-['Pretendard',sans-serif] text-sm font-semibold text-[#4a4a40]">
+                  {d}
+                </div>
+              ))}
+            </div>
+          </div>
+          <CodeBlock>{`font-['Pretendard',sans-serif] text-sm font-semibold text-[#4a4a40]
+grid grid-cols-7, 각 셀 px-1 py-2 text-center`}</CodeBlock>
+        </div>
+
+        {/* Date cells */}
+        <div className="space-y-2">
+          <p className="font-['Pretendard',sans-serif] text-xs font-semibold text-[#FF6C0F]">날짜 셀</p>
+          <div className="rounded-lg border border-[#ddd9cc] bg-white">
+            <div className="grid grid-cols-4 gap-0">
+              {/* Normal day */}
+              <div className="min-h-[72px] border-b border-r border-[#ece8db] p-1.5">
+                <span className="mb-1 inline-block font-['Pretendard',sans-serif] text-xs font-semibold text-[#16140f]">14</span>
+              </div>
+              {/* Today */}
+              <div className="min-h-[72px] border-b border-r border-[#ece8db] p-1.5 ring-2 ring-inset ring-[#FF6C0F]">
+                <span className="mb-1 inline-block font-['Pretendard',sans-serif] text-xs font-semibold text-[#FF6C0F]">15</span>
+                <div className="flex flex-col gap-0.5">
+                  <span className="rounded-full bg-[#FFF0E5] px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold text-[#FF6C0F] truncate">W5 4/15-18</span>
+                </div>
+              </div>
+              {/* Day with multiple events */}
+              <div className="min-h-[72px] border-b border-r border-[#ece8db] p-1.5">
+                <span className="mb-1 inline-block font-['Pretendard',sans-serif] text-xs font-semibold text-[#16140f]">20</span>
+                <div className="flex flex-col gap-0.5">
+                  <span className="rounded-full bg-[#f0efe6] px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold text-[#6b6b5e] truncate">OFF</span>
+                  <span className="rounded-full bg-[#E8F0FE] px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold text-[#2563EB] truncate">EVENT</span>
+                </div>
+              </div>
+              {/* Outside month */}
+              <div className="min-h-[72px] border-b border-[#ece8db] p-1.5">
+                <span className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]/30">1</span>
+              </div>
+            </div>
+          </div>
+          <CodeBlock>{`당월 날짜:  text-xs font-semibold text-[#16140f]
+타월 날짜:  text-xs text-[#6b6b5e]/30
+오늘:      ring-2 ring-inset ring-[#FF6C0F]
+           날짜 숫자 text-[#FF6C0F]
+셀 크기:   min-h-[72px] p-1.5
+셀 구분:   border-b border-r border-[#ece8db]`}</CodeBlock>
+        </div>
+
+        {/* Event pills */}
+        <div className="space-y-2">
+          <p className="font-['Pretendard',sans-serif] text-xs font-semibold text-[#FF6C0F]">이벤트 필 (Event Pills)</p>
+          <div className="flex flex-wrap items-center gap-3 rounded-lg border border-[#ddd9cc] bg-white p-4">
+            <span className="rounded-full bg-[#FFF0E5] px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold text-[#FF6C0F]">W3 4/1-4</span>
+            <span className="rounded-full bg-[#f0efe6] px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold text-[#6b6b5e]">OFF</span>
+            <span className="rounded-full bg-[#E8F0FE] px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold text-[#2563EB]">EVENT</span>
+            <span className="font-['Pretendard',sans-serif] text-[10px] text-[#6b6b5e]">+2 more</span>
+          </div>
+          <CodeBlock>{`공통 기본:  rounded-full px-2.5 py-1
+            font-['Pretendard',sans-serif] text-xs font-semibold truncate
+
+표준 (주차): bg-[#FFF0E5] text-[#FF6C0F]
+OFF:        bg-[#f0efe6] text-[#6b6b5e]
+EVENT:      bg-[#E8F0FE] text-[#2563EB]
+
+오버플로:   최대 2개 표시 후 "+N more"
+            font-['Pretendard',sans-serif] text-[10px] text-[#6b6b5e]
+
+모바일:     축약 레이블 사용 (예: "W3" → "W3")`}</CodeBlock>
+        </div>
+
+        {/* Calendar container */}
+        <div className="space-y-2">
+          <p className="font-['Pretendard',sans-serif] text-xs font-semibold text-[#FF6C0F]">캘린더 컨테이너</p>
+          <CodeBlock>{`컨테이너:   rounded-lg border border-[#ddd9cc] bg-white
+그리드:     grid grid-cols-7
+헤더 구분:  border-b border-[#ece8db]
+빈 상태:    px-4 py-12 text-center text-sm text-[#6b6b5e]`}</CodeBlock>
+        </div>
+
+        <Rule label="캘린더 금지 패턴">
+          <ul className="list-inside list-disc space-y-1">
+            <li>shadow-sm, shadow-md 등 그림자 사용 금지 -- border만 사용</li>
+            <li>hover:scale-*, hover:-translate-y-* 등 트랜스폼 금지 -- 색상 전환만 허용</li>
+            <li>외부 날짜 라이브러리 (react-calendar, react-big-calendar 등) 금지 -- 직접 구현</li>
+            <li>날짜 셀에 배경색 채우기 금지 -- ring으로 오늘 강조, 나머지는 투명</li>
+            <li>이벤트 필에 border 추가 금지 -- 배경색 + 텍스트색 조합만 사용</li>
+          </ul>
+        </Rule>
+      </SubSection>
     </div>
   );
 }
