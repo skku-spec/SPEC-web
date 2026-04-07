@@ -137,12 +137,28 @@ export async function upsertCurriculumWeek(data: {
   notes: string | null;
   batch: string;
   sort_order: number;
+  start_date?: string | null;
+  end_date?: string | null;
 }): Promise<{ success: boolean; error?: string }> {
   try {
     await requireAdmin();
 
     if (!data.week_label.trim() || !data.topic.trim()) {
       return { success: false, error: "주차 라벨과 주제는 필수입니다." };
+    }
+
+    if (data.end_date && !data.start_date) {
+      return {
+        success: false,
+        error: "종료 날짜를 설정하려면 시작 날짜가 필요합니다.",
+      };
+    }
+
+    if (data.start_date && data.end_date && data.end_date < data.start_date) {
+      return {
+        success: false,
+        error: "종료 날짜는 시작 날짜 이후여야 합니다.",
+      };
     }
 
     const supabase = await createClient();
@@ -157,6 +173,8 @@ export async function upsertCurriculumWeek(data: {
       notes: data.notes?.trim() || null,
       batch: data.batch || "default",
       sort_order: data.sort_order,
+      start_date: data.start_date ?? null,
+      end_date: data.end_date ?? null,
     };
 
     if (data.id) {
