@@ -4,6 +4,8 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import PageHeader from '@/components/PageHeader';
+import { formatCurriculumDateRange, parseCurriculumDatesForCalendar } from '@/lib/utils/curriculum-dates';
+import CurriculumCalendar from '@/components/curriculum/CurriculumCalendar';
 
 interface CurriculumClientProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -642,6 +644,9 @@ function LearnerTrack({ weeks }: { weeks: any[] }) {
               <th className="sticky left-0 z-10 w-[72px] bg-[#16140f] px-4 py-3 text-left font-['Pretendard',sans-serif] text-[13px] font-bold uppercase tracking-wider text-[#f5f5ee]/70">
                 STEP
               </th>
+              <th className="w-[120px] px-4 py-3 text-left font-['Pretendard',sans-serif] text-[13px] font-bold uppercase tracking-wider text-[#f5f5ee]/70">
+                날짜
+              </th>
               <th className="w-[160px] px-4 py-3 text-left font-['Pretendard',sans-serif] text-[13px] font-bold uppercase tracking-wider text-[#f5f5ee]/70">
                 주제
               </th>
@@ -672,6 +677,11 @@ function LearnerTrack({ weeks }: { weeks: any[] }) {
                     <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#16140f]/5 text-[12px] font-bold">
                       {row.week}
                     </span>
+                  </td>
+
+                  {/* Date */}
+                  <td className="px-4 py-3.5 font-['Pretendard',sans-serif] text-sm text-[#6b6b5e] whitespace-nowrap">
+                    {formatCurriculumDateRange(row.start_date, row.end_date)}
                   </td>
 
                   {/* Topic */}
