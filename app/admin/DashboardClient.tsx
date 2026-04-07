@@ -133,7 +133,7 @@ export function DashboardClient({
       totalPresent: userLogs.filter(l => l.status === "present").length,
       totalHw: userSubmissions.length
     };
-  }).sort((a, b) => (b.attRate + b.hwRate) - (a.attRate + a.hwRate));
+  }).sort((a, b) => a.name.localeCompare(b.name, "ko"));
 
 
   return (
