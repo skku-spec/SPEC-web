@@ -100,11 +100,19 @@ describe("CurriculumCalendar", () => {
     expect(screen.queryByTestId("event-detail")).toBeNull();
   });
 
-  it("shows range indicator for multi-day events", () => {
+  it("renders multi-day events as spanning bars across days", () => {
     render(<CurriculumCalendar events={JUNE_EVENTS} />);
-    const pill = screen.getByTestId("event-pill");
-    expect(pill).toHaveTextContent("EVENT");
-    expect(pill.textContent).toContain("6/6");
+    const pills = screen.getAllByTestId("event-pill");
+    expect(pills.length).toBeGreaterThanOrEqual(1);
+    expect(pills[0]).toHaveTextContent("EVENT");
+    const cell6 = screen.getByTestId("day-cell-6");
+    const cell7 = screen.getByTestId("day-cell-7");
+    expect(
+      cell6.querySelector('[data-testid="event-pill"], [data-testid="event-bar"]'),
+    ).toBeTruthy();
+    expect(
+      cell7.querySelector('[data-testid="event-pill"], [data-testid="event-bar"]'),
+    ).toBeTruthy();
   });
 
   it("renders with empty events array", () => {

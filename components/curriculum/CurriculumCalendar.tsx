@@ -36,9 +36,15 @@ function formatRange(e: CalendarEvent): string {
 
 const DAY_HEADERS = ['일', '월', '화', '수', '목', '금', '토'] as const;
 
+type CalendarDayEntry = CalendarEvent & {
+  isMultiDay: boolean;
+  isVisualStart: boolean;
+  isVisualEnd: boolean;
+};
+
 function pillClass(label: string): string {
   const base =
-    "rounded-full px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold truncate cursor-pointer transition-colors";
+    "rounded-full px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold line-clamp-2 cursor-pointer transition-colors";
   if (/off/i.test(label)) {
     return `${base} bg-[#f0efe6] text-[#6b6b5e]`;
   }
@@ -46,6 +52,12 @@ function pillClass(label: string): string {
     return `${base} bg-[#E8F0FE] text-[#2563EB]`;
   }
   return `${base} bg-[#FFF0E5] text-[#FF6C0F]`;
+}
+
+function barColor(label: string): string {
+  if (/off/i.test(label)) return 'bg-[#f0efe6] text-[#6b6b5e]';
+  if (/event/i.test(label)) return 'bg-[#E8F0FE] text-[#2563EB]';
+  return 'bg-[#FFF0E5] text-[#FF6C0F]';
 }
 
 interface CurriculumCalendarProps {
@@ -89,12 +101,50 @@ export default function CurriculumCalendar({ events }: CurriculumCalendarProps) 
   }, []);
 
   const eventsByDay = useMemo(() => {
-    const map = new Map<number, CalendarEvent[]>();
+    const map = new Map<number, CalendarDayEntry[]>();
+    const monthDays = getDaysInMonth(year, month);
+    const monthFirstDay = getFirstDayOfWeek(year, month);
+    const monthStart = new Date(year, month, 1);
+    const monthEnd = new Date(year, month, monthDays);
+
     for (const e of events) {
-      if (e.date.getFullYear() === year && e.date.getMonth() === month) {
-        const day = e.date.getDate();
-        if (!map.has(day)) map.set(day, []);
-        map.get(day)!.push(e);
+      const startDate = e.date;
+      const endDate = e.endDate;
+      const isMultiDay = !!(endDate && !sameDay(startDate, endDate));
+
+      if (isMultiDay) {
+        // Skip events that don't overlap with current month
+        if (startDate > monthEnd || endDate! < monthStart) continue;
+        // Clamp iteration range to current month
+        const rangeStart = startDate < monthStart ? monthStart : startDate;
+        const rangeEnd = endDate! > monthEnd ? monthEnd : endDate!;
+        const cursor = new Date(rangeStart);
+        while (cursor <= rangeEnd) {
+          const day = cursor.getDate();
+          const col = (monthFirstDay + day - 1) % 7;
+          const isActualStart = sameDay(cursor, startDate);
+          const isActualEnd = sameDay(cursor, endDate!);
+          if (!map.has(day)) map.set(day, []);
+          map.get(day)!.push({
+            ...e,
+            isMultiDay: true,
+            isVisualStart: isActualStart || col === 0 || day === 1,
+            isVisualEnd: isActualEnd || col === 6 || day === monthDays,
+          });
+          cursor.setDate(cursor.getDate() + 1);
+        }
+      } else {
+        // Single-day event
+        if (startDate.getFullYear() === year && startDate.getMonth() === month) {
+          const day = startDate.getDate();
+          if (!map.has(day)) map.set(day, []);
+          map.get(day)!.push({
+            ...e,
+            isMultiDay: false,
+            isVisualStart: true,
+            isVisualEnd: true,
+          });
+        }
       }
     }
     return map;
@@ -168,7 +218,7 @@ export default function CurriculumCalendar({ events }: CurriculumCalendarProps) 
             return (
               <div
                 key={`prev-${dayNum}`}
-                className="min-h-[72px] border-b border-r border-[#ece8db] p-1.5"
+                className="min-h-[90px] border-b border-r border-[#ece8db] p-1.5"
               >
                 <span className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]/30">
                   {dayNum}
@@ -183,13 +233,16 @@ export default function CurriculumCalendar({ events }: CurriculumCalendarProps) 
             const cellDate = new Date(year, month, dayNum);
             const isToday = sameDay(cellDate, today);
             const dayEvents = eventsByDay.get(dayNum) || [];
-            const visibleEvents = dayEvents.slice(0, 2);
-            const overflow = dayEvents.length - 2;
+            const sorted = [...dayEvents].sort((a, b) =>
+              (b.isMultiDay ? 1 : 0) - (a.isMultiDay ? 1 : 0)
+            );
+            const visibleEvents = sorted.slice(0, 3);
+            const overflow = sorted.length - 3;
 
             return (
               <div
                 key={`day-${dayNum}`}
-                className={`min-h-[72px] border-b border-r border-[#ece8db] p-1.5 ${
+                className={`min-h-[90px] border-b border-r border-[#ece8db] p-1.5 ${
                   isToday ? 'ring-2 ring-inset ring-[#FF6C0F]' : ''
                 }`}
                 data-testid={`day-cell-${dayNum}`}
@@ -203,10 +256,40 @@ export default function CurriculumCalendar({ events }: CurriculumCalendarProps) 
                 </span>
 
                 <div className="flex flex-col gap-0.5">
-                  {visibleEvents.map((e) => {
-                    const key = `${dayNum}-${e.weekLabel}`;
+                  {visibleEvents.map((entry) => {
+                    if (entry.isMultiDay) {
+                      const radius =
+                        entry.isVisualStart && entry.isVisualEnd
+                          ? 'rounded-md'
+                          : entry.isVisualStart
+                            ? 'rounded-l-md'
+                            : entry.isVisualEnd
+                              ? 'rounded-r-md'
+                              : '';
+
+                      return (
+                        <div
+                          key={`${dayNum}-${entry.weekLabel}-bar`}
+                          className="-mx-1.5"
+                        >
+                          <div
+                            className={`flex h-6 items-center ${barColor(entry.weekLabel)} ${radius} font-['Pretendard',sans-serif] text-xs font-semibold`}
+                            title={`${entry.weekLabel} — ${entry.topic}`}
+                            data-testid={entry.isVisualStart ? 'event-pill' : 'event-bar'}
+                          >
+                            {entry.isVisualStart && (
+                              <span className="truncate pl-2 pr-1">
+                                {entry.weekLabel}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    const key = `${dayNum}-${entry.weekLabel}`;
                     const isExpanded = expandedKey === key;
-                    const rangeStr = formatRange(e);
+                    const rangeStr = formatRange(entry);
 
                     return (
                       <div key={key}>
@@ -215,11 +298,12 @@ export default function CurriculumCalendar({ events }: CurriculumCalendarProps) 
                           onClick={() =>
                             setExpandedKey(isExpanded ? null : key)
                           }
-                          className={`${pillClass(e.weekLabel)} w-full text-left`}
+                          className={`${pillClass(entry.weekLabel)} w-full text-left`}
                           data-testid="event-pill"
                           aria-expanded={isExpanded}
+                          title={`${entry.weekLabel} — ${entry.topic}`}
                         >
-                          {e.weekLabel}
+                          {entry.weekLabel}
                           {rangeStr && (
                             <span className="ml-1 opacity-60">
                               {rangeStr}
@@ -232,7 +316,7 @@ export default function CurriculumCalendar({ events }: CurriculumCalendarProps) 
                             className="mt-1 rounded-md bg-[#f5f5ee] px-2 py-1.5 font-['Pretendard',sans-serif] text-xs leading-relaxed text-[#4a4a40]"
                             data-testid="event-detail"
                           >
-                            {e.topic}
+                            {entry.topic}
                           </div>
                         )}
                       </div>
@@ -255,7 +339,7 @@ export default function CurriculumCalendar({ events }: CurriculumCalendarProps) 
             return (
             <div
               key={`next-${dayNum}`}
-              className="min-h-[72px] border-b border-r border-[#ece8db] p-1.5"
+              className="min-h-[90px] border-b border-r border-[#ece8db] p-1.5"
             >
               <span className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]/30">
                 {dayNum}
