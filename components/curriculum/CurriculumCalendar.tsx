@@ -36,6 +36,11 @@ function formatRange(e: CalendarEvent): string {
 
 const DAY_HEADERS = ['일', '월', '화', '수', '목', '금', '토'] as const;
 
+function formatAgendaDate(d: Date): string {
+  const dayName = DAY_HEADERS[d.getDay()];
+  return `${d.getMonth() + 1}/${d.getDate()} ${dayName}`;
+}
+
 type CalendarDayEntry = CalendarEvent & {
   isMultiDay: boolean;
   isVisualStart: boolean;
@@ -150,6 +155,19 @@ export default function CurriculumCalendar({ events }: CurriculumCalendarProps) 
     return map;
   }, [events, year, month]);
 
+  const monthAgendaEvents = useMemo(() => {
+    const monthStart = new Date(year, month, 1);
+    const mDays = getDaysInMonth(year, month);
+    const monthEnd = new Date(year, month, mDays);
+
+    return events
+      .filter((e) => {
+        const end = e.endDate || e.date;
+        return e.date <= monthEnd && end >= monthStart;
+      })
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
+  }, [events, year, month]);
+
   const hasEvents = eventsByDay.size > 0;
 
   const daysInMonth = getDaysInMonth(year, month);
@@ -197,7 +215,7 @@ export default function CurriculumCalendar({ events }: CurriculumCalendarProps) 
       </div>
 
       {/* ── Day-of-week headers ── */}
-      <div className="grid grid-cols-7 border-b border-[#ece8db]">
+      <div className="hidden sm:grid sm:grid-cols-7 border-b border-[#ece8db]">
         {DAY_HEADERS.map((d) => (
           <div
             key={d}
@@ -211,7 +229,8 @@ export default function CurriculumCalendar({ events }: CurriculumCalendarProps) 
 
       {/* ── Grid body ── */}
       {hasEvents ? (
-        <div className="grid grid-cols-7">
+        <>
+        <div className="hidden sm:grid sm:grid-cols-7">
           {/* leading blanks (prev month) */}
           {Array.from({ length: leadingBlanks }, (_, i) => {
             const dayNum = prevDays - leadingBlanks + 1 + i;
@@ -348,6 +367,68 @@ export default function CurriculumCalendar({ events }: CurriculumCalendarProps) 
             );
           })}
         </div>
+
+        {/* ── Mobile agenda view ── */}
+        <div className="sm:hidden" data-testid="mobile-agenda">
+          {monthAgendaEvents.map((entry, idx) => {
+            const isOff = /off/i.test(entry.weekLabel);
+            const isEvent = /event/i.test(entry.weekLabel);
+
+            if (isOff || isEvent) {
+              const rangeStr =
+                entry.endDate && !sameDay(entry.date, entry.endDate)
+                  ? formatRange(entry)
+                  : formatAgendaDate(entry.date);
+              return (
+                <div
+                  key={`agenda-${entry.weekLabel}-${entry.date.getTime()}`}
+                  className={`border-b border-[#ece8db] px-3 py-2.5 ${
+                    isOff ? 'bg-[#f0efe6]' : 'bg-[#E8F0FE]'
+                  }`}
+                  data-testid="agenda-event"
+                >
+                  <p
+                    className={`rounded-md px-3 py-2 font-['Pretendard',sans-serif] text-xs font-semibold ${
+                      isOff ? 'text-[#6b6b5e]' : 'text-[#2563EB]'
+                    }`}
+                  >
+                    {rangeStr}
+                    {' · '}
+                    {entry.topic || entry.weekLabel}
+                  </p>
+                </div>
+              );
+            }
+
+            const dateStr =
+              entry.endDate && !sameDay(entry.date, entry.endDate)
+                ? formatRange(entry)
+                : formatAgendaDate(entry.date);
+
+            return (
+              <div
+                key={`agenda-${entry.weekLabel}-${entry.date.getTime()}`}
+                className="flex items-start border-b border-[#ece8db] px-3 py-2.5"
+                data-testid="agenda-event"
+              >
+                <span className="w-16 shrink-0 pt-0.5 font-['Pretendard',sans-serif] text-xs font-semibold text-[#6b6b5e]">
+                  {dateStr}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
+                    {entry.weekLabel}
+                  </p>
+                  {entry.topic && (
+                    <p className="line-clamp-1 font-['Pretendard',sans-serif] text-xs text-[#4a4a40]">
+                      {entry.topic}
+                    </p>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        </>
       ) : (
         <div className="px-4 py-12 text-center" data-testid="empty-month">
           <p className="font-['Pretendard',sans-serif] text-sm text-[#6b6b5e]">
