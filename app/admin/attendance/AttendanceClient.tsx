@@ -322,7 +322,7 @@ export function AttendanceClient({
             </tr>
           </thead>
           <tbody>
-            {learners.map(learner => {
+            {[...learners].sort((a, b) => a.name.localeCompare(b.name, "ko")).map(learner => {
               const stats = calculateStats(learner.id);
               return (
                 <tr key={learner.id} className="border-t border-[#ece8db] transition-colors hover:bg-[#fcfcf8] group text-center">
@@ -413,7 +413,7 @@ export function AttendanceClient({
       </div>
 
       <div className="space-y-3 md:hidden">
-        {learners.map(learner => {
+        {[...learners].sort((a, b) => a.name.localeCompare(b.name, "ko")).map(learner => {
           const stats = calculateStats(learner.id);
           return (
             <div key={learner.id} className="rounded-lg border border-[#ddd9cc] bg-white p-4">
