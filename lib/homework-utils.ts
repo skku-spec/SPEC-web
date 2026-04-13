@@ -37,7 +37,18 @@ export function computeLearnerHomeworkStats(
     const sub = submissions.find(
       (s) => s.homework_id === hw.id && s.user_id === learnerId && s.status === "completed"
     );
-    const classification = classifySubmission(sub?.submitted_at ?? null, hw.due_date);
+
+    if (!sub) {
+      notSubmittedCount++;
+      continue;
+    }
+
+    if (!sub.submitted_at) {
+      completedCount++;
+      continue;
+    }
+
+    const classification = classifySubmission(sub.submitted_at, hw.due_date);
     if (classification === "on-time") {
       completedCount++;
     } else if (classification === "late") {
