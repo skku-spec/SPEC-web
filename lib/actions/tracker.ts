@@ -47,7 +47,7 @@ export async function getTrackerData() {
 
     const { data: homeworks, error: hwError } = await supabase
       .from("homeworks")
-      .select("id, title, is_individual, is_team, padlet_board_id, submission_link, individual_content, team_content")
+      .select("id, title, is_individual, is_team, padlet_board_id, submission_link, individual_content, team_content, due_date")
       .order("created_at", { ascending: true });
     if (hwError) return { success: false as const, error: `과제 목록을 불러오지 못했습니다: ${hwError.message}` };
 
@@ -241,12 +241,30 @@ export async function syncHomeworkSubmissions(homeworkId: string, submissionsDat
 
     if (submissionsData.length === 0) return { success: true as const };
 
-    const records = submissionsData.map(s => ({
-      homework_id: homeworkId,
-      user_id: s.user_id,
-      status: s.status,
-      submitted_at: s.status === "completed" ? new Date().toISOString() : undefined
-    }));
+    const userIds = submissionsData.map(s => s.user_id);
+    const { data: existing } = await supabase
+      .from("homework_submissions")
+      .select("user_id, status, submitted_at")
+      .eq("homework_id", homeworkId)
+      .in("user_id", userIds);
+
+    const existingMap = new Map(
+      (existing ?? []).map(e => [e.user_id, e])
+    );
+
+    const now = new Date().toISOString();
+    const records = submissionsData.map(s => {
+      const prev = existingMap.get(s.user_id);
+      const preservedAt = prev?.status === "completed" ? prev.submitted_at : undefined;
+      return {
+        homework_id: homeworkId,
+        user_id: s.user_id,
+        status: s.status,
+        submitted_at: s.status === "completed"
+          ? (preservedAt ?? now)
+          : undefined,
+      };
+    });
 
     const { error } = await supabase
       .from("homework_submissions")
