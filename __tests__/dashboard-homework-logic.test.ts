@@ -82,6 +82,16 @@ describe("computeLearnerHomeworkStats", () => {
     });
   });
 
+  it("treats completed submissions without submitted_at as on-time", () => {
+    const homeworks = [{ id: "hw-1", due_date: "2026-04-10T09:00:00Z" }];
+    const submissions = [
+      { homework_id: "hw-1", user_id: userId, status: "completed", submitted_at: null },
+    ];
+    expect(computeLearnerHomeworkStats(userId, homeworks, submissions)).toEqual({
+      completedCount: 1, totalCount: 1, lateCount: 0, notSubmittedCount: 0,
+    });
+  });
+
   it("returns zeros when no homeworks exist", () => {
     expect(computeLearnerHomeworkStats(userId, [], [])).toEqual({
       completedCount: 0, totalCount: 0, lateCount: 0, notSubmittedCount: 0,
