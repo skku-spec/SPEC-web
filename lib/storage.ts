@@ -35,21 +35,31 @@ export async function uploadBlogImage(file: File): Promise<string> {
 }
 
 export async function uploadSpecLogImage(file: File): Promise<string> {
-  const formData = new FormData();
-  formData.append("image", file);
-
-  const response = await fetch("/api/upload/spec-log-image", {
+  // Step 1: 서버에서 서명된 업로드 URL 발급 (파일 메타데이터만 전송)
+  const presignRes = await fetch("/api/upload/spec-log-presign", {
     method: "POST",
-    body: formData,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: file.name, type: file.type, size: file.size }),
   });
 
-  const result = await response.json();
-
-  if (!response.ok || !result.success) {
-    throw new Error(result.error || "이미지 업로드에 실패했습니다.");
+  const presign = await presignRes.json();
+  if (!presignRes.ok || !presign.success) {
+    throw new Error(presign.error || "업로드 URL 발급에 실패했습니다.");
   }
 
-  return result.url;
+  // Step 2: 브라우저에서 Supabase Storage로 직접 업로드 (Next.js 서버 거치지 않음)
+  const supabase = createClient();
+  const { error: uploadError } = await supabase.storage
+    .from("spec-log-images")
+    .uploadToSignedUrl(presign.path, presign.token, file, {
+      contentType: file.type,
+    });
+
+  if (uploadError) {
+    throw new Error(`이미지 업로드에 실패했습니다: ${uploadError.message}`);
+  }
+
+  return presign.publicUrl;
 }
 
 export async function uploadJobLogo(file: File): Promise<string> {

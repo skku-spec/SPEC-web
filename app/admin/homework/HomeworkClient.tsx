@@ -121,7 +121,7 @@ export function HomeworkClient() {
       .select("id,name,username,slug,role") // Added slug
       .eq("role", "learner");
     if (!error && data) {
-      setAvailableLearners(data as Profile[]);
+      setAvailableLearners((data as Profile[]).sort((a, b) => a.name.localeCompare(b.name, "ko")));
     }
   }, []);
 
