@@ -146,7 +146,7 @@ export function HomeworkClient() {
               const rows = buildSubmissionRows(hw, hwTeams);
               const syncData = availableLearners.map(learner => {
                 const row = rows.find(r => r.label === learner.name);
-                const isCompleted = row ? Object.values(row.sectionStatus).some(v => v === true) : false;
+                const isCompleted = row ? Object.values(row.sectionStatus).every(v => v === true) : false;
                 return {
                   user_id: learner.id,
                   status: isCompleted ? "completed" : "pending"
