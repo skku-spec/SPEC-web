@@ -439,9 +439,9 @@ export default function MembersClient({ initialMembers }: MembersClientProps) {
                     <td className="px-4 py-3 font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">
                       {batch}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 whitespace-nowrap">
                       <span
-                        className={`inline-flex rounded-full px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold ${typeStyle.bg} ${typeStyle.text}`}
+                        className={`inline-flex rounded-full px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold whitespace-nowrap ${typeStyle.bg} ${typeStyle.text}`}
                       >
                         {memberTypeLabel(m.member_type)}
                       </span>
@@ -460,7 +460,7 @@ export default function MembersClient({ initialMembers }: MembersClientProps) {
                           : <span className="font-['Pretendard',sans-serif] text-sm text-[#6b6b5e]">-</span>}
                       </div>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 whitespace-nowrap">
                       <div className="flex items-center gap-3">
                         <button
                           onClick={() => openEdit(m)}
