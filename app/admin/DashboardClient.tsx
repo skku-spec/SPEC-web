@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { Download } from "lucide-react";
 import { exportMembersCSV } from "@/lib/actions/members";
 import { exportApplicationsCSV, exportAttendanceCSV } from "@/lib/actions/export";
-import { computeLearnerHomeworkStats } from "@/lib/homework-utils";
+import { computeLearnerHomeworkStats, groupHomeworksByDueDate } from "@/lib/homework-utils";
 
 type Profile = {
   id: string;
@@ -119,7 +119,7 @@ export function DashboardClient({
 
   const learnerStats = safeLearners.map(learner => {
     const userLogs = safeLogs.filter(l => l.user_id === learner.id);
-    const totalPresent = userLogs.filter(l => l.status === "present").length;
+    const totalPresent = userLogs.filter(l => l.status === "present" || l.status === "late").length;
     const attRate = safeSessions.length > 0
       ? Math.round((totalPresent / safeSessions.length) * 100)
       : 0;
@@ -130,11 +130,9 @@ export function DashboardClient({
       totalPresent,
       ...hwStats,
     };
-  }).sort((a, b) => {
-    const aHwRatio = a.totalCount > 0 ? a.completedCount / a.totalCount : 0;
-    const bHwRatio = b.totalCount > 0 ? b.completedCount / b.totalCount : 0;
-    return (b.attRate / 100 + bHwRatio) - (a.attRate / 100 + aHwRatio);
-  });
+  }).sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+
+  const homeworkGroups = groupHomeworksByDueDate(safeHomeworks);
 
 
   return (
@@ -186,7 +184,8 @@ export function DashboardClient({
           <thead className="bg-[#f0efe6] text-left">
             <tr>
               <th className="sticky left-0 z-10 bg-[#f0efe6] px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold min-w-[180px]">이름</th>
-              <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold">합계</th>
+              <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-[#2f9e44]">출석 합계</th>
+              <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-[#2563EB]">과제 합계</th>
               <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold">출석 (Sessions)</th>
               <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold">과제 (Homeworks)</th>
             </tr>
@@ -214,6 +213,17 @@ export function DashboardClient({
                           )}
                         </div>
                       </div>
+                    </td>
+
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex rounded-full px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold ${
+                        safeSessions.length === 0 ? "bg-gray-100 text-[#6b6b5e]" :
+                        learner.totalPresent / safeSessions.length >= 0.8 ? "bg-[#E6F9E6] text-[#2f9e44]" :
+                        learner.totalPresent / safeSessions.length >= 0.5 ? "bg-[#FFF0E5] text-[#FF6C0F]" :
+                        "bg-[#FEE2E2] text-[#b42318]"
+                      }`}>
+                        {learner.totalPresent}/{safeSessions.length}
+                      </span>
                     </td>
 
                     <td className="px-4 py-3">
@@ -250,17 +260,23 @@ export function DashboardClient({
 
                     <td className="px-4 py-3">
                       <div className="flex gap-1.5">
-                        {safeHomeworks.map(h => {
-                          const isDone = safeSubmissions.some(s => s.homework_id === h.id && s.user_id === learner.id && s.status === 'completed');
+                        {homeworkGroups.map((group, groupIdx) => {
+                          const isDone = group.homeworkIds.every(hwId =>
+                            safeSubmissions.some(s => s.homework_id === hwId && s.user_id === learner.id && s.status === 'completed')
+                          );
+                          const tooltipText = group.homeworkIds
+                            .map(hwId => safeHomeworks.find(h => h.id === hwId)?.title)
+                            .filter(Boolean)
+                            .join(' + ');
                           return (
-                            <div key={h.id} className="group/dot relative cursor-help">
+                            <div key={groupIdx} className="group/dot relative cursor-help">
                               <div className={`h-6 w-6 rounded-md flex items-center justify-center font-['Pretendard',sans-serif] text-[9px] font-semibold ${
                                 isDone ? "bg-blue-100 text-[#2563EB]" : "bg-gray-100 text-gray-400"
                               }`}>
                                 H
                               </div>
                               <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/dot:block z-50 whitespace-nowrap bg-[#16140f] text-white text-[10px] px-2 py-1 rounded-md">
-                                {h.title}
+                                {tooltipText}
                               </div>
                             </div>
                           );
@@ -294,14 +310,24 @@ export function DashboardClient({
                       )}
                     </div>
                   </div>
-                  <span className={`inline-flex rounded-full px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold ${
-                    learner.totalCount === 0 ? "bg-gray-100 text-[#6b6b5e]" :
-                    hwRatio >= 0.8 ? "bg-[#E6F9E6] text-[#2f9e44]" :
-                    hwRatio >= 0.5 ? "bg-[#FFF0E5] text-[#FF6C0F]" :
-                    "bg-[#FEE2E2] text-[#b42318]"
-                  }`}>
-                    {learner.completedCount}/{learner.totalCount}
-                  </span>
+                  <div className="flex gap-1.5 items-center">
+                    <span className={`inline-flex rounded-full px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold ${
+                      safeSessions.length === 0 ? "bg-gray-100 text-[#6b6b5e]" :
+                      learner.totalPresent / safeSessions.length >= 0.8 ? "bg-[#E6F9E6] text-[#2f9e44]" :
+                      learner.totalPresent / safeSessions.length >= 0.5 ? "bg-[#FFF0E5] text-[#FF6C0F]" :
+                      "bg-[#FEE2E2] text-[#b42318]"
+                    }`}>
+                      S {learner.totalPresent}/{safeSessions.length}
+                    </span>
+                    <span className={`inline-flex rounded-full px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold ${
+                      learner.totalCount === 0 ? "bg-gray-100 text-[#6b6b5e]" :
+                      hwRatio >= 0.8 ? "bg-[#E6F9E6] text-[#2f9e44]" :
+                      hwRatio >= 0.5 ? "bg-[#FFF0E5] text-[#FF6C0F]" :
+                      "bg-[#FEE2E2] text-[#b42318]"
+                    }`}>
+                      H {learner.completedCount}/{learner.totalCount}
+                    </span>
+                  </div>
                 </div>
                 <div className="mt-2 flex gap-4 font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">
                   <span>출석 {learner.totalPresent}/{safeSessions.length}</span>

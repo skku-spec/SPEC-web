@@ -1,15 +1,6 @@
 export type SubmissionClassification = "on-time" | "late" | "not-submitted";
 
-const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
-
-function getEndOfKSTDay(date: Date): Date {
-  const kstTime = new Date(date.getTime() + KST_OFFSET_MS);
-  const endOfDayKST = new Date(Date.UTC(
-    kstTime.getUTCFullYear(), kstTime.getUTCMonth(), kstTime.getUTCDate(),
-    23, 59, 59, 999
-  ));
-  return new Date(endOfDayKST.getTime() - KST_OFFSET_MS);
-}
+const ONE_HOUR_MS = 60 * 60 * 1000;
 
 export function classifySubmission(
   submittedAt: string | null,
@@ -20,8 +11,35 @@ export function classifySubmission(
   const submitted = new Date(submittedAt);
   const due = new Date(dueDate);
   if (submitted <= due) return "on-time";
-  if (submitted <= getEndOfKSTDay(due)) return "late";
+  if (submitted <= new Date(due.getTime() + ONE_HOUR_MS)) return "late";
   return "not-submitted";
+}
+
+export type HomeworkGroup = {
+  dueDate: string | null;
+  homeworkIds: string[];
+};
+
+export function groupHomeworksByDueDate(
+  homeworks: { id: string; due_date: string | null }[]
+): HomeworkGroup[] {
+  const groups: HomeworkGroup[] = [];
+  const dateMap = new Map<string, HomeworkGroup>();
+
+  for (const hw of homeworks) {
+    if (hw.due_date === null) {
+      groups.push({ dueDate: null, homeworkIds: [hw.id] });
+    } else {
+      if (!dateMap.has(hw.due_date)) {
+        const group: HomeworkGroup = { dueDate: hw.due_date, homeworkIds: [] };
+        dateMap.set(hw.due_date, group);
+        groups.push(group);
+      }
+      dateMap.get(hw.due_date)!.homeworkIds.push(hw.id);
+    }
+  }
+
+  return groups;
 }
 
 export function computeLearnerHomeworkStats(
@@ -29,34 +47,37 @@ export function computeLearnerHomeworkStats(
   homeworks: { id: string; due_date: string | null }[],
   submissions: { homework_id: string; user_id: string; status: string; submitted_at: string | null }[]
 ): { completedCount: number; totalCount: number; lateCount: number; notSubmittedCount: number } {
+  const groups = groupHomeworksByDueDate(homeworks);
   let completedCount = 0;
   let lateCount = 0;
   let notSubmittedCount = 0;
 
-  for (const hw of homeworks) {
-    const sub = submissions.find(
-      (s) => s.homework_id === hw.id && s.user_id === learnerId && s.status === "completed"
+  for (const group of groups) {
+    const groupSubs = group.homeworkIds.map(hwId =>
+      submissions.find(s => s.homework_id === hwId && s.user_id === learnerId && s.status === "completed")
     );
 
-    if (!sub) {
+    // AND condition: every homework in the group must have status=completed
+    if (!groupSubs.every(sub => sub !== undefined)) {
       notSubmittedCount++;
       continue;
     }
 
-    if (!sub.submitted_at) {
-      completedCount++;
-      continue;
+    // All submitted — check if any has submitted_at within the 1hr late window
+    let groupIsLate = false;
+    for (let i = 0; i < group.homeworkIds.length; i++) {
+      const hw = homeworks.find(h => h.id === group.homeworkIds[i])!;
+      const sub = groupSubs[i]!;
+      if (!sub.submitted_at) continue;
+      if (classifySubmission(sub.submitted_at, hw.due_date) === "late") {
+        groupIsLate = true;
+        break;
+      }
     }
 
-    const classification = classifySubmission(sub.submitted_at, hw.due_date);
-    if (classification === "on-time") {
-      completedCount++;
-    } else if (classification === "late") {
-      completedCount++;
-      lateCount++;
-    } else {
-      notSubmittedCount++;
-    }
+    completedCount++;
+    if (groupIsLate) lateCount++;
   }
-  return { completedCount, totalCount: homeworks.length, lateCount, notSubmittedCount };
+
+  return { completedCount, totalCount: groups.length, lateCount, notSubmittedCount };
 }
