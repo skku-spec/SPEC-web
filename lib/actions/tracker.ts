@@ -34,6 +34,22 @@ export async function getTrackerData() {
 
     if (!isAdminOrPreneur) {
       learnersQuery = learnersQuery.eq("id", profile!.id);
+    } else {
+      // Admin view: only include profiles that still have an active members entry
+      const { data: activeMembers } = await supabase
+        .from("members")
+        .select("public_profile_id")
+        .not("public_profile_id", "is", null);
+
+      const activeProfileIds = (activeMembers ?? [])
+        .map((m) => m.public_profile_id)
+        .filter(Boolean) as string[];
+
+      if (activeProfileIds.length === 0) {
+        learnersQuery = learnersQuery.in("id", ["__none__"]); // return empty
+      } else {
+        learnersQuery = learnersQuery.in("id", activeProfileIds);
+      }
     }
 
     const { data: learners, error: learnersError } = await learnersQuery;
