@@ -25,6 +25,8 @@ type AttendanceLog = {
   status: string;
 }
 
+type SectionConfig = { type: "individual" } | { type: "team"; task_index: number };
+
 type Homework = {
   id: string;
   title: string;
@@ -34,6 +36,7 @@ type Homework = {
   is_team: boolean;
   individual_content: unknown;
   team_content: unknown;
+  section_type_config?: unknown;
 }
 
 type Submission = {
@@ -114,6 +117,7 @@ export function DashboardClient({
   const safeLogs = logs || [];
   const safeHomeworks = homeworks || [];
   const safeSubmissions = submissions || [];
+  const safeSectionSubmissions = sectionSubmissions || [];
 
   const totalLearners = safeLearners.length;
   const totalAttendancePointsPossible = safeLearners.length * safeSessions.length;
@@ -222,10 +226,6 @@ export function DashboardClient({
     return lines;
   }, []);
 
-  const hwLabel = useCallback((hw: HwRow): string => {
-    return hwLines(hw).map(l => `${l.prefix} ${l.name}`).join(', ');
-  }, [hwLines]);
-
   // ── Preview data (reactive) ────────────────────────────────────────────────
   const previewData = useMemo(() => {
     const effStart = startWeek > 0 ? startWeek : 1;
@@ -245,20 +245,58 @@ export function DashboardClient({
       if (s && sessionHwMap.has(s.id)) sessionHwMap.get(s.id)!.push(hw);
     });
 
-    const cumStats = safeLearners.map(learner => ({
-      ...learner,
-      missed: homeworksInPeriod.filter(hw =>
-        !safeSubmissions.some(s => s.homework_id === hw.id && s.user_id === learner.id && s.status === 'completed')
-      ),
-    })).filter(l => l.missed.length > 0)
-      .sort((a, b) => b.missed.length - a.missed.length || a.name.localeCompare(b.name, 'ko'));
+    const getUnsubmittedLines = (hw: HwRow, learnerId: string): { prefix: string; name: string }[] => {
+      const hwSecs = safeSectionSubmissions.filter(s => s.homework_id === hw.id && s.user_id === learnerId);
+      const allLines = hwLines(hw);
+      if (hwSecs.length === 0) return allLines;
+      const unsubmittedSecs = hwSecs.filter(s => !s.is_completed);
+      if (unsubmittedSecs.length === 0) return [];
+      const config = (hw.section_type_config as Record<string, SectionConfig> | null | undefined) ?? {};
+      const indItems = (hw.individual_content as string[] | null | undefined) ?? [];
+      const teamItems = (hw.team_content as string[] | null | undefined) ?? [];
+      let showIndividual = false;
+      const unsubmittedTeamIndices = new Set<number>();
+      for (const sec of unsubmittedSecs) {
+        const sConf = config[sec.section_id];
+        if (!sConf || sConf.type === 'individual') {
+          showIndividual = true;
+        } else if (sConf.type === 'team') {
+          unsubmittedTeamIndices.add(sConf.task_index);
+        }
+      }
+      const result: { prefix: string; name: string }[] = [];
+      if (showIndividual) {
+        indItems.filter(s => s?.trim()).forEach(s => result.push({ prefix: '[개인]', name: stripPrefix(s) }));
+      }
+      teamItems.forEach((s, i) => {
+        if (s?.trim() && unsubmittedTeamIndices.has(i)) result.push({ prefix: '[팀]', name: stripPrefix(s) });
+      });
+      return result.length > 0 ? result : allLines;
+    };
+
+    const cumStats = safeLearners.map(learner => {
+      // Build missed list with only the unsubmitted lines per homework
+      const missed = homeworksInPeriod
+        .filter(hw => {
+          const hwSecs = safeSectionSubmissions.filter(s => s.homework_id === hw.id && s.user_id === learner.id);
+          if (hwSecs.length > 0) return hwSecs.some(s => !s.is_completed);
+          return !safeSubmissions.some(s => s.homework_id === hw.id && s.user_id === learner.id && s.status === 'completed');
+        })
+        .map(hw => ({ hw, lines: getUnsubmittedLines(hw, learner.id) }))
+        .filter(({ lines }) => lines.length > 0);
+      const { notSubmittedCount: missedCount } = computeLearnerHomeworkStats(
+        learner.id, homeworksInPeriod, safeSubmissions, safeSectionSubmissions
+      );
+      return { ...learner, missed, missedCount };
+    }).filter(l => l.missed.length > 0)
+      .sort((a, b) => b.missedCount - a.missedCount || a.name.localeCompare(b.name, 'ko'));
 
     const cumGroups = cumStats.reduce<Record<number, typeof cumStats>>((acc, l) => {
-      const k = l.missed.length; if (!acc[k]) acc[k] = []; acc[k].push(l); return acc;
+      const k = l.missedCount; if (!acc[k]) acc[k] = []; acc[k].push(l); return acc;
     }, {});
 
     return { effStart, effEnd, sessionsInPeriod, sessionHwMap, cumGroups };
-  }, [startWeek, endWeek, sortedSessionsAll, safeHomeworks, safeLearners, safeSubmissions, getAssignedSession]);
+  }, [startWeek, endWeek, sortedSessionsAll, safeHomeworks, safeLearners, safeSubmissions, safeSectionSubmissions, getAssignedSession, hwLines]);
 
   const generateReportHTML = useCallback(() => {
     const fmtDate = (iso: string) => {
@@ -304,7 +342,7 @@ export function DashboardClient({
         .forEach(([count, members]) => {
           cumulativeSection += `<div class="cum-group"><p class="cum-title"><strong>${count}회 미제출${Number(count) === maxCount ? ' (최다 미제출)' : ''}</strong></p>`;
           members.forEach(m => {
-            cumulativeSection += `<div class="person">- <strong>${m.name}</strong>: ${m.missed.map(hw => hwLabel(hw)).join(', ')}</div>`;
+            cumulativeSection += `<div class="person">- <strong>${m.name}</strong>: ${m.missed.flatMap(({ lines }) => lines).map(l => `${l.prefix} ${l.name}`).join(', ')}</div>`;
           });
           cumulativeSection += `</div>`;
         });
@@ -370,7 +408,7 @@ ${cumulativeSection}
 ${contactSection}
 </body>
 </html>`;
-  }, [previewData, sortedSessionsAll, safeLearners, contactNeeded, missingTwoPlus, getNonSubmitters, hwLines, hwLabel]);
+  }, [previewData, sortedSessionsAll, safeLearners, contactNeeded, missingTwoPlus, getNonSubmitters, hwLines]);
 
   const handlePrintReport = useCallback(() => {
     const html = generateReportHTML();
@@ -940,7 +978,7 @@ ${contactSection}
                               </p>
                               {members.map(m => (
                                 <p key={m.id} className="ml-4 text-sm text-[#333] mb-0.5">
-                                  - <strong>{m.name}</strong>: {m.missed.map(hw => hwLabel(hw)).join(', ')}
+                                  - <strong>{m.name}</strong>: {m.missed.flatMap(({ lines }) => lines).map(l => `${l.prefix} ${l.name}`).join(', ')}
                                 </p>
                               ))}
                             </div>
