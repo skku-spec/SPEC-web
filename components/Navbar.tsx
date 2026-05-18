@@ -214,11 +214,6 @@ export default function Navbar() {
                       </Link>
                     )}
 
-                    {canAccessAdmin && (
-                      <Link href="/admin" className="dropdown-item block px-4 py-2 text-[#16140f] hover:bg-gray-100 rounded text-sm font-['Pretendard',sans-serif]">
-                        관리자
-                      </Link>
-                    )}
 
 
 
@@ -367,15 +362,6 @@ export default function Navbar() {
                         className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}
                       >
                         대시보드
-                      </Link>
-                    )}
-                    {canAccessAdmin && (
-                      <Link
-                        href="/admin"
-                        onClick={() => setMenuOpen(false)}
-                        className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}
-                      >
-                        관리자 패널
                       </Link>
                     )}
                   </div>

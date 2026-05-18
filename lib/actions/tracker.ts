@@ -63,7 +63,7 @@ export async function getTrackerData() {
 
     const { data: homeworks, error: hwError } = await supabase
       .from("homeworks")
-      .select("id, title, is_individual, is_team, padlet_board_id, submission_link, individual_content, team_content, due_date")
+      .select("id, title, is_individual, is_team, padlet_board_id, submission_link, individual_content, team_content, due_date, created_at")
       .order("created_at", { ascending: true });
     if (hwError) return { success: false as const, error: `과제 목록을 불러오지 못했습니다: ${hwError.message}` };
 
@@ -79,6 +79,14 @@ export async function getTrackerData() {
     }
     const { data: submissions } = await subsQuery;
 
+    let sectionSubsQuery = supabase
+      .from("homework_section_submissions")
+      .select("homework_id, user_id, section_id, is_completed");
+    if (!isAdminOrPreneur) {
+      sectionSubsQuery = sectionSubsQuery.eq("user_id", profile!.id);
+    }
+    const { data: sectionSubmissions, error: sectionSubsError } = await sectionSubsQuery;
+
     return {
       success: true as const,
       data: {
@@ -88,6 +96,7 @@ export async function getTrackerData() {
         homeworks,
         logs: logs || [],
         submissions: submissions || [],
+        sectionSubmissions: sectionSubsError ? [] : (sectionSubmissions || []),
         isAdminOrPreneur,
       },
     };
@@ -244,6 +253,74 @@ export async function toggleHomeworkStatusForUser(userId: string, homeworkId: st
     return { success: true as const };
   } catch (err) {
     return { success: false as const, error: err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다." };
+  }
+}
+
+/**
+ * Fetch all per-item submission records for a homework.
+ * Returns rows keyed by (user_id, item_type, item_index).
+ */
+export async function getHomeworkSectionSubmissions(homeworkId: string) {
+  try {
+    await requireAdmin();
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("homework_section_submissions")
+      .select("user_id, section_id, is_completed")
+      .eq("homework_id", homeworkId);
+    if (error) return { success: false as const, error: error.message };
+    return { success: true as const, data: data ?? [] };
+  } catch (err) {
+    return { success: false as const, error: err instanceof Error ? err.message : "알 수 없는 오류" };
+  }
+}
+
+/**
+ * Bulk upsert per-item submission records (used for Padlet auto-sync).
+ */
+export async function bulkUpsertHomeworkSectionSubmissions(
+  records: { homework_id: string; user_id: string; section_id: string; is_completed: boolean }[]
+) {
+  try {
+    await requireAdmin();
+    if (records.length === 0) return { success: true as const };
+    const supabase = await createClient();
+    const now = new Date().toISOString();
+    const { error } = await supabase
+      .from("homework_section_submissions")
+      .upsert(
+        records.map(r => ({ ...r, updated_at: now })),
+        { onConflict: "user_id,homework_id,section_id" }
+      );
+    if (error) return { success: false as const, error: error.message };
+    return { success: true as const };
+  } catch (err) {
+    return { success: false as const, error: err instanceof Error ? err.message : "알 수 없는 오류" };
+  }
+}
+
+/**
+ * Upsert a single per-section submission record.
+ */
+export async function upsertHomeworkSectionSubmission(
+  homeworkId: string,
+  userId: string,
+  sectionId: string,
+  isCompleted: boolean
+) {
+  try {
+    await requireAdmin();
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("homework_section_submissions")
+      .upsert(
+        { homework_id: homeworkId, user_id: userId, section_id: sectionId, is_completed: isCompleted, updated_at: new Date().toISOString() },
+        { onConflict: "user_id,homework_id,section_id" }
+      );
+    if (error) return { success: false as const, error: error.message };
+    return { success: true as const };
+  } catch (err) {
+    return { success: false as const, error: err instanceof Error ? err.message : "알 수 없는 오류" };
   }
 }
 

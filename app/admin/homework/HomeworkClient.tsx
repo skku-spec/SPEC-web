@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { syncHomeworkSubmissions, upsertHomework, replaceHomeworkTeams, toggleHomeworkStatusForUser } from "@/lib/actions/tracker";
+import { upsertHomework, replaceHomeworkTeams, getHomeworkSectionSubmissions, upsertHomeworkSectionSubmission, bulkUpsertHomeworkSectionSubmissions } from "@/lib/actions/tracker";
 import { uploadHomeworkFile, uploadHomeworkImage } from "@/lib/storage";
 import {
   User,
@@ -56,6 +56,7 @@ type SubmissionRow = {
   isTeam: boolean;
   memberNames: string[];
   sectionStatus: Record<string, boolean>; // sectionId -> submitted
+  relevantSectionIds: string[]; // sections that count toward this learner's completion
   teamLabel?: string;    // e.g. "(Team A)" if in a team
 };
 
@@ -153,35 +154,40 @@ export function HomeworkClient() {
   const [cellOverrides, setCellOverrides] = useState<Record<string, boolean>>({});
   const [togglingCell, setTogglingCell] = useState<string | null>(null);
 
-  // Sync Padlet data with Database when loaded
+  // Padlet 로드 완료 시 항목별 제출 현황을 homework_section_submissions에 저장
   useEffect(() => {
-    const syncAll = async () => {
+    const syncPadletToItems = async () => {
       setIsSyncing(true);
       try {
         for (const hwId of Object.keys(padletData)) {
           const pData = padletData[hwId];
-          if (pData && !pData.loading && !pData.error && availableLearners.length > 0) {
-            const hw = homeworks.find(h => h.id === hwId);
-            if (hw) {
-              const hwTeams = teamsByHomework[hwId] ?? [];
-              const rows = buildSubmissionRows(hw, hwTeams);
-              const syncData = availableLearners
-                .filter(learner => {
-                  // Skip users who have any manual cell override for this homework
-                  const sections = padletData[hwId]?.sections ?? [];
-                  const ids = sections.length > 0 ? sections.map(s => s.id) : ['__none__'];
-                  return !ids.some(sid => cellOverrides[`${hwId}:${learner.id}:${sid}`] !== undefined);
-                })
-                .map(learner => {
-                  const row = rows.find(r => r.label === learner.name);
-                  const isCompleted = row ? Object.values(row.sectionStatus).every(v => v === true) : false;
-                  return {
-                    user_id: learner.id,
-                    status: isCompleted ? "completed" : "pending"
-                  };
-                });
-              await syncHomeworkSubmissions(hwId, syncData);
+          if (!pData || pData.loading || pData.error) continue;
+
+          const hw = homeworks.find(h => h.id === hwId);
+          if (!hw || !hw.padlet_board_id) continue;
+
+          const hwTeams = teamsByHomework[hwId] ?? [];
+          const rows = buildSubmissionRows(hw, hwTeams);
+
+          type SectionRecord = { homework_id: string; user_id: string; section_id: string; is_completed: boolean };
+          const records: SectionRecord[] = [];
+
+          for (const row of rows) {
+            for (const sId of row.relevantSectionIds) {
+              if (sId === '__none__') continue;
+              const cellKey = `${hwId}:${row.userId}:${sId}`;
+              if (cellOverrides[cellKey] !== undefined) continue; // 수동 override 있으면 건너뜀
+              records.push({
+                homework_id: hwId,
+                user_id: row.userId,
+                section_id: sId,
+                is_completed: row.sectionStatus[sId] ?? false,
+              });
             }
+          }
+
+          if (records.length > 0) {
+            await bulkUpsertHomeworkSectionSubmissions(records);
           }
         }
       } finally {
@@ -190,10 +196,10 @@ export function HomeworkClient() {
     };
 
     if (Object.keys(padletData).length > 0) {
-      syncAll();
+      syncPadletToItems();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- buildSubmissionRows is a pure function whose deps (padletData) are already listed
-  }, [padletData, availableLearners, homeworks, cellOverrides]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [padletData, homeworks, teamsByHomework, cellOverrides]);
 
   const loadTeamData = async (homeworkId: string) => {
     const { data, error } = await supabase
@@ -413,9 +419,22 @@ export function HomeworkClient() {
     }
   };
 
+  const loadSectionSubmissions = async (hwId: string) => {
+    const result = await getHomeworkSectionSubmissions(hwId);
+    if (!result.success || result.data.length === 0) return;
+
+    const overrides: Record<string, boolean> = {};
+    result.data.forEach(row => {
+      overrides[`${hwId}:${row.user_id}:${row.section_id}`] = row.is_completed;
+    });
+    setCellOverrides(prev => ({ ...prev, ...overrides }));
+  };
+
   const fetchPadletSubmissions = async (hw: Homework) => {
-    if (!hw.padlet_board_id) return;
     const hwId = hw.id;
+    await loadSectionSubmissions(hwId);
+
+    if (!hw.padlet_board_id) return;
 
     setPadletData(prev => ({ ...prev, [hwId]: { sections: [], posts: [], loading: true, error: null } }));
 
@@ -448,8 +467,6 @@ export function HomeworkClient() {
     hwId: string,
     userId: string,
     sectionId: string,
-    allSectionIds: string[],
-    currentSectionStatuses: Record<string, boolean>,
   ) => {
     const key = `${hwId}:${userId}:${sectionId}`;
     const current = cellOverrides[key] !== undefined ? cellOverrides[key] : (currentSectionStatuses[sectionId] ?? false);
@@ -458,18 +475,8 @@ export function HomeworkClient() {
     setCellOverrides(prev => ({ ...prev, [key]: next }));
     setTogglingCell(key);
 
-    // Compute overall completion based on the new cell state
-    const ids = allSectionIds.length > 0 ? allSectionIds : ['__none__'];
-    const allComplete = ids.every(sid => {
-      if (sid === sectionId) return next;
-      const k = `${hwId}:${userId}:${sid}`;
-      return cellOverrides[k] !== undefined ? cellOverrides[k] : (currentSectionStatuses[sid] ?? false);
-    });
+    await upsertHomeworkSectionSubmission(hwId, userId, sectionId, next);
 
-    const result = await toggleHomeworkStatusForUser(userId, hwId, allComplete);
-    if (!result.success) {
-      setCellOverrides(prev => ({ ...prev, [key]: current }));
-    }
     setTogglingCell(null);
   };
 
@@ -518,22 +525,30 @@ export function HomeworkClient() {
     // Show every available learner as a row
     availableLearners.forEach(learner => {
       const sectionStatus: Record<string, boolean> = {};
+      const relevantSectionIds: string[] = [];
 
       sections.forEach(s => {
         const sConfig = getSectionConfig(hw, s.id);
         if (sConfig.type === "team") {
           // For team sections, look up team by (userId, task_index)
           const teamInfo = learnerTeamMap.get(`${learner.id}:${sConfig.task_index}`);
-          const targetNames = teamInfo ? teamInfo.memberNames : [learner.name];
-          const targetUsernames = teamInfo ? teamInfo.memberUsernames : [learner.username];
-          sectionStatus[s.id] = anyPostedInSection(targetNames, targetUsernames, s.id);
+          if (teamInfo) {
+            // Learner is assigned to this team slot — relevant
+            relevantSectionIds.push(s.id);
+            sectionStatus[s.id] = anyPostedInSection(teamInfo.memberNames, teamInfo.memberUsernames, s.id);
+          } else {
+            // Learner has no team assignment for this slot — not their responsibility
+            sectionStatus[s.id] = anyPostedInSection([learner.name], [learner.username], s.id);
+          }
         } else {
+          relevantSectionIds.push(s.id);
           sectionStatus[s.id] = anyPostedInSection([learner.name], [learner.username], s.id);
         }
       });
 
       if (sections.length === 0) {
         sectionStatus['__none__'] = anyPostedInSection([learner.name], [learner.username], undefined);
+        relevantSectionIds.push('__none__');
       }
 
       // For the teamLabel, use task_index 0 by default (first team task)
@@ -545,6 +560,7 @@ export function HomeworkClient() {
         isTeam: !!defaultTeamInfo,
         memberNames: defaultTeamInfo?.memberNames ?? [learner.name],
         sectionStatus,
+        relevantSectionIds,
         teamLabel,
       });
     });
@@ -1368,7 +1384,7 @@ export function HomeworkClient() {
                                         <td className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{learner.name}</td>
                                         <td className="px-4 py-3 text-center">
                                           <button
-                                            onClick={() => handleCellToggle(hw.id, learner.id, '__none__', [], {})}
+                                            onClick={() => handleCellToggle(hw.id, learner.id, '__none__')}
                                             disabled={isToggling}
                                             title={isCompleted ? "완료 취소" : "완료로 표시"}
                                             className={`inline-flex h-8 w-8 items-center justify-center rounded-full transition-all disabled:opacity-50 ${
@@ -1400,7 +1416,7 @@ export function HomeworkClient() {
                                   <div key={learner.id} className="flex items-center justify-between rounded-lg border border-[#ddd9cc] bg-white px-4 py-3">
                                     <p className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{learner.name}</p>
                                     <button
-                                      onClick={() => handleCellToggle(hw.id, learner.id, '__none__', [], {})}
+                                      onClick={() => handleCellToggle(hw.id, learner.id, '__none__')}
                                       disabled={isToggling}
                                       title={isCompleted ? "완료 취소" : "완료로 표시"}
                                       className={`inline-flex h-8 w-8 items-center justify-center rounded-full transition-all disabled:opacity-50 ${
@@ -1424,8 +1440,8 @@ export function HomeworkClient() {
                         );
                       }
 
-                      if (pData?.loading) return <div className="text-center py-20 text-xs font-semibold text-[#6b6b5e] animate-pulse">PADLET 부르는 중...</div>;
-                      if (pData?.error) return <div className="text-center py-20 text-[#b42318] text-xs font-semibold">{pData.error}</div>;
+                      if (!pData || pData.loading) return <div className="text-center py-20 text-xs font-semibold text-[#6b6b5e] animate-pulse">PADLET 부르는 중...</div>;
+                      if (pData.error) return <div className="text-center py-20 text-[#b42318] text-xs font-semibold">{pData.error}</div>;
 
                       const hwTeams = teamsByHomework[hw.id] ?? [];
                       const rows = buildSubmissionRows(hw, hwTeams);
@@ -1477,7 +1493,6 @@ export function HomeworkClient() {
                               </thead>
                               <tbody>
                                 {rows.map((row, rIdx) => {
-                                  const sectionIds = pData.sections.length > 0 ? pData.sections.map(s => s.id) : ['__none__'];
                                   return (
                                     <tr key={rIdx} className="border-t border-[#ece8db] hover:bg-[#fcfcf8] transition-colors">
                                       <td className="px-4 py-3">
@@ -1495,7 +1510,7 @@ export function HomeworkClient() {
                                         return (
                                           <td key={sId} className="px-4 py-3 text-center">
                                             <button
-                                              onClick={() => handleCellToggle(hw.id, row.userId, sId, sectionIds, row.sectionStatus)}
+                                              onClick={() => handleCellToggle(hw.id, row.userId, sId)}
                                               disabled={isToggling}
                                               title={effective ? "완료 취소" : "완료로 표시"}
                                               className={`inline-flex h-8 w-8 items-center justify-center rounded-full transition-all disabled:opacity-50 ${
@@ -1550,7 +1565,7 @@ export function HomeworkClient() {
                                         <div key={s.id} className="flex items-center justify-between rounded-lg bg-[#f5f5ee] px-3 py-2">
                                           <span className="font-['Pretendard',sans-serif] text-xs text-[#4a4a40]">{s.title}</span>
                                           <button
-                                            onClick={() => handleCellToggle(hw.id, row.userId, s.id, sectionIds, row.sectionStatus)}
+                                            onClick={() => handleCellToggle(hw.id, row.userId, s.id)}
                                             disabled={isToggling}
                                             title={effective ? "완료 취소" : "완료로 표시"}
                                             className={`inline-flex h-6 w-6 items-center justify-center rounded-full transition-all disabled:opacity-50 ${
