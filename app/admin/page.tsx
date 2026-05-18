@@ -19,12 +19,13 @@ export default async function AdminDashboardPage() {
   return (
     <section className="space-y-8 pb-10">
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <DashboardClient 
-          learners={trackerData?.learners ?? []} 
-          sessions={trackerData?.sessions ?? []} 
-          logs={trackerData?.logs ?? []} 
+        <DashboardClient
+          learners={trackerData?.learners ?? []}
+          sessions={trackerData?.sessions ?? []}
+          logs={trackerData?.logs ?? []}
           homeworks={trackerData?.homeworks ?? []}
           submissions={trackerData?.submissions ?? []}
+          sectionSubmissions={trackerData?.sectionSubmissions ?? []}
           applicationStats={applicationStats}
         />
       </div>

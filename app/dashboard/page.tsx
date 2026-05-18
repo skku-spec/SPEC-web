@@ -19,7 +19,7 @@ export default async function LearnerDashboardPage() {
     );
   }
 
-  const { currentLearner, sessions, homeworks, logs, submissions } = result.data;
+  const { currentLearner, sessions, homeworks, logs, submissions, sectionSubmissions } = result.data;
 
   if (!currentLearner) {
     return (
@@ -32,12 +32,13 @@ export default async function LearnerDashboardPage() {
   return (
     <section className="space-y-8 pb-10">
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <LearnerDashboardClient 
-          learner={currentLearner} 
-          sessions={sessions} 
-          logs={logs} 
+        <LearnerDashboardClient
+          learner={currentLearner}
+          sessions={sessions}
+          logs={logs}
           homeworks={homeworks}
           submissions={submissions}
+          sectionSubmissions={sectionSubmissions}
         />
       </div>
     </section>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { syncHomeworkSubmissions, upsertHomework, replaceHomeworkTeams } from "@/lib/actions/tracker";
+import { upsertHomework, replaceHomeworkTeams, getHomeworkSectionSubmissions, upsertHomeworkSectionSubmission, bulkUpsertHomeworkSectionSubmissions } from "@/lib/actions/tracker";
 import { uploadHomeworkFile, uploadHomeworkImage } from "@/lib/storage";
 import {
   User,
@@ -52,9 +52,11 @@ type PadletPost = {
 
 type SubmissionRow = {
   label: string;         // learner name
+  userId: string;
   isTeam: boolean;
   memberNames: string[];
   sectionStatus: Record<string, boolean>; // sectionId -> submitted
+  relevantSectionIds: string[]; // sections that count toward this learner's completion
   teamLabel?: string;    // e.g. "(Team A)" if in a team
 };
 
@@ -116,10 +118,27 @@ export function HomeworkClient() {
   }, []);
 
   const fetchLearners = useCallback(async () => {
+    // Only include profiles that still have an active entry in the members table
+    const { data: activeMembers } = await supabase
+      .from("members")
+      .select("public_profile_id")
+      .not("public_profile_id", "is", null);
+
+    const activeProfileIds = (activeMembers ?? [])
+      .map((m) => m.public_profile_id as string)
+      .filter(Boolean);
+
+    if (activeProfileIds.length === 0) {
+      setAvailableLearners([]);
+      return;
+    }
+
     const { data, error } = await supabase
       .from("profiles")
-      .select("id,name,username,slug,role") // Added slug
-      .eq("role", "learner");
+      .select("id,name,username,slug,role")
+      .eq("role", "learner")
+      .in("id", activeProfileIds);
+
     if (!error && data) {
       setAvailableLearners((data as Profile[]).sort((a, b) => a.name.localeCompare(b.name, "ko")));
     }
@@ -131,29 +150,44 @@ export function HomeworkClient() {
   }, [fetchHomeworks, fetchLearners]);
 
   const [isSyncing, setIsSyncing] = useState(false);
+  // key: `${hwId}:${userId}:${sectionId}` → manual override value
+  const [cellOverrides, setCellOverrides] = useState<Record<string, boolean>>({});
+  const [togglingCell, setTogglingCell] = useState<string | null>(null);
 
-  // Sync Padlet data with Database when loaded
+  // Padlet 로드 완료 시 항목별 제출 현황을 homework_section_submissions에 저장
   useEffect(() => {
-    const syncAll = async () => {
+    const syncPadletToItems = async () => {
       setIsSyncing(true);
       try {
         for (const hwId of Object.keys(padletData)) {
           const pData = padletData[hwId];
-          if (pData && !pData.loading && !pData.error && availableLearners.length > 0) {
-            const hw = homeworks.find(h => h.id === hwId);
-            if (hw) {
-              const hwTeams = teamsByHomework[hwId] ?? [];
-              const rows = buildSubmissionRows(hw, hwTeams);
-              const syncData = availableLearners.map(learner => {
-                const row = rows.find(r => r.label === learner.name);
-                const isCompleted = row ? Object.values(row.sectionStatus).every(v => v === true) : false;
-                return {
-                  user_id: learner.id,
-                  status: isCompleted ? "completed" : "pending"
-                };
+          if (!pData || pData.loading || pData.error) continue;
+
+          const hw = homeworks.find(h => h.id === hwId);
+          if (!hw || !hw.padlet_board_id) continue;
+
+          const hwTeams = teamsByHomework[hwId] ?? [];
+          const rows = buildSubmissionRows(hw, hwTeams);
+
+          type SectionRecord = { homework_id: string; user_id: string; section_id: string; is_completed: boolean };
+          const records: SectionRecord[] = [];
+
+          for (const row of rows) {
+            for (const sId of row.relevantSectionIds) {
+              if (sId === '__none__') continue;
+              const cellKey = `${hwId}:${row.userId}:${sId}`;
+              if (cellOverrides[cellKey] !== undefined) continue; // 수동 override 있으면 건너뜀
+              records.push({
+                homework_id: hwId,
+                user_id: row.userId,
+                section_id: sId,
+                is_completed: row.sectionStatus[sId] ?? false,
               });
-              await syncHomeworkSubmissions(hwId, syncData);
             }
+          }
+
+          if (records.length > 0) {
+            await bulkUpsertHomeworkSectionSubmissions(records);
           }
         }
       } finally {
@@ -162,10 +196,10 @@ export function HomeworkClient() {
     };
 
     if (Object.keys(padletData).length > 0) {
-      syncAll();
+      syncPadletToItems();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- buildSubmissionRows is a pure function whose deps (padletData) are already listed
-  }, [padletData, availableLearners, homeworks]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [padletData, homeworks, teamsByHomework, cellOverrides]);
 
   const loadTeamData = async (homeworkId: string) => {
     const { data, error } = await supabase
@@ -385,9 +419,22 @@ export function HomeworkClient() {
     }
   };
 
+  const loadSectionSubmissions = async (hwId: string) => {
+    const result = await getHomeworkSectionSubmissions(hwId);
+    if (!result.success || result.data.length === 0) return;
+
+    const overrides: Record<string, boolean> = {};
+    result.data.forEach(row => {
+      overrides[`${hwId}:${row.user_id}:${row.section_id}`] = row.is_completed;
+    });
+    setCellOverrides(prev => ({ ...prev, ...overrides }));
+  };
+
   const fetchPadletSubmissions = async (hw: Homework) => {
-    if (!hw.padlet_board_id) return;
     const hwId = hw.id;
+    await loadSectionSubmissions(hwId);
+
+    if (!hw.padlet_board_id) return;
 
     setPadletData(prev => ({ ...prev, [hwId]: { sections: [], posts: [], loading: true, error: null } }));
 
@@ -410,6 +457,29 @@ export function HomeworkClient() {
     }
   };
 
+
+  const getEffectiveStatus = (hwId: string, userId: string, sectionId: string, padletStatus: boolean): boolean => {
+    const key = `${hwId}:${userId}:${sectionId}`;
+    return cellOverrides[key] !== undefined ? cellOverrides[key] : padletStatus;
+  };
+
+  const handleCellToggle = async (
+    hwId: string,
+    userId: string,
+    sectionId: string,
+    padletStatus: boolean = false,
+  ) => {
+    const key = `${hwId}:${userId}:${sectionId}`;
+    const current = cellOverrides[key] !== undefined ? cellOverrides[key] : padletStatus;
+    const next = !current;
+
+    setCellOverrides(prev => ({ ...prev, [key]: next }));
+    setTogglingCell(key);
+
+    await upsertHomeworkSectionSubmission(hwId, userId, sectionId, next);
+
+    setTogglingCell(null);
+  };
 
   const buildSubmissionRows = (hw: Homework, hwTeams: { team_name: string; user_id: string; task_index: number }[]): SubmissionRow[] => {
     const pData = padletData[hw.id];
@@ -456,22 +526,30 @@ export function HomeworkClient() {
     // Show every available learner as a row
     availableLearners.forEach(learner => {
       const sectionStatus: Record<string, boolean> = {};
+      const relevantSectionIds: string[] = [];
 
       sections.forEach(s => {
         const sConfig = getSectionConfig(hw, s.id);
         if (sConfig.type === "team") {
           // For team sections, look up team by (userId, task_index)
           const teamInfo = learnerTeamMap.get(`${learner.id}:${sConfig.task_index}`);
-          const targetNames = teamInfo ? teamInfo.memberNames : [learner.name];
-          const targetUsernames = teamInfo ? teamInfo.memberUsernames : [learner.username];
-          sectionStatus[s.id] = anyPostedInSection(targetNames, targetUsernames, s.id);
+          if (teamInfo) {
+            // Learner is assigned to this team slot — relevant
+            relevantSectionIds.push(s.id);
+            sectionStatus[s.id] = anyPostedInSection(teamInfo.memberNames, teamInfo.memberUsernames, s.id);
+          } else {
+            // Learner has no team assignment for this slot — not their responsibility
+            sectionStatus[s.id] = anyPostedInSection([learner.name], [learner.username], s.id);
+          }
         } else {
+          relevantSectionIds.push(s.id);
           sectionStatus[s.id] = anyPostedInSection([learner.name], [learner.username], s.id);
         }
       });
 
       if (sections.length === 0) {
         sectionStatus['__none__'] = anyPostedInSection([learner.name], [learner.username], undefined);
+        relevantSectionIds.push('__none__');
       }
 
       // For the teamLabel, use task_index 0 by default (first team task)
@@ -479,9 +557,11 @@ export function HomeworkClient() {
       const teamLabel = defaultTeamInfo ? `(${defaultTeamInfo.teamName})` : '';
       rows.push({
         label: learner.name,
+        userId: learner.id,
         isTeam: !!defaultTeamInfo,
         memberNames: defaultTeamInfo?.memberNames ?? [learner.name],
         sectionStatus,
+        relevantSectionIds,
         teamLabel,
       });
     });
@@ -1275,16 +1355,94 @@ export function HomeworkClient() {
                     {/* Tab: 제출 현황 */}
                     {activeTab[hw.id] === 'status' && (() => {
                       const pData = padletData[hw.id];
-                      if (!hw.padlet_board_id) {
+                      const hasPadlet = !!hw.padlet_board_id;
+
+                      // Manual-only mode (no Padlet board ID)
+                      if (!hasPadlet) {
                         return (
-                          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-lg border-2 border-dashed border-[#ddd9cc]">
-                            <AlertCircle className="h-10 w-10 mb-4 text-[#6b6b5e]" strokeWidth={1.5} />
-                            <p className="text-sm font-semibold text-[#6b6b5e]">Padlet Board ID가 설정되지 않았습니다.</p>
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2 rounded-lg border border-[#ddd9cc] bg-[#fff8f0] px-4 py-3">
+                              <AlertCircle className="h-4 w-4 shrink-0 text-[#FF6C0F]" strokeWidth={2} />
+                              <p className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">
+                                Padlet Board ID 없음 — 버튼을 클릭해 수동으로 완료 여부를 체크하세요.
+                              </p>
+                            </div>
+                            <div className="hidden md:block overflow-x-auto">
+                              <table className="w-full text-left border-collapse">
+                                <thead className="bg-[#f0efe6]">
+                                  <tr>
+                                    <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold">대상</th>
+                                    <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-center">완료 여부</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {availableLearners.map(learner => {
+                                    const cellKey = `${hw.id}:${learner.id}:__none__`;
+                                    const isCompleted = cellOverrides[cellKey] ?? false;
+                                    const isToggling = togglingCell === cellKey;
+                                    return (
+                                      <tr key={learner.id} className="border-t border-[#ece8db] hover:bg-[#fcfcf8] transition-colors">
+                                        <td className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{learner.name}</td>
+                                        <td className="px-4 py-3 text-center">
+                                          <button
+                                            onClick={() => handleCellToggle(hw.id, learner.id, '__none__')}
+                                            disabled={isToggling}
+                                            title={isCompleted ? "완료 취소" : "완료로 표시"}
+                                            className={`inline-flex h-8 w-8 items-center justify-center rounded-full transition-all disabled:opacity-50 ${
+                                              isCompleted
+                                                ? "bg-[#E6F9E6] text-[#2f9e44] ring-2 ring-[#2f9e44]/20 hover:bg-[#FEE2E2] hover:text-[#b42318] hover:ring-[#b42318]/20"
+                                                : "bg-[#FEE2E2] text-[#b42318]/40 ring-1 ring-[#b42318]/10 hover:bg-[#E6F9E6] hover:text-[#2f9e44] hover:ring-2 hover:ring-[#2f9e44]/20 opacity-50 hover:opacity-100"
+                                            }`}
+                                          >
+                                            {isToggling
+                                              ? <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                                              : isCompleted
+                                                ? <Check className="h-4 w-4" strokeWidth={3} />
+                                                : <X className="h-4 w-4" strokeWidth={3} />
+                                            }
+                                          </button>
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                            <div className="md:hidden space-y-3">
+                              {availableLearners.map(learner => {
+                                const cellKey = `${hw.id}:${learner.id}:__none__`;
+                                const isCompleted = cellOverrides[cellKey] ?? false;
+                                const isToggling = togglingCell === cellKey;
+                                return (
+                                  <div key={learner.id} className="flex items-center justify-between rounded-lg border border-[#ddd9cc] bg-white px-4 py-3">
+                                    <p className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{learner.name}</p>
+                                    <button
+                                      onClick={() => handleCellToggle(hw.id, learner.id, '__none__')}
+                                      disabled={isToggling}
+                                      title={isCompleted ? "완료 취소" : "완료로 표시"}
+                                      className={`inline-flex h-8 w-8 items-center justify-center rounded-full transition-all disabled:opacity-50 ${
+                                        isCompleted
+                                          ? "bg-[#E6F9E6] text-[#2f9e44] ring-2 ring-[#2f9e44]/20 hover:bg-[#FEE2E2] hover:text-[#b42318] hover:ring-[#b42318]/20"
+                                          : "bg-[#FEE2E2] text-[#b42318]/40 ring-1 ring-[#b42318]/10 hover:bg-[#E6F9E6] hover:text-[#2f9e44] hover:ring-2 hover:ring-[#2f9e44]/20 opacity-50 hover:opacity-100"
+                                      }`}
+                                    >
+                                      {isToggling
+                                        ? <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                                        : isCompleted
+                                          ? <Check className="h-4 w-4" strokeWidth={3} />
+                                          : <X className="h-4 w-4" strokeWidth={3} />
+                                      }
+                                    </button>
+                                  </div>
+                                );
+                              })}
+                            </div>
                           </div>
                         );
                       }
-                      if (pData?.loading) return <div className="text-center py-20 text-xs font-semibold text-[#6b6b5e] animate-pulse">PADLET 부르는 중...</div>;
-                      if (pData?.error) return <div className="text-center py-20 text-[#b42318] text-xs font-semibold">{pData.error}</div>;
+
+                      if (!pData || pData.loading) return <div className="text-center py-20 text-xs font-semibold text-[#6b6b5e] animate-pulse">PADLET 부르는 중...</div>;
+                      if (pData.error) return <div className="text-center py-20 text-[#b42318] text-xs font-semibold">{pData.error}</div>;
 
                       const hwTeams = teamsByHomework[hw.id] ?? [];
                       const rows = buildSubmissionRows(hw, hwTeams);
@@ -1335,66 +1493,102 @@ export function HomeworkClient() {
                                 </tr>
                               </thead>
                               <tbody>
-                                {rows.map((row, rIdx) => (
-                                  <tr key={rIdx} className="border-t border-[#ece8db] hover:bg-[#fcfcf8] transition-colors">
-                                    <td className="px-4 py-3">
-                                      <p className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{row.label}</p>
-                                      {row.teamLabel && (
-                                        <span className="inline-block mt-0.5 text-[10px] font-semibold text-[#FF6C0F] bg-[#FFF0E5] px-2 py-0.5 rounded-lg">
-                                          {row.teamLabel}
-                                        </span>
-                                      )}
-                                    </td>
-                                    {Object.keys(row.sectionStatus).map(sId => (
-                                      <td key={sId} className="px-4 py-3 text-center">
-                                        {row.sectionStatus[sId] ? (
-                                          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#E6F9E6] text-[#2f9e44] ring-2 ring-[#2f9e44]/20"><Check className="h-4 w-4" strokeWidth={3} /></span>
-                                        ) : (
-                                          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#FEE2E2] text-[#b42318]/40 ring-1 ring-[#b42318]/10 opacity-40"><X className="h-4 w-4" strokeWidth={3} /></span>
+                                {rows.map((row, rIdx) => {
+                                  return (
+                                    <tr key={rIdx} className="border-t border-[#ece8db] hover:bg-[#fcfcf8] transition-colors">
+                                      <td className="px-4 py-3">
+                                        <p className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{row.label}</p>
+                                        {row.teamLabel && (
+                                          <span className="inline-block mt-0.5 text-[10px] font-semibold text-[#FF6C0F] bg-[#FFF0E5] px-2 py-0.5 rounded-lg">
+                                            {row.teamLabel}
+                                          </span>
                                         )}
                                       </td>
-                                    ))}
-                                  </tr>
-                                ))}
+                                      {Object.keys(row.sectionStatus).map(sId => {
+                                        const effective = getEffectiveStatus(hw.id, row.userId, sId, row.sectionStatus[sId]);
+                                        const cellKey = `${hw.id}:${row.userId}:${sId}`;
+                                        const isToggling = togglingCell === cellKey;
+                                        return (
+                                          <td key={sId} className="px-4 py-3 text-center">
+                                            <button
+                                              onClick={() => handleCellToggle(hw.id, row.userId, sId, row.sectionStatus[sId])}
+                                              disabled={isToggling}
+                                              title={effective ? "완료 취소" : "완료로 표시"}
+                                              className={`inline-flex h-8 w-8 items-center justify-center rounded-full transition-all disabled:opacity-50 ${
+                                                effective
+                                                  ? "bg-[#E6F9E6] text-[#2f9e44] ring-2 ring-[#2f9e44]/20 hover:bg-[#FEE2E2] hover:text-[#b42318] hover:ring-[#b42318]/20"
+                                                  : "bg-[#FEE2E2] text-[#b42318]/40 ring-1 ring-[#b42318]/10 opacity-40 hover:opacity-100 hover:bg-[#E6F9E6] hover:text-[#2f9e44] hover:ring-2 hover:ring-[#2f9e44]/20"
+                                              }`}
+                                            >
+                                              {isToggling
+                                                ? <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                                                : effective
+                                                  ? <Check className="h-4 w-4" strokeWidth={3} />
+                                                  : <X className="h-4 w-4" strokeWidth={3} />
+                                              }
+                                            </button>
+                                          </td>
+                                        );
+                                      })}
+                                    </tr>
+                                  );
+                                })}
                               </tbody>
                             </table>
                           </div>
 
                           <div className="md:hidden space-y-3">
-                            {rows.map((row, rIdx) => (
-                              <div key={rIdx} className="rounded-lg border border-[#ddd9cc] bg-white p-4">
-                                <div className="flex items-center gap-2 mb-3">
-                                  <div className="grid h-9 w-9 place-items-center rounded-full bg-[#e8e6dc]">
-                                    <span className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#4a4a40]">
-                                      {row.label.charAt(0)}
-                                    </span>
-                                  </div>
-                                  <div>
-                                    <p className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{row.label}</p>
-                                    {row.teamLabel && (
-                                      <span className="inline-block mt-0.5 rounded-full bg-[#FFF0E5] px-2 py-0.5 font-['Pretendard',sans-serif] text-[10px] font-semibold text-[#FF6C0F]">
-                                        {row.teamLabel}
+                            {rows.map((row, rIdx) => {
+                              const sectionIds = pData.sections.length > 0 ? pData.sections.map(s => s.id) : ['__none__'];
+                              return (
+                                <div key={rIdx} className="rounded-lg border border-[#ddd9cc] bg-white p-4">
+                                  <div className="flex items-center gap-2 mb-3">
+                                    <div className="grid h-9 w-9 place-items-center rounded-full bg-[#e8e6dc]">
+                                      <span className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#4a4a40]">
+                                        {row.label.charAt(0)}
                                       </span>
-                                    )}
+                                    </div>
+                                    <div>
+                                      <p className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{row.label}</p>
+                                      {row.teamLabel && (
+                                        <span className="inline-block mt-0.5 rounded-full bg-[#FFF0E5] px-2 py-0.5 font-['Pretendard',sans-serif] text-[10px] font-semibold text-[#FF6C0F]">
+                                          {row.teamLabel}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="space-y-2">
+                                    {(pData.sections.length > 0 ? pData.sections : [{ id: '__none__', title: '전체' }]).map(s => {
+                                      const effective = getEffectiveStatus(hw.id, row.userId, s.id, row.sectionStatus[s.id] ?? false);
+                                      const cellKey = `${hw.id}:${row.userId}:${s.id}`;
+                                      const isToggling = togglingCell === cellKey;
+                                      return (
+                                        <div key={s.id} className="flex items-center justify-between rounded-lg bg-[#f5f5ee] px-3 py-2">
+                                          <span className="font-['Pretendard',sans-serif] text-xs text-[#4a4a40]">{s.title}</span>
+                                          <button
+                                            onClick={() => handleCellToggle(hw.id, row.userId, s.id, row.sectionStatus[s.id] ?? false)}
+                                            disabled={isToggling}
+                                            title={effective ? "완료 취소" : "완료로 표시"}
+                                            className={`inline-flex h-6 w-6 items-center justify-center rounded-full transition-all disabled:opacity-50 ${
+                                              effective
+                                                ? "bg-[#E6F9E6] text-[#2f9e44] hover:bg-[#FEE2E2] hover:text-[#b42318]"
+                                                : "bg-[#FEE2E2] text-[#b42318]/40 opacity-40 hover:opacity-100 hover:bg-[#E6F9E6] hover:text-[#2f9e44]"
+                                            }`}
+                                          >
+                                            {isToggling
+                                              ? <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                                              : effective
+                                                ? <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                                                : <X className="h-3.5 w-3.5" strokeWidth={3} />
+                                            }
+                                          </button>
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                 </div>
-                                <div className="space-y-2">
-                                  {(pData.sections.length > 0 ? pData.sections : [{ id: '__none__', title: '전체' }]).map(s => {
-                                    const submitted = row.sectionStatus[s.id] ?? false;
-                                    return (
-                                      <div key={s.id} className="flex items-center justify-between rounded-lg bg-[#f5f5ee] px-3 py-2">
-                                        <span className="font-['Pretendard',sans-serif] text-xs text-[#4a4a40]">{s.title}</span>
-                                        {submitted ? (
-                                          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#E6F9E6] text-[#2f9e44]"><Check className="h-3.5 w-3.5" strokeWidth={3} /></span>
-                                        ) : (
-                                          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#FEE2E2] text-[#b42318]/40 opacity-40"><X className="h-3.5 w-3.5" strokeWidth={3} /></span>
-                                        )}
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </>
                       );

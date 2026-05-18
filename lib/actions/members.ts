@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { logAuditEvent } from "@/lib/helpers/audit-log";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { Database } from "@/lib/supabase/types";
 
 type MemberType = Database["public"]["Tables"]["members"]["Row"]["member_type"];
@@ -276,7 +277,8 @@ export async function createMember(
     if (input.member_type) insertPayload.member_type = input.member_type;
     if (input.parts) insertPayload.parts = input.parts;
 
-    const { data, error } = await supabase
+    const adminClient = createAdminClient();
+    const { data, error } = await adminClient
       .from("members")
       .insert(insertPayload)
       .select(PROFILE_JOIN)
@@ -287,6 +289,8 @@ export async function createMember(
     }
 
     await logAuditEvent({ action: "create", entityType: "member", entityId: data.id });
+
+    revalidateAll();
 
     const result: MemberActionResult<MemberWithProfile> = {
       success: true,
@@ -349,8 +353,8 @@ export async function updateMember(
     if (input.first_name !== undefined) updatePayload.first_name = input.first_name ?? null;
     if (input.last_name !== undefined) updatePayload.last_name = input.last_name ?? null;
 
-    const supabase = await createClient();
-    const { data, error } = await supabase
+    const adminClient = createAdminClient();
+    const { data, error } = await adminClient
       .from("members")
       .update(updatePayload)
       .eq("id", id)
@@ -388,19 +392,37 @@ export async function deleteMember(
       return { error: "멤버 ID를 입력해주세요." };
     }
 
-    const supabase = await createClient();
-    const { data, error } = await supabase
+    const adminClient = createAdminClient();
+
+    // Fetch linked profile ID before deleting
+    const { data: memberData } = await adminClient
+      .from("members")
+      .select("public_profile_id")
+      .eq("id", id)
+      .maybeSingle();
+
+    const { data, error } = await adminClient
       .from("members")
       .delete()
       .eq("id", id)
       .select("id");
 
     if (error) {
-      return { error: "멤버 삭제 중 오류가 발생했습니다." };
+      console.error("[deleteMember] Supabase error:", error);
+      return { error: `멤버 삭제 중 오류가 발생했습니다: ${error.message}` };
     }
 
     if (!data || data.length === 0) {
       return { error: "삭제할 멤버를 찾을 수 없습니다." };
+    }
+
+    // Revoke learner role so they no longer appear in homework/attendance tracking
+    if (memberData?.public_profile_id) {
+      await adminClient
+        .from("profiles")
+        .update({ role: "outsider" })
+        .eq("id", memberData.public_profile_id)
+        .eq("role", "learner"); // only downgrade learners, don't touch preneur/admin accounts
     }
 
     await logAuditEvent({ action: "delete", entityType: "member", entityId: id });
@@ -408,7 +430,8 @@ export async function deleteMember(
     revalidateAll();
 
     return { success: true, data: null };
-  } catch {
+  } catch (err) {
+    console.error("[deleteMember] Unexpected error:", err);
     return { error: "멤버 삭제 중 오류가 발생했습니다." };
   }
 }

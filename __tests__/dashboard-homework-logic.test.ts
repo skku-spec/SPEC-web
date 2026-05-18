@@ -82,19 +82,19 @@ describe("computeLearnerHomeworkStats", () => {
     });
   });
 
-  it("counts not-submitted when no submission exists (same-due_date group counts as one)", () => {
+  it("counts not-submitted per individual homework", () => {
     const homeworks = [
       { id: "hw-1", due_date: "2026-04-10T09:00:00Z" },
       { id: "hw-2", due_date: "2026-04-10T09:00:00Z" },
     ];
     const submissions: { homework_id: string; user_id: string; status: string; submitted_at: string | null }[] = [];
-    // Both have same due_date → one group → one not-submitted
+    // 2 individual homeworks not submitted → notSubmittedCount: 2, totalCount: 2
     expect(computeLearnerHomeworkStats(userId, homeworks, submissions)).toEqual({
-      completedCount: 0, totalCount: 1, lateCount: 0, notSubmittedCount: 1,
+      completedCount: 0, totalCount: 2, lateCount: 0, notSubmittedCount: 2,
     });
   });
 
-  it("marks group as not-submitted if any homework in group is missing (AND condition)", () => {
+  it("counts partial submission correctly per individual homework", () => {
     const homeworks = [
       { id: "hw-1", due_date: "2026-04-10T09:00:00Z" },
       { id: "hw-2", due_date: "2026-04-10T09:00:00Z" },
@@ -103,12 +103,13 @@ describe("computeLearnerHomeworkStats", () => {
       { homework_id: "hw-1", user_id: userId, status: "completed", submitted_at: "2026-04-10T06:00:00Z" },
       // hw-2 missing
     ];
+    // hw-1 done, hw-2 not → completedCount: 1, notSubmittedCount: 1
     expect(computeLearnerHomeworkStats(userId, homeworks, submissions)).toEqual({
-      completedCount: 0, totalCount: 1, lateCount: 0, notSubmittedCount: 1,
+      completedCount: 1, totalCount: 2, lateCount: 0, notSubmittedCount: 1,
     });
   });
 
-  it("marks group as complete only when all homeworks in group are submitted", () => {
+  it("counts all homeworks in same due_date as individual completions", () => {
     const homeworks = [
       { id: "hw-1", due_date: "2026-04-10T09:00:00Z" },
       { id: "hw-2", due_date: "2026-04-10T09:00:00Z" },
@@ -118,7 +119,7 @@ describe("computeLearnerHomeworkStats", () => {
       { homework_id: "hw-2", user_id: userId, status: "completed", submitted_at: "2026-04-10T07:00:00Z" },
     ];
     expect(computeLearnerHomeworkStats(userId, homeworks, submissions)).toEqual({
-      completedCount: 1, totalCount: 1, lateCount: 0, notSubmittedCount: 0,
+      completedCount: 2, totalCount: 2, lateCount: 0, notSubmittedCount: 0,
     });
   });
 
@@ -131,10 +132,10 @@ describe("computeLearnerHomeworkStats", () => {
     const submissions = [
       { homework_id: "hw-1", user_id: userId, status: "completed", submitted_at: "2026-04-10T06:00:00Z" },
       { homework_id: "hw-2", user_id: userId, status: "completed", submitted_at: "2026-04-10T06:00:00Z" },
-      // hw-3 missing → week 2 not-submitted
+      // hw-3 missing
     ];
     expect(computeLearnerHomeworkStats(userId, homeworks, submissions)).toEqual({
-      completedCount: 1, totalCount: 2, lateCount: 0, notSubmittedCount: 1,
+      completedCount: 2, totalCount: 3, lateCount: 0, notSubmittedCount: 1,
     });
   });
 

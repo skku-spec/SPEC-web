@@ -697,6 +697,30 @@ export type Database = {
         };
         Relationships: [];
       };
+      homework_section_submissions: {
+        Row: {
+          homework_id: string;
+          user_id: string;
+          section_id: string;
+          is_completed: boolean;
+          updated_at: string | null;
+        };
+        Insert: {
+          homework_id: string;
+          user_id: string;
+          section_id: string;
+          is_completed?: boolean;
+          updated_at?: string | null;
+        };
+        Update: {
+          homework_id?: string;
+          user_id?: string;
+          section_id?: string;
+          is_completed?: boolean;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
       recruitment_settings: {
         Row: {
           id: string;
