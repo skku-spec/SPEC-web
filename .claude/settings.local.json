@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx vitest *)"
+      "Bash(npx vitest *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(Get-Content guide/report.md -Raw)",
+      "Bash(xxd \"C:/Users/sjhbr/Documents/GitHub/SPEC-web/guide/report.md\")",
+      "Bash(iconv *)"
     ]
   }
 }
