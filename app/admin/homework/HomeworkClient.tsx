@@ -467,9 +467,10 @@ export function HomeworkClient() {
     hwId: string,
     userId: string,
     sectionId: string,
+    padletStatus: boolean = false,
   ) => {
     const key = `${hwId}:${userId}:${sectionId}`;
-    const current = cellOverrides[key] !== undefined ? cellOverrides[key] : (currentSectionStatuses[sectionId] ?? false);
+    const current = cellOverrides[key] !== undefined ? cellOverrides[key] : padletStatus;
     const next = !current;
 
     setCellOverrides(prev => ({ ...prev, [key]: next }));
@@ -1510,7 +1511,7 @@ export function HomeworkClient() {
                                         return (
                                           <td key={sId} className="px-4 py-3 text-center">
                                             <button
-                                              onClick={() => handleCellToggle(hw.id, row.userId, sId)}
+                                              onClick={() => handleCellToggle(hw.id, row.userId, sId, row.sectionStatus[sId])}
                                               disabled={isToggling}
                                               title={effective ? "완료 취소" : "완료로 표시"}
                                               className={`inline-flex h-8 w-8 items-center justify-center rounded-full transition-all disabled:opacity-50 ${
@@ -1565,7 +1566,7 @@ export function HomeworkClient() {
                                         <div key={s.id} className="flex items-center justify-between rounded-lg bg-[#f5f5ee] px-3 py-2">
                                           <span className="font-['Pretendard',sans-serif] text-xs text-[#4a4a40]">{s.title}</span>
                                           <button
-                                            onClick={() => handleCellToggle(hw.id, row.userId, s.id)}
+                                            onClick={() => handleCellToggle(hw.id, row.userId, s.id, row.sectionStatus[s.id] ?? false)}
                                             disabled={isToggling}
                                             title={effective ? "완료 취소" : "완료로 표시"}
                                             className={`inline-flex h-6 w-6 items-center justify-center rounded-full transition-all disabled:opacity-50 ${
