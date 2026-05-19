@@ -295,7 +295,7 @@ export function DashboardClient({
       const k = l.missedCount; if (!acc[k]) acc[k] = []; acc[k].push(l); return acc;
     }, {});
 
-    return { effStart, effEnd, sessionsInPeriod, sessionHwMap, cumGroups };
+    return { effStart, effEnd, sessionsInPeriod, sessionHwMap, cumGroups, cumStats };
   }, [startWeek, endWeek, sortedSessionsAll, safeHomeworks, safeLearners, safeSubmissions, safeSectionSubmissions, getAssignedSession, hwLines]);
 
   const generateReportHTML = useCallback(() => {
@@ -304,9 +304,9 @@ export function DashboardClient({
       return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
     };
 
-    const { effStart, effEnd, sessionsInPeriod, sessionHwMap, cumGroups } = previewData;
+    const { effStart, effEnd, sessionsInPeriod, sessionHwMap, cumGroups, cumStats } = previewData;
 
-    const contactList = missingTwoPlus.filter(l => contactNeeded[l.id] !== false);
+    const contactList = cumStats.filter(l => l.missedCount >= 2 && contactNeeded[l.id] !== false);
     const periodText = sortedSessionsAll.length > 0 ? `${effStart}주차 ~ ${effEnd}주차` : '전체 기간';
 
     // Build HTML sections
@@ -355,7 +355,7 @@ export function DashboardClient({
       contactSection += `<p class="names">연락 필요한 러너가 없습니다.</p>`;
     } else {
       const cGroups = contactList.reduce<Record<number, typeof contactList>>((acc, l) => {
-        const k = l.notSubmittedCount;
+        const k = l.missedCount;
         if (!acc[k]) acc[k] = [];
         acc[k].push(l);
         return acc;
@@ -408,7 +408,7 @@ ${cumulativeSection}
 ${contactSection}
 </body>
 </html>`;
-  }, [previewData, sortedSessionsAll, safeLearners, contactNeeded, missingTwoPlus, getNonSubmitters, hwLines]);
+  }, [previewData, sortedSessionsAll, safeLearners, contactNeeded, getNonSubmitters, hwLines]);
 
   const handlePrintReport = useCallback(() => {
     const html = generateReportHTML();
@@ -992,14 +992,14 @@ ${contactSection}
                     <p className="text-base font-black text-[#16140f] mb-3">
                       <span className="text-[#aaa] mr-1">##</span>연락 명단
                     </p>
-                    {missingTwoPlus.filter(l => contactNeeded[l.id] !== false).length === 0 ? (
+                    {previewData.cumStats.filter(l => l.missedCount >= 2 && contactNeeded[l.id] !== false).length === 0 ? (
                       <p className="text-[#6b6b5e] text-sm ml-4">연락 필요한 러너가 없습니다.</p>
                     ) : (
                       Object.entries(
-                        missingTwoPlus
-                          .filter(l => contactNeeded[l.id] !== false)
-                          .reduce<Record<number, typeof missingTwoPlus>>((acc, l) => {
-                            const k = l.notSubmittedCount;
+                        previewData.cumStats
+                          .filter(l => l.missedCount >= 2 && contactNeeded[l.id] !== false)
+                          .reduce<Record<number, (typeof previewData.cumStats)>>((acc, l) => {
+                            const k = l.missedCount;
                             if (!acc[k]) acc[k] = [];
                             acc[k].push(l);
                             return acc;
