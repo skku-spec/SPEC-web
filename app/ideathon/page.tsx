@@ -97,15 +97,6 @@ export default function IdeathonPage() {
 
       {/* Introduction Section */}
       <section id="intro" className="relative w-full py-16 md:py-24 border-t border-[#ddd9cc]/60 overflow-hidden bg-white">
-        {/* Background Image Slice 1 */}
-        <div
-          className="absolute inset-0 pointer-events-none select-none z-0 opacity-90 mix-blend-multiply"
-          style={{
-            backgroundImage: "url('/images/ideathon-bg-1.png')",
-            backgroundSize: "100% 100%",
-            backgroundRepeat: "no-repeat",
-          }}
-        />
         <div className="relative z-10 mx-auto max-w-[960px] px-6">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-10 items-start">
             <div className="md:col-span-5">
@@ -117,7 +108,7 @@ export default function IdeathonPage() {
                 팔아라, 만들지 마라
               </p>
             </div>
-            <div className="md:col-span-7 bg-white/70 backdrop-blur-md p-6 sm:p-8 rounded-lg border border-[#ddd9cc] shadow-sm">
+            <div className="md:col-span-7 bg-white p-6 sm:p-8 rounded-lg border border-[#ddd9cc] shadow-sm">
               <p className="font-['Pretendard',sans-serif] text-[18px] leading-[1.8] text-[#16140f] mb-6 font-medium">
                 아이디어톤은 10주간의 치열했던 Bootcamp 기간 동안 서로 셔플하며 증명해온 비즈니스 모델을 구체화하는 실전 창업의 첫 게이트웨이입니다.
               </p>
@@ -149,15 +140,6 @@ export default function IdeathonPage() {
 
       {/* Schedule & Location Section */}
       <section id="schedule" className="relative w-full py-16 md:py-24 border-t border-[#ddd9cc]/60 overflow-hidden bg-white">
-        {/* Background Image Slice 2 */}
-        <div
-          className="absolute inset-0 pointer-events-none select-none z-0 opacity-90 mix-blend-multiply"
-          style={{
-            backgroundImage: "url('/images/ideathon-bg-2.png')",
-            backgroundSize: "100% 100%",
-            backgroundRepeat: "no-repeat",
-          }}
-        />
         <div className="relative z-10 mx-auto max-w-[960px] px-6">
           <div className="mb-12 text-center">
             <h2 className="font-['Pretendard',sans-serif] text-3xl font-bold tracking-tight text-[#16140f] sm:text-4xl">
@@ -170,7 +152,7 @@ export default function IdeathonPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Info Card 1: Schedule */}
-            <div className="rounded-lg border border-[#ddd9cc] bg-white/80 backdrop-blur-md p-6 flex items-start gap-4 shadow-sm">
+            <div className="rounded-lg border border-[#ddd9cc] bg-white p-6 flex items-start gap-4 shadow-sm">
               <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#FF6C0F]/10 text-[#FF6C0F]">
                 <Calendar className="h-5 w-5" />
               </div>
@@ -188,7 +170,7 @@ export default function IdeathonPage() {
             </div>
 
             {/* Info Card 2: Location */}
-            <div className="rounded-lg border border-[#ddd9cc] bg-white/80 backdrop-blur-md p-6 flex items-start gap-4 shadow-sm">
+            <div className="rounded-lg border border-[#ddd9cc] bg-white p-6 flex items-start gap-4 shadow-sm">
               <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#FF6C0F]/10 text-[#FF6C0F]">
                 <MapPin className="h-5 w-5" />
               </div>
@@ -210,17 +192,8 @@ export default function IdeathonPage() {
 
       {/* Timetable Section */}
       <section id="timetable" className="relative w-full py-16 md:py-24 border-t border-[#ddd9cc]/60 overflow-hidden bg-white">
-        {/* Background Image Slice 3 */}
-        <div
-          className="absolute inset-0 pointer-events-none select-none z-0 opacity-90 mix-blend-multiply"
-          style={{
-            backgroundImage: "url('/images/ideathon-bg-3.png')",
-            backgroundSize: "100% 100%",
-            backgroundRepeat: "no-repeat",
-          }}
-        />
         <div className="relative z-10 mx-auto max-w-[960px] px-6">
-          <div className="space-y-8 bg-white/70 backdrop-blur-md p-6 md:p-10 rounded-lg border border-[#ddd9cc] shadow-sm">
+          <div className="space-y-8 bg-white p-6 md:p-10 rounded-lg border border-[#ddd9cc] shadow-sm">
             <div>
               <h3 className="font-['Pretendard',sans-serif] text-2xl font-bold text-[#16140f] mb-6 pb-2 border-b border-[#ece8db]">
                 아이디어톤 타임테이블
@@ -288,16 +261,6 @@ export default function IdeathonPage() {
 
       {/* Partners & FAQ Section */}
       <section id="partners-faq" className="relative w-full py-16 md:py-24 border-t border-[#ddd9cc]/60 overflow-hidden bg-white">
-        {/* Background Image Slice 4 */}
-        <div
-          className="absolute inset-0 pointer-events-none select-none z-0 opacity-90 mix-blend-multiply"
-          style={{
-            backgroundImage: "url('/images/ideathon-bg-4.png')",
-            backgroundSize: "100% 100%",
-            backgroundRepeat: "no-repeat",
-          }}
-        />
-        
         {/* Partners Content */}
         <div className="relative z-10 mx-auto max-w-[960px] px-6 mb-20 md:mb-28">
           <div className="mb-12 text-center">
@@ -311,7 +274,7 @@ export default function IdeathonPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
             {/* Partner 1 */}
-            <div className="flex flex-col items-center justify-between p-8 rounded-lg border border-[#ddd9cc] bg-white/90 backdrop-blur-sm text-center shadow-sm">
+            <div className="flex flex-col items-center justify-between p-8 rounded-lg border border-[#ddd9cc] bg-white text-center shadow-sm">
               <div className="mb-4 text-[#FF6C0F] flex items-center justify-center">
                 <Handshake className="h-10 w-10 stroke-[1.5]" />
               </div>
@@ -326,7 +289,7 @@ export default function IdeathonPage() {
             </div>
 
             {/* Partner 2 */}
-            <div className="flex flex-col items-center justify-between p-8 rounded-lg border border-[#ddd9cc] bg-white/90 backdrop-blur-sm text-center shadow-sm">
+            <div className="flex flex-col items-center justify-between p-8 rounded-lg border border-[#ddd9cc] bg-white text-center shadow-sm">
               <div className="mb-4 text-[#FF6C0F] flex items-center justify-center">
                 <Handshake className="h-10 w-10 stroke-[1.5]" />
               </div>
@@ -359,7 +322,7 @@ export default function IdeathonPage() {
               return (
                 <div
                   key={idx}
-                  className="rounded-lg border border-[#ddd9cc] bg-white/95 backdrop-blur-sm overflow-hidden transition-all duration-200 shadow-sm"
+                  className="rounded-lg border border-[#ddd9cc] bg-white overflow-hidden transition-all duration-200 shadow-sm"
                 >
                   <button
                     type="button"
