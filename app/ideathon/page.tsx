@@ -63,45 +63,9 @@ export default function IdeathonPage() {
   };
 
   return (
-    <main className="relative flex-1 bg-white text-[#16140f] overflow-hidden min-h-screen">
-      {/* Decorative Brush Stroke Background Layer (High Opacity for Prominent Template Effect) */}
-      <div className="absolute inset-0 pointer-events-none select-none overflow-hidden z-0">
-        {/* Top-Right brush stroke */}
-        <div
-          className="absolute top-0 right-[-10%] w-[90%] md:w-[70%] h-[750px] bg-no-repeat bg-[position:right_top] opacity-90 mix-blend-multiply"
-          style={{
-            backgroundImage: "url('/images/ideathon-bg.jpg')",
-            backgroundSize: "contain",
-          }}
-        />
-        {/* Mid-Left brush stroke */}
-        <div
-          className="absolute top-[28%] left-[-15%] w-[85%] md:w-[65%] h-[800px] bg-no-repeat bg-[position:left_center] opacity-80 mix-blend-multiply rotate-45"
-          style={{
-            backgroundImage: "url('/images/ideathon-bg.jpg')",
-            backgroundSize: "contain",
-          }}
-        />
-        {/* Mid-Right brush stroke */}
-        <div
-          className="absolute top-[58%] right-[-15%] w-[85%] md:w-[65%] h-[800px] bg-no-repeat bg-[position:right_center] opacity-80 mix-blend-multiply -rotate-12"
-          style={{
-            backgroundImage: "url('/images/ideathon-bg.jpg')",
-            backgroundSize: "contain",
-          }}
-        />
-        {/* Bottom-Left brush stroke */}
-        <div
-          className="absolute bottom-[-100px] left-[-10%] w-[90%] md:w-[70%] h-[850px] bg-no-repeat bg-[position:left_bottom] opacity-90 mix-blend-multiply rotate-180"
-          style={{
-            backgroundImage: "url('/images/ideathon-bg.jpg')",
-            backgroundSize: "contain",
-          }}
-        />
-      </div>
-
+    <main className="relative flex-1 bg-white text-[#16140f] min-h-screen">
       {/* Hero Section */}
-      <section className="relative z-10 mx-auto max-w-[960px] px-6 pt-24 pb-20 md:pt-32 md:pb-28 text-center">
+      <section className="relative z-10 mx-auto max-w-[960px] px-6 pt-24 pb-20 md:pt-32 md:pb-28 text-center bg-white">
         <span className="inline-block rounded-full bg-[#FF6C0F]/10 px-4 py-1 text-xs font-semibold uppercase tracking-wider text-[#FF6C0F] mb-6 font-['Pretendard',sans-serif]">
           SPEC 4기 EVENT
         </span>
@@ -132,40 +96,51 @@ export default function IdeathonPage() {
       </section>
 
       {/* Introduction Section */}
-      <section id="intro" className="relative z-10 mx-auto max-w-[960px] px-6 py-16 md:py-24 border-t border-[#ddd9cc]/60">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 items-start">
-          <div className="md:col-span-5">
-            <h2 className="font-['Outfit',sans-serif] text-3xl md:text-4xl font-black uppercase tracking-tight text-[#16140f]">
-              SELL FIRST.<br />
-              <span className="text-[#FF6C0F]">BUILD NEVER.</span>
-            </h2>
-            <p className="mt-4 font-['Pretendard',sans-serif] text-sm font-semibold text-[#6b6b5e] uppercase tracking-wider">
-              팔아라, 만들지 마라
-            </p>
-          </div>
-          <div className="md:col-span-7 bg-white/70 backdrop-blur-md p-6 sm:p-8 rounded-lg border border-[#ddd9cc] shadow-sm">
-            <p className="font-['Pretendard',sans-serif] text-[18px] leading-[1.8] text-[#16140f] mb-6 font-medium">
-              아이디어톤은 10주간의 치열했던 Bootcamp 기간 동안 서로 셔플하며 증명해온 비즈니스 모델을 구체화하는 실전 창업의 첫 게이트웨이입니다.
-            </p>
-            <p className="font-['Pretendard',sans-serif] text-base leading-[1.8] text-[#4a4a40] mb-6">
-              단순한 상상이나 기획서 제출에서 벗어나, 그간 모아온 리얼 고객 데이터와 가설 검증 결과물을 바탕으로 진행됩니다. 참가자들은 이 세션에서 서로의 강점과 비전을 공유하며, 향후 30주간 프로덕트를 함께 만들고 매출을 극대화할 최적의 핵심 공동창업자를 확정하게 됩니다.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
-              <div className="p-5 rounded-lg border border-[#ddd9cc] bg-white">
-                <h4 className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f] mb-2">
-                  최고의 파트너 매칭
-                </h4>
-                <p className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e] leading-relaxed">
-                  개발, 디자인, 기획 등 각기 다른 전문 분야의 파운더들이 핏을 조율하고 최종 원팀을 구성합니다.
-                </p>
-              </div>
-              <div className="p-5 rounded-lg border border-[#ddd9cc] bg-white">
-                <h4 className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f] mb-2">
-                  실전 비즈니스 피드백
-                </h4>
-                <p className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e] leading-relaxed">
-                  현업 스타트업 창업가 및 파트너 투자 심사역들이 멘토로 합류하여 실시간 검증 피드백을 전달합니다.
-                </p>
+      <section id="intro" className="relative w-full py-16 md:py-24 border-t border-[#ddd9cc]/60 overflow-hidden bg-white">
+        {/* Background Image Slice 1 */}
+        <div
+          className="absolute inset-0 pointer-events-none select-none z-0 opacity-90 mix-blend-multiply"
+          style={{
+            backgroundImage: "url('/images/ideathon-bg-1.png')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        />
+        <div className="relative z-10 mx-auto max-w-[960px] px-6">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-10 items-start">
+            <div className="md:col-span-5">
+              <h2 className="font-['Outfit',sans-serif] text-3xl md:text-4xl font-black uppercase tracking-tight text-[#16140f]">
+                SELL FIRST.<br />
+                <span className="text-[#FF6C0F]">BUILD NEVER.</span>
+              </h2>
+              <p className="mt-4 font-['Pretendard',sans-serif] text-sm font-semibold text-[#6b6b5e] uppercase tracking-wider">
+                팔아라, 만들지 마라
+              </p>
+            </div>
+            <div className="md:col-span-7 bg-white/70 backdrop-blur-md p-6 sm:p-8 rounded-lg border border-[#ddd9cc] shadow-sm">
+              <p className="font-['Pretendard',sans-serif] text-[18px] leading-[1.8] text-[#16140f] mb-6 font-medium">
+                아이디어톤은 10주간의 치열했던 Bootcamp 기간 동안 서로 셔플하며 증명해온 비즈니스 모델을 구체화하는 실전 창업의 첫 게이트웨이입니다.
+              </p>
+              <p className="font-['Pretendard',sans-serif] text-base leading-[1.8] text-[#4a4a40] mb-6">
+                단순한 상상이나 기획서 제출에서 벗어나, 그간 모아온 리얼 고객 데이터와 가설 검증 결과물을 바탕으로 진행됩니다. 참가자들은 이 세션에서 서로의 강점과 비전을 공유하며, 향후 30주간 프로덕트를 함께 만들고 매출을 극대화할 최적의 핵심 공동창업자를 확정하게 됩니다.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
+                <div className="p-5 rounded-lg border border-[#ddd9cc] bg-white">
+                  <h4 className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f] mb-2">
+                    최고의 파트너 매칭
+                  </h4>
+                  <p className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e] leading-relaxed">
+                    개발, 디자인, 기획 등 각기 다른 전문 분야의 파운더들이 핏을 조율하고 최종 원팀을 구성합니다.
+                  </p>
+                </div>
+                <div className="p-5 rounded-lg border border-[#ddd9cc] bg-white">
+                  <h4 className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f] mb-2">
+                    실전 비즈니스 피드백
+                  </h4>
+                  <p className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e] leading-relaxed">
+                    현업 스타트업 창업가 및 파트너 투자 심사역들이 멘토로 합류하여 실시간 검증 피드백을 전달합니다.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -173,8 +148,17 @@ export default function IdeathonPage() {
       </section>
 
       {/* Schedule & Location Section */}
-      <section id="schedule" className="relative z-10 py-20 md:py-28">
-        <div className="mx-auto max-w-[960px] px-6">
+      <section id="schedule" className="relative w-full py-16 md:py-24 border-t border-[#ddd9cc]/60 overflow-hidden bg-white">
+        {/* Background Image Slice 2 */}
+        <div
+          className="absolute inset-0 pointer-events-none select-none z-0 opacity-90 mix-blend-multiply"
+          style={{
+            backgroundImage: "url('/images/ideathon-bg-2.png')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        />
+        <div className="relative z-10 mx-auto max-w-[960px] px-6">
           <div className="mb-12 text-center">
             <h2 className="font-['Pretendard',sans-serif] text-3xl font-bold tracking-tight text-[#16140f] sm:text-4xl">
               일정 및 장소
@@ -184,7 +168,7 @@ export default function IdeathonPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Info Card 1: Schedule */}
             <div className="rounded-lg border border-[#ddd9cc] bg-white/80 backdrop-blur-md p-6 flex items-start gap-4 shadow-sm">
               <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#FF6C0F]/10 text-[#FF6C0F]">
@@ -221,8 +205,21 @@ export default function IdeathonPage() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Timetable Blocks */}
+      {/* Timetable Section */}
+      <section id="timetable" className="relative w-full py-16 md:py-24 border-t border-[#ddd9cc]/60 overflow-hidden bg-white">
+        {/* Background Image Slice 3 */}
+        <div
+          className="absolute inset-0 pointer-events-none select-none z-0 opacity-90 mix-blend-multiply"
+          style={{
+            backgroundImage: "url('/images/ideathon-bg-3.png')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        />
+        <div className="relative z-10 mx-auto max-w-[960px] px-6">
           <div className="space-y-8 bg-white/70 backdrop-blur-md p-6 md:p-10 rounded-lg border border-[#ddd9cc] shadow-sm">
             <div>
               <h3 className="font-['Pretendard',sans-serif] text-2xl font-bold text-[#16140f] mb-6 pb-2 border-b border-[#ece8db]">
@@ -289,98 +286,111 @@ export default function IdeathonPage() {
         </div>
       </section>
 
-      {/* Partners Section */}
-      <section className="relative z-10 mx-auto max-w-[960px] px-6 py-20 md:py-28 border-t border-[#ddd9cc]/60">
-        <div className="mb-12 text-center">
-          <h2 className="font-['Pretendard',sans-serif] text-3xl font-bold tracking-tight text-[#16140f] sm:text-4xl">
-            파트너사
-          </h2>
-          <p className="mt-3 font-['Pretendard',sans-serif] text-base text-[#6b6b5e]">
-            SPEC의 도전적인 여정을 함께 지원하는 든든한 조력자
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
-          {/* Partner 1 */}
-          <div className="flex flex-col items-center justify-between p-8 rounded-lg border border-[#ddd9cc] bg-white/90 backdrop-blur-sm text-center shadow-sm">
-            <div className="mb-4 text-[#FF6C0F] flex items-center justify-center">
-              <Handshake className="h-10 w-10 stroke-[1.5]" />
-            </div>
-            <div>
-              <h3 className="font-['Pretendard',sans-serif] text-lg font-bold text-[#16140f] mb-2">
-                알파브라더스
-              </h3>
-              <p className="font-['Pretendard',sans-serif] text-sm text-[#4a4a40] leading-relaxed">
-                검증된 방법론을 바탕으로 혁신 기업의 시작과 성장을 설계하고 조력하는 전문 빌더사입니다. 본 행사 개최 공간 및 실무 멘토링을 제공합니다.
-              </p>
-            </div>
+      {/* Partners & FAQ Section */}
+      <section id="partners-faq" className="relative w-full py-16 md:py-24 border-t border-[#ddd9cc]/60 overflow-hidden bg-white">
+        {/* Background Image Slice 4 */}
+        <div
+          className="absolute inset-0 pointer-events-none select-none z-0 opacity-90 mix-blend-multiply"
+          style={{
+            backgroundImage: "url('/images/ideathon-bg-4.png')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        />
+        
+        {/* Partners Content */}
+        <div className="relative z-10 mx-auto max-w-[960px] px-6 mb-20 md:mb-28">
+          <div className="mb-12 text-center">
+            <h2 className="font-['Pretendard',sans-serif] text-3xl font-bold tracking-tight text-[#16140f] sm:text-4xl">
+              파트너사
+            </h2>
+            <p className="mt-3 font-['Pretendard',sans-serif] text-base text-[#6b6b5e]">
+              SPEC의 도전적인 여정을 함께 지원하는 든든한 조력자
+            </p>
           </div>
 
-          {/* Partner 2 */}
-          <div className="flex flex-col items-center justify-between p-8 rounded-lg border border-[#ddd9cc] bg-white/90 backdrop-blur-sm text-center shadow-sm">
-            <div className="mb-4 text-[#FF6C0F] flex items-center justify-center">
-              <Handshake className="h-10 w-10 stroke-[1.5]" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            {/* Partner 1 */}
+            <div className="flex flex-col items-center justify-between p-8 rounded-lg border border-[#ddd9cc] bg-white/90 backdrop-blur-sm text-center shadow-sm">
+              <div className="mb-4 text-[#FF6C0F] flex items-center justify-center">
+                <Handshake className="h-10 w-10 stroke-[1.5]" />
+              </div>
+              <div>
+                <h3 className="font-['Pretendard',sans-serif] text-lg font-bold text-[#16140f] mb-2">
+                  알파브라더스
+                </h3>
+                <p className="font-['Pretendard',sans-serif] text-sm text-[#4a4a40] leading-relaxed">
+                  검증된 방법론을 바탕으로 혁신 기업의 시작과 성장을 설계하고 조력하는 전문 빌더사입니다. 본 행사 개최 공간 및 실무 멘토링을 제공합니다.
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="font-['Pretendard',sans-serif] text-lg font-bold text-[#16140f] mb-2">
-                윌러특허법률사무소
-              </h3>
-              <p className="font-['Pretendard',sans-serif] text-sm text-[#4a4a40] leading-relaxed">
-                스타트업 비즈니스의 지식재산권(IP) 보호와 특허 출원 전략을 지원하여, 장기적인 경쟁력 강화를 돕는 핵심 지식재산 전략 파트너입니다.
-              </p>
+
+            {/* Partner 2 */}
+            <div className="flex flex-col items-center justify-between p-8 rounded-lg border border-[#ddd9cc] bg-white/90 backdrop-blur-sm text-center shadow-sm">
+              <div className="mb-4 text-[#FF6C0F] flex items-center justify-center">
+                <Handshake className="h-10 w-10 stroke-[1.5]" />
+              </div>
+              <div>
+                <h3 className="font-['Pretendard',sans-serif] text-lg font-bold text-[#16140f] mb-2">
+                  윌러특허법률사무소
+                </h3>
+                <p className="font-['Pretendard',sans-serif] text-sm text-[#4a4a40] leading-relaxed">
+                  스타트업 비즈니스의 지식재산권(IP) 보호와 특허 출원 전략을 지원하여, 장기적인 경쟁력 강화를 돕는 핵심 지식재산 전략 파트너입니다.
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      </section>
 
-      {/* FAQ Section */}
-      <section className="relative z-10 mx-auto max-w-[720px] px-6 py-20 md:py-28 border-t border-[#ddd9cc]/60">
-        <div className="mb-12 text-center">
-          <h2 className="font-['Pretendard',sans-serif] text-3xl font-bold tracking-tight text-[#16140f]">
-            자주 묻는 질문 (FAQ)
-          </h2>
-          <p className="mt-3 font-['Pretendard',sans-serif] text-base text-[#6b6b5e]">
-            아이디어톤에 대해 참가자가 가장 많이 문의하는 질문과 답변
-          </p>
-        </div>
+        {/* FAQ Content */}
+        <div id="faq" className="relative z-10 mx-auto max-w-[720px] px-6">
+          <div className="mb-12 text-center">
+            <h2 className="font-['Pretendard',sans-serif] text-3xl font-bold tracking-tight text-[#16140f]">
+              자주 묻는 질문 (FAQ)
+            </h2>
+            <p className="mt-3 font-['Pretendard',sans-serif] text-base text-[#6b6b5e]">
+              아이디어톤에 대해 참가자가 가장 많이 문의하는 질문과 답변
+            </p>
+          </div>
 
-        <div className="space-y-4">
-          {FAQ_ITEMS.map((item, idx) => {
-            const isOpen = openFaq === idx;
-            return (
-              <div
-                key={idx}
-                className="rounded-lg border border-[#ddd9cc] bg-white/95 backdrop-blur-sm overflow-hidden transition-all duration-200 shadow-sm"
-              >
-                <button
-                  type="button"
-                  onClick={() => toggleFaq(idx)}
-                  className="flex w-full items-center justify-between px-6 py-4 text-left focus:outline-none"
-                >
-                  <div className="flex items-center gap-3">
-                    <HelpCircle className="h-5 w-5 text-[#FF6C0F] shrink-0" />
-                    <span className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
-                      {item.question}
-                    </span>
-                  </div>
-                  <ChevronDown
-                    className={`h-5 w-5 text-[#6b6b5e] shrink-0 transition-transform duration-200 ${
-                      isOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
+          <div className="space-y-4">
+            {FAQ_ITEMS.map((item, idx) => {
+              const isOpen = openFaq === idx;
+              return (
                 <div
-                  className={`transition-all duration-200 ease-in-out ${
-                    isOpen ? "max-h-[200px] border-t border-[#ece8db]" : "max-h-0 pointer-events-none"
-                  } overflow-hidden`}
+                  key={idx}
+                  className="rounded-lg border border-[#ddd9cc] bg-white/95 backdrop-blur-sm overflow-hidden transition-all duration-200 shadow-sm"
                 >
-                  <div className="px-6 py-4 bg-[#fcfcf8]/80 font-['Pretendard',sans-serif] text-sm text-[#4a4a40] leading-relaxed">
-                    {item.answer}
+                  <button
+                    type="button"
+                    onClick={() => toggleFaq(idx)}
+                    className="flex w-full items-center justify-between px-6 py-4 text-left focus:outline-none"
+                  >
+                    <div className="flex items-center gap-3">
+                      <HelpCircle className="h-5 w-5 text-[#FF6C0F] shrink-0" />
+                      <span className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
+                        {item.question}
+                      </span>
+                    </div>
+                    <ChevronDown
+                      className={`h-5 w-5 text-[#6b6b5e] shrink-0 transition-transform duration-200 ${
+                        isOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+                  <div
+                    className={`transition-all duration-200 ease-in-out ${
+                      isOpen ? "max-h-[200px] border-t border-[#ece8db]" : "max-h-0 pointer-events-none"
+                    } overflow-hidden`}
+                  >
+                    <div className="px-6 py-4 bg-[#fcfcf8]/80 font-['Pretendard',sans-serif] text-sm text-[#4a4a40] leading-relaxed">
+                      {item.answer}
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </section>
     </main>
