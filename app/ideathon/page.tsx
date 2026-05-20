@@ -102,8 +102,8 @@ export default function IdeathonPage() {
           className="absolute inset-0 pointer-events-none select-none z-0 opacity-90 mix-blend-multiply"
           style={{
             backgroundImage: "url('/images/ideathon-bg-1.png')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
+            backgroundSize: "100% 100%",
+            backgroundRepeat: "no-repeat",
           }}
         />
         <div className="relative z-10 mx-auto max-w-[960px] px-6">
@@ -154,8 +154,8 @@ export default function IdeathonPage() {
           className="absolute inset-0 pointer-events-none select-none z-0 opacity-90 mix-blend-multiply"
           style={{
             backgroundImage: "url('/images/ideathon-bg-2.png')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
+            backgroundSize: "100% 100%",
+            backgroundRepeat: "no-repeat",
           }}
         />
         <div className="relative z-10 mx-auto max-w-[960px] px-6">
@@ -215,8 +215,8 @@ export default function IdeathonPage() {
           className="absolute inset-0 pointer-events-none select-none z-0 opacity-90 mix-blend-multiply"
           style={{
             backgroundImage: "url('/images/ideathon-bg-3.png')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
+            backgroundSize: "100% 100%",
+            backgroundRepeat: "no-repeat",
           }}
         />
         <div className="relative z-10 mx-auto max-w-[960px] px-6">
@@ -293,8 +293,8 @@ export default function IdeathonPage() {
           className="absolute inset-0 pointer-events-none select-none z-0 opacity-90 mix-blend-multiply"
           style={{
             backgroundImage: "url('/images/ideathon-bg-4.png')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
+            backgroundSize: "100% 100%",
+            backgroundRepeat: "no-repeat",
           }}
         />
         
