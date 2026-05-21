@@ -372,10 +372,10 @@ export default function IdeathonPage() {
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 pt-4 w-full justify-center">
                   <Link
-                    href="/dashboard/ideas"
+                    href="/dashboard"
                     className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#16140f] px-6 font-['Pretendard',sans-serif] text-sm font-semibold text-white transition-opacity hover:opacity-90"
                   >
-                    대시보드에서 목록 확인
+                    대시보드로 이동
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                   <button
