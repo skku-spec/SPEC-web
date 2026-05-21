@@ -97,9 +97,7 @@ export default function IdeathonPage() {
                 BEGIN YOUR JOURNEY.<br />
                 <span className="text-[#FF9900]">MAKE THE IDEA.</span>
               </h2>
-              <p className="mt-4 font-['Pretendard',sans-serif] text-sm font-semibold text-[#6b6b5e] uppercase tracking-wider">
-                팔아라, 만들지 마라
-              </p>
+
             </div>
             <div className="md:col-span-7 bg-white p-6 sm:p-8 rounded-lg border border-[#ddd9cc] shadow-sm">
               <p className="font-['Pretendard',sans-serif] text-[18px] leading-[1.8] text-[#16140f] mb-6 font-medium">
@@ -263,7 +261,7 @@ export default function IdeathonPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
               {/* Alphabrothers */}
               <div className="flex flex-col items-center gap-6 p-8 rounded-xl bg-white border border-[#ddd9cc] shadow-sm text-center">
                 <div className="flex items-center justify-center h-16">
@@ -275,24 +273,79 @@ export default function IdeathonPage() {
                     className="object-contain max-h-16 w-auto"
                   />
                 </div>
+                <div className="flex flex-col gap-1 items-center">
+                  <span className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
+                    알파브라더스
+                  </span>
+                  <a
+                    href="https://www.alphabrothers.co.kr/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-['Pretendard',sans-serif] text-xs text-[#FF6C0F] font-semibold hover:underline"
+                  >
+                    공식 웹사이트
+                  </a>
+                </div>
                 <p className="font-['Pretendard',sans-serif] text-sm text-[#4a4a40] leading-relaxed">
                   검증된 방법론을 바탕으로 혁신 기업의 시작과 성장을 설계하고 조력하는 전문 빌더사입니다. 본 행사 개최 공간 및 실무 멘토링을 제공합니다.
                 </p>
               </div>
 
-              {/* Willer */}
+              {/* Jiheon Bae */}
               <div className="flex flex-col items-center gap-6 p-8 rounded-xl bg-white border border-[#ddd9cc] shadow-sm text-center">
                 <div className="flex items-center justify-center h-16">
                   <Image
-                    src="/images/logos/willer.jpeg"
-                    alt="윌러특허법률사무소"
-                    width={160}
+                    src="/images/logos/jiheon.jpeg"
+                    alt="배지헌 변리사"
+                    width={64}
                     height={64}
-                    className="object-contain max-h-16 w-auto"
+                    className="object-cover h-16 w-16 rounded-full border border-[#ddd9cc]"
                   />
                 </div>
+                <div className="flex flex-col gap-1 items-center">
+                  <span className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
+                    배지헌 변리사
+                  </span>
+                  <a
+                    href="https://www.linkedin.com/in/%EB%B0%B0%EC%A7%80%ED%97%8C/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-['Pretendard',sans-serif] text-xs text-[#FF6C0F] font-semibold hover:underline"
+                  >
+                    LinkedIn 프로필
+                  </a>
+                </div>
                 <p className="font-['Pretendard',sans-serif] text-sm text-[#4a4a40] leading-relaxed">
-                  스타트업 비즈니스의 지식재산권(IP) 보호와 특허 출원 전략을 지원하여, 장기적인 경쟁력 강화를 돕는 핵심 지식재산 전략 파트너입니다.
+                  특허법인 윌러의 파트너 변리사입니다. 스타트업 비즈니스의 지식재산권(IP) 보호와 특허 출원 전략을 지원하여, 장기적인 경쟁력 강화를 돕는 핵심 지식재산 전략 파트너입니다.
+                </p>
+              </div>
+
+              {/* Lee Jeongmin */}
+              <div className="flex flex-col items-center gap-6 p-8 rounded-xl bg-white border border-[#ddd9cc] shadow-sm text-center">
+                <div className="flex items-center justify-center h-16">
+                  <Image
+                    src="/images/logos/jungmin.png"
+                    alt="이정민 대표"
+                    width={64}
+                    height={64}
+                    className="object-cover h-16 w-16 rounded-full border border-[#ddd9cc]"
+                  />
+                </div>
+                <div className="flex flex-col gap-1 items-center">
+                  <span className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
+                    이정민 대표 (Tony Lee)
+                  </span>
+                  <a
+                    href="https://www.linkedin.com/in/jyoung105/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-['Pretendard',sans-serif] text-xs text-[#FF6C0F] font-semibold hover:underline"
+                  >
+                    LinkedIn 프로필
+                  </a>
+                </div>
+                <p className="font-['Pretendard',sans-serif] text-sm text-[#4a4a40] leading-relaxed">
+                  AI 솔로 빌더이자 ABLD의 설립자(전 스모어톡 공동창업자/CSO)입니다. 생성형 AI 모델 활용, 멀티 에이전트 시스템 설계 및 스타트업 실행 전략 멘토링을 제공합니다.
                 </p>
               </div>
             </div>
@@ -372,10 +425,10 @@ export default function IdeathonPage() {
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 pt-4 w-full justify-center">
                   <Link
-                    href="/dashboard/ideas"
+                    href="/dashboard"
                     className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#16140f] px-6 font-['Pretendard',sans-serif] text-sm font-semibold text-white transition-opacity hover:opacity-90"
                   >
-                    대시보드에서 목록 확인
+                    대시보드로 이동
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                   <button
