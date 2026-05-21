@@ -275,6 +275,19 @@ export default function IdeathonPage() {
                     className="object-contain max-h-16 w-auto"
                   />
                 </div>
+                <div className="flex flex-col gap-1 items-center">
+                  <span className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
+                    알파브라더스
+                  </span>
+                  <a
+                    href="https://www.alphabrothers.co.kr/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-['Pretendard',sans-serif] text-xs text-[#FF6C0F] font-semibold hover:underline"
+                  >
+                    공식 웹사이트
+                  </a>
+                </div>
                 <p className="font-['Pretendard',sans-serif] text-sm text-[#4a4a40] leading-relaxed">
                   검증된 방법론을 바탕으로 혁신 기업의 시작과 성장을 설계하고 조력하는 전문 빌더사입니다. 본 행사 개최 공간 및 실무 멘토링을 제공합니다.
                 </p>
