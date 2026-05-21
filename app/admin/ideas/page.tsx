@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminIdeasPage() {
-  const [ideasResult, authResult] = await Promise.all([
+  const [ideasResult] = await Promise.all([
     getIdeas(),
     requireAdmin(),
   ]);
