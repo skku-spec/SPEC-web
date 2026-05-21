@@ -1,7 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
-import { Calendar, MapPin, Handshake, ChevronDown, HelpCircle, Info } from "lucide-react";
+import { Calendar, MapPin, ChevronDown, HelpCircle, Info } from "lucide-react";
+import { IdeathonScrollHero } from "./IdeathonScrollHero";
 
 const FAQ_ITEMS = [
   {
@@ -65,35 +67,7 @@ export default function IdeathonPage() {
   return (
     <main className="relative flex-1 bg-white text-[#16140f] min-h-screen">
       {/* Hero Section */}
-      <section className="relative z-10 mx-auto max-w-[960px] px-6 pt-24 pb-20 md:pt-32 md:pb-28 text-center bg-white">
-        <span className="inline-block rounded-full bg-[#FF6C0F]/10 px-4 py-1 text-xs font-semibold uppercase tracking-wider text-[#FF6C0F] mb-6 font-['Pretendard',sans-serif]">
-          SPEC 4기 EVENT
-        </span>
-        <h1
-          className="text-[clamp(2.5rem,6vw,4.5rem)] font-black tracking-tight leading-[1.1] text-[#16140f] mb-6"
-          style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}
-        >
-          SPEC IDEATHON
-        </h1>
-        <p className="mx-auto max-w-2xl font-['Pretendard',sans-serif] text-lg sm:text-xl font-normal leading-relaxed text-[#4a4a40] mb-8">
-          W10 부트캠프를 마무리하며 최종 창업 팀을 빌딩하고,<br className="hidden sm:inline" />
-          48시간 동안 비즈니스 가설을 검증하는 1박 2일 몰입형 아이디어톤
-        </p>
-        <div className="flex justify-center gap-4">
-          <a
-            href="#intro"
-            className="inline-flex h-11 items-center justify-center rounded-md bg-[#16140f] px-6 font-['Pretendard',sans-serif] text-sm font-semibold text-white transition-all hover:bg-[#16140f]/80"
-          >
-            소개 보러가기
-          </a>
-          <a
-            href="#schedule"
-            className="inline-flex h-11 items-center justify-center rounded-md border border-[#ddd9cc] bg-white/90 backdrop-blur-sm px-6 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f] transition-all hover:bg-gray-50"
-          >
-            타임테이블 & 장소
-          </a>
-        </div>
-      </section>
+      <IdeathonScrollHero />
 
       {/* Introduction Section */}
       <section id="intro" className="relative w-full py-16 md:py-24 border-t border-[#ddd9cc]/60 overflow-hidden bg-white">
@@ -101,8 +75,8 @@ export default function IdeathonPage() {
           <div className="grid grid-cols-1 md:grid-cols-12 gap-10 items-start">
             <div className="md:col-span-5">
               <h2 className="font-['Outfit',sans-serif] text-3xl md:text-4xl font-black uppercase tracking-tight text-[#16140f]">
-                SELL FIRST.<br />
-                <span className="text-[#FF6C0F]">BUILD NEVER.</span>
+                BEGIN YOUR JOURNEY.<br />
+                <span className="text-[#FF9900]">MAKE THE IDEA.</span>
               </h2>
               <p className="mt-4 font-['Pretendard',sans-serif] text-sm font-semibold text-[#6b6b5e] uppercase tracking-wider">
                 팔아라, 만들지 마라
@@ -138,87 +112,84 @@ export default function IdeathonPage() {
         </div>
       </section>
 
-      {/* Schedule & Location Section */}
-      <section id="schedule" className="relative w-full py-16 md:py-24 border-t border-[#ddd9cc]/60 overflow-hidden bg-white">
-        <div className="relative z-10 mx-auto max-w-[960px] px-6">
+      {/* Schedule & Venue + Timetable — single dark section */}
+      <section id="schedule" className="relative w-full overflow-hidden" style={{ backgroundColor: "#16140f" }}>
+        {/* Schedule & Venue */}
+        <div id="timetable" className="relative z-10 mx-auto max-w-[960px] px-6 pt-16 md:pt-24">
           <div className="mb-12 text-center">
-            <h2 className="font-['Pretendard',sans-serif] text-3xl font-bold tracking-tight text-[#16140f] sm:text-4xl">
-              일정 및 장소
+            <h2 className="font-['Pretendard',sans-serif] text-3xl font-bold tracking-tight text-white sm:text-4xl">
+              SCHEDULE & VENUE
             </h2>
-            <p className="mt-3 font-['Pretendard',sans-serif] text-base text-[#6b6b5e]">
+            <p className="mt-3 font-['Pretendard',sans-serif] text-base text-white/75">
               SPEC 4기 아이디어톤을 관통하는 1박 2일의 스케줄과 오시는 길
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Info Card 1: Schedule */}
-            <div className="rounded-lg border border-[#ddd9cc] bg-white p-6 flex items-start gap-4 shadow-sm">
-              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#FF6C0F]/10 text-[#FF6C0F]">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="rounded-xl bg-white/15 backdrop-blur-sm border border-white/25 p-6 flex items-start gap-4">
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-white/20 text-white">
                 <Calendar className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="font-['Pretendard',sans-serif] text-lg font-semibold text-[#16140f] mb-1">
-                  행사 일정
+                <h3 className="font-['Pretendard',sans-serif] text-lg font-semibold text-white mb-1">
+                  EVENT DATE
                 </h3>
-                <p className="font-['Pretendard',sans-serif] text-[15px] text-[#4a4a40] font-bold mb-1">
+                <p className="font-['Pretendard',sans-serif] text-[15px] text-white font-bold mb-1">
                   2026.06.06 (토) - 2026.06.07 (일)
                 </p>
-                <p className="font-['Pretendard',sans-serif] text-sm text-[#6b6b5e]">
+                <p className="font-['Pretendard',sans-serif] text-sm text-white/75">
                   1박 2일간의 강도 높은 몰입형 팀 빌딩 및 피칭 스프린트로 진행됩니다.
                 </p>
               </div>
             </div>
 
-            {/* Info Card 2: Location */}
-            <div className="rounded-lg border border-[#ddd9cc] bg-white p-6 flex items-start gap-4 shadow-sm">
-              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#FF6C0F]/10 text-[#FF6C0F]">
+            <div className="rounded-xl bg-white/15 backdrop-blur-sm border border-white/25 p-6 flex items-start gap-4">
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-white/20 text-white">
                 <MapPin className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="font-['Pretendard',sans-serif] text-lg font-semibold text-[#16140f] mb-1">
-                  행사 장소
+                <h3 className="font-['Pretendard',sans-serif] text-lg font-semibold text-white mb-1">
+                  VENUE
                 </h3>
-                <p className="font-['Pretendard',sans-serif] text-[15px] text-[#4a4a40] font-bold mb-1">
+                <p className="font-['Pretendard',sans-serif] text-[15px] text-white font-bold mb-1">
                   알파브러더스 사무실
                 </p>
-                <p className="font-['Pretendard',sans-serif] text-sm text-[#6b6b5e]">
+                <p className="font-['Pretendard',sans-serif] text-sm text-white/75">
                   아이디어 구체화와 협업을 극대화할 수 있는 창의적인 코워킹 플레이스입니다.
                 </p>
               </div>
             </div>
           </div>
         </div>
-      </section>
 
-      {/* Timetable Section */}
-      <section id="timetable" className="relative w-full py-16 md:py-24 border-t border-[#ddd9cc]/60 overflow-hidden bg-white">
-        <div className="relative z-10 mx-auto max-w-[960px] px-6">
-          <div className="space-y-8 bg-white p-6 md:p-10 rounded-lg border border-[#ddd9cc] shadow-sm">
+        {/* Timetable */}
+        <div className="relative z-10 mx-auto max-w-[960px] px-6 pb-16 md:pb-24 mt-12">
+          <div className="space-y-8 p-6 md:p-10 rounded-lg border border-white/10 bg-white/5">
             <div>
-              <h3 className="font-['Pretendard',sans-serif] text-2xl font-bold text-[#16140f] mb-6 pb-2 border-b border-[#ece8db]">
-                아이디어톤 타임테이블
+              <h3 className="font-['Pretendard',sans-serif] text-2xl font-bold text-white mb-6 pb-2 border-b border-white/15">
+                TIMETABLE
               </h3>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
-              {/* Day 1 Timetable */}
+              {/* Day 1 */}
               <div>
-                <h4 className="font-['Pretendard',sans-serif] text-lg font-bold text-[#FF6C0F] mb-6 flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded bg-[#FF6C0F]/10 text-xs font-semibold">Day 1</span>
+                <h4 className="font-['Pretendard',sans-serif] text-lg font-bold text-[#FF9900] mb-6 flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded bg-[#FF9900]/20 text-xs font-semibold">Day 1</span>
                   6/6 (토)
                 </h4>
-                <div className="relative border-l border-[#ddd9cc] pl-6 space-y-6">
+                <div className="relative border-l border-white/20 pl-6 space-y-6">
                   {TIMETABLE_DAY1.map((item, idx) => (
                     <div key={idx} className="relative">
-                      <div className="absolute -left-[31px] top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-white border-2 border-[#FF6C0F]" />
-                      <span className="inline-block text-xs font-bold text-[#6b6b5e] mb-0.5 font-['Pretendard',sans-serif]">
+                      <div className="absolute -left-[31px] top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#16140f] border-2 border-[#FF9900]" />
+                      <span className="inline-block text-xs font-bold text-white/50 mb-0.5 font-['Pretendard',sans-serif]">
                         {item.time}
                       </span>
-                      <h5 className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
+                      <h5 className="font-['Pretendard',sans-serif] text-sm font-semibold text-white">
                         {item.title}
                       </h5>
                       {item.desc && (
-                        <p className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e] mt-0.5">
+                        <p className="font-['Pretendard',sans-serif] text-xs text-white/50 mt-0.5">
                           {item.desc}
                         </p>
                       )}
@@ -227,29 +198,29 @@ export default function IdeathonPage() {
                 </div>
               </div>
 
-              {/* Day 2 Timetable */}
+              {/* Day 2 */}
               <div>
-                <h4 className="font-['Pretendard',sans-serif] text-lg font-bold text-[#FF6C0F] mb-6 flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded bg-[#FF6C0F]/10 text-xs font-semibold">Day 2</span>
+                <h4 className="font-['Pretendard',sans-serif] text-lg font-bold text-[#FF9900] mb-6 flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded bg-[#FF9900]/20 text-xs font-semibold">Day 2</span>
                   6/7 (일)
                 </h4>
-                <div className="relative border-l border-[#ddd9cc] pl-6 space-y-6">
+                <div className="relative border-l border-white/20 pl-6 space-y-6">
                   {TIMETABLE_DAY2.map((item, idx) => (
                     <div key={idx} className="relative">
-                      <div className="absolute -left-[31px] top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-white border-2 border-[#FF6C0F]" />
-                      <span className="inline-block text-xs font-bold text-[#6b6b5e] mb-0.5 font-['Pretendard',sans-serif]">
+                      <div className="absolute -left-[31px] top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#16140f] border-2 border-[#FF9900]" />
+                      <span className="inline-block text-xs font-bold text-white/50 mb-0.5 font-['Pretendard',sans-serif]">
                         {item.time}
                       </span>
-                      <h5 className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
+                      <h5 className="font-['Pretendard',sans-serif] text-sm font-semibold text-white">
                         {item.title}
                       </h5>
                     </div>
                   ))}
                 </div>
 
-                <div className="mt-8 p-4 rounded-lg bg-[#fcfcf8] border border-[#ddd9cc] flex items-start gap-2.5">
-                  <Info className="h-4 w-4 text-[#FF6C0F] shrink-0 mt-0.5" />
-                  <p className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e] leading-relaxed">
+                <div className="mt-8 p-4 rounded-lg bg-white/5 border border-white/10 flex items-start gap-2.5">
+                  <Info className="h-4 w-4 text-[#FF9900] shrink-0 mt-0.5" />
+                  <p className="font-['Pretendard',sans-serif] text-xs text-white/50 leading-relaxed">
                     세부 시간은 공간 사용 가능 시간과 멘토/심사위원 일정에 따라 일부 조정될 수 있습니다.
                   </p>
                 </div>
@@ -260,43 +231,47 @@ export default function IdeathonPage() {
       </section>
 
       {/* Partners & FAQ Section */}
-      <section id="partners-faq" className="relative w-full py-16 md:py-24 border-t border-[#ddd9cc]/60 overflow-hidden bg-white">
-        {/* Partners Content */}
-        <div className="relative z-10 mx-auto max-w-[960px] px-6 mb-20 md:mb-28">
-          <div className="mb-12 text-center">
-            <h2 className="font-['Pretendard',sans-serif] text-3xl font-bold tracking-tight text-[#16140f] sm:text-4xl">
-              파트너사
-            </h2>
-            <p className="mt-3 font-['Pretendard',sans-serif] text-base text-[#6b6b5e]">
-              SPEC의 도전적인 여정을 함께 지원하는 든든한 조력자
-            </p>
-          </div>
+      <section id="partners-faq" className="relative w-full overflow-hidden">
+        {/* Partners — white background */}
+        <div className="relative w-full py-16 md:py-24 bg-white">
+          <div className="relative z-10 mx-auto max-w-[960px] px-6">
+            <div className="mb-12 text-center">
+              <h2 className="font-['Pretendard',sans-serif] text-3xl font-bold tracking-tight text-[#16140f] sm:text-4xl">
+                PARTNERS
+              </h2>
+              <p className="mt-3 font-['Pretendard',sans-serif] text-base text-[#6b6b5e]">
+                SPEC의 도전적인 여정을 함께 지원하는 든든한 조력자
+              </p>
+            </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            {/* Partner 1 */}
-            <div className="flex flex-col items-center justify-between p-8 rounded-lg border border-[#ddd9cc] bg-white text-center shadow-sm">
-              <div className="mb-4 text-[#FF6C0F] flex items-center justify-center">
-                <Handshake className="h-10 w-10 stroke-[1.5]" />
-              </div>
-              <div>
-                <h3 className="font-['Pretendard',sans-serif] text-lg font-bold text-[#16140f] mb-2">
-                  알파브라더스
-                </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
+              {/* Alphabrothers */}
+              <div className="flex flex-col items-center gap-6 p-8 rounded-xl bg-white border border-[#ddd9cc] shadow-sm text-center">
+                <div className="flex items-center justify-center h-16">
+                  <Image
+                    src="/images/logos/alphabrothers.png"
+                    alt="알파브라더스"
+                    width={160}
+                    height={64}
+                    className="object-contain max-h-16 w-auto"
+                  />
+                </div>
                 <p className="font-['Pretendard',sans-serif] text-sm text-[#4a4a40] leading-relaxed">
                   검증된 방법론을 바탕으로 혁신 기업의 시작과 성장을 설계하고 조력하는 전문 빌더사입니다. 본 행사 개최 공간 및 실무 멘토링을 제공합니다.
                 </p>
               </div>
-            </div>
 
-            {/* Partner 2 */}
-            <div className="flex flex-col items-center justify-between p-8 rounded-lg border border-[#ddd9cc] bg-white text-center shadow-sm">
-              <div className="mb-4 text-[#FF6C0F] flex items-center justify-center">
-                <Handshake className="h-10 w-10 stroke-[1.5]" />
-              </div>
-              <div>
-                <h3 className="font-['Pretendard',sans-serif] text-lg font-bold text-[#16140f] mb-2">
-                  윌러특허법률사무소
-                </h3>
+              {/* Willer */}
+              <div className="flex flex-col items-center gap-6 p-8 rounded-xl bg-white border border-[#ddd9cc] shadow-sm text-center">
+                <div className="flex items-center justify-center h-16">
+                  <Image
+                    src="/images/logos/willer.jpeg"
+                    alt="윌러특허법률사무소"
+                    width={160}
+                    height={64}
+                    className="object-contain max-h-16 w-auto"
+                  />
+                </div>
                 <p className="font-['Pretendard',sans-serif] text-sm text-[#4a4a40] leading-relaxed">
                   스타트업 비즈니스의 지식재산권(IP) 보호와 특허 출원 전략을 지원하여, 장기적인 경쟁력 강화를 돕는 핵심 지식재산 전략 파트너입니다.
                 </p>
@@ -305,54 +280,56 @@ export default function IdeathonPage() {
           </div>
         </div>
 
-        {/* FAQ Content */}
-        <div id="faq" className="relative z-10 mx-auto max-w-[720px] px-6">
-          <div className="mb-12 text-center">
-            <h2 className="font-['Pretendard',sans-serif] text-3xl font-bold tracking-tight text-[#16140f]">
-              자주 묻는 질문 (FAQ)
-            </h2>
-            <p className="mt-3 font-['Pretendard',sans-serif] text-base text-[#6b6b5e]">
-              아이디어톤에 대해 참가자가 가장 많이 문의하는 질문과 답변
-            </p>
-          </div>
+        {/* FAQ — white background */}
+        <div className="relative w-full py-16 md:py-24 bg-white">
+          <div id="faq" className="relative z-10 mx-auto max-w-[720px] px-6">
+            <div className="mb-12 text-center">
+              <h2 className="font-['Pretendard',sans-serif] text-3xl font-bold tracking-tight text-[#16140f]">
+                FAQ
+              </h2>
+              <p className="mt-3 font-['Pretendard',sans-serif] text-base text-[#6b6b5e]">
+                아이디어톤에 대해 참가자가 가장 많이 문의하는 질문과 답변
+              </p>
+            </div>
 
-          <div className="space-y-4">
-            {FAQ_ITEMS.map((item, idx) => {
-              const isOpen = openFaq === idx;
-              return (
-                <div
-                  key={idx}
-                  className="rounded-lg border border-[#ddd9cc] bg-white overflow-hidden transition-all duration-200 shadow-sm"
-                >
-                  <button
-                    type="button"
-                    onClick={() => toggleFaq(idx)}
-                    className="flex w-full items-center justify-between px-6 py-4 text-left focus:outline-none"
-                  >
-                    <div className="flex items-center gap-3">
-                      <HelpCircle className="h-5 w-5 text-[#FF6C0F] shrink-0" />
-                      <span className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
-                        {item.question}
-                      </span>
-                    </div>
-                    <ChevronDown
-                      className={`h-5 w-5 text-[#6b6b5e] shrink-0 transition-transform duration-200 ${
-                        isOpen ? "rotate-180" : ""
-                      }`}
-                    />
-                  </button>
+            <div className="space-y-4">
+              {FAQ_ITEMS.map((item, idx) => {
+                const isOpen = openFaq === idx;
+                return (
                   <div
-                    className={`transition-all duration-200 ease-in-out ${
-                      isOpen ? "max-h-[200px] border-t border-[#ece8db]" : "max-h-0 pointer-events-none"
-                    } overflow-hidden`}
+                    key={idx}
+                    className="rounded-lg border border-[#ddd9cc] bg-white overflow-hidden transition-all duration-200 shadow-sm"
                   >
-                    <div className="px-6 py-4 bg-[#fcfcf8]/80 font-['Pretendard',sans-serif] text-sm text-[#4a4a40] leading-relaxed">
-                      {item.answer}
+                    <button
+                      type="button"
+                      onClick={() => toggleFaq(idx)}
+                      className="flex w-full items-center justify-between px-6 py-4 text-left focus:outline-none"
+                    >
+                      <div className="flex items-center gap-3">
+                        <HelpCircle className="h-5 w-5 text-[#FF9900] shrink-0" />
+                        <span className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
+                          {item.question}
+                        </span>
+                      </div>
+                      <ChevronDown
+                        className={`h-5 w-5 text-[#6b6b5e] shrink-0 transition-transform duration-200 ${
+                          isOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+                    <div
+                      className={`transition-all duration-200 ease-in-out ${
+                        isOpen ? "max-h-[200px] border-t border-[#ece8db]" : "max-h-0 pointer-events-none"
+                      } overflow-hidden`}
+                    >
+                      <div className="px-6 py-4 bg-[#fcfcf8]/80 font-['Pretendard',sans-serif] text-sm text-[#4a4a40] leading-relaxed">
+                        {item.answer}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>
