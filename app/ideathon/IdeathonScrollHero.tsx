@@ -27,7 +27,7 @@ export function IdeathonScrollHero() {
     video.load();
 
     const handleTimeUpdate = () => {
-      const limit = video.duration ? Math.min(6.5, video.duration - 0.2) : 6.5;
+      const limit = video.duration ? Math.min(5.0, video.duration - 0.2) : 5.0;
       if (video.currentTime >= limit || video.ended) {
         video.pause();
         setVideoEnded(true);
@@ -47,7 +47,7 @@ export function IdeathonScrollHero() {
   }, [src]);
 
   return (
-    <div className="relative h-[100dvh] w-full overflow-hidden" style={{ backgroundColor: "#000000" }}>
+    <div className="relative h-[100dvh] w-full overflow-hidden bg-black rounded-none" style={{ backgroundColor: "#000000" }}>
       <video
         key={src}
         ref={videoRef}
@@ -55,12 +55,12 @@ export function IdeathonScrollHero() {
         autoPlay
         muted
         playsInline
-        className="absolute inset-0 w-full h-full object-contain md:object-cover"
+        className="absolute inset-0 w-full h-full object-cover bg-black rounded-none border-0 outline-none"
       />
 
       {/* Submit Idea overlay — fades in after video ends */}
       <div
-        className="absolute inset-0 flex flex-col items-center justify-end pb-16 md:pb-24 pointer-events-none z-20"
+        className="absolute inset-0 flex flex-col items-center justify-end pb-36 md:pb-52 pointer-events-none z-20"
         style={{
           opacity: videoEnded ? 1 : 0,
           transition: "opacity 1s ease",

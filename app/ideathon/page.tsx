@@ -97,9 +97,7 @@ export default function IdeathonPage() {
                 BEGIN YOUR JOURNEY.<br />
                 <span className="text-[#FF9900]">MAKE THE IDEA.</span>
               </h2>
-              <p className="mt-4 font-['Pretendard',sans-serif] text-sm font-semibold text-[#6b6b5e] uppercase tracking-wider">
-                팔아라, 만들지 마라
-              </p>
+
             </div>
             <div className="md:col-span-7 bg-white p-6 sm:p-8 rounded-lg border border-[#ddd9cc] shadow-sm">
               <p className="font-['Pretendard',sans-serif] text-[18px] leading-[1.8] text-[#16140f] mb-6 font-medium">
