@@ -15,6 +15,7 @@ import {
   Handshake,
   ScrollText,
   ShieldCheck,
+  Lightbulb,
   type LucideIcon,
 } from "lucide-react";
 
@@ -40,6 +41,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { label: "과제", href: "/admin/homework", icon: BookOpen, group: "content" },
   { label: "커리큘럼", href: "/admin/curriculum", icon: GraduationCap, group: "content" },
   { label: "SPEC 로그", href: "/admin/spec-log", icon: ScrollText, group: "content" },
+  { label: "아이디어", href: "/admin/ideas", icon: Lightbulb, group: "content" },
 
   /* ── Operations (더보기 시트 — 운영) ──────────── */
   { label: "폼 빌더", href: "/admin/form-builder", icon: FormInput, group: "operations" },

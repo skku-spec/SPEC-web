@@ -553,6 +553,53 @@ export type Database = {
         };
         Relationships: [];
       };
+      ideathon_ideas: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          description: string;
+          target_customer: string | null;
+          competitors: string | null;
+          market_size: string | null;
+          team_members: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          description: string;
+          target_customer?: string | null;
+          competitors?: string | null;
+          market_size?: string | null;
+          team_members?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          description?: string;
+          target_customer?: string | null;
+          competitors?: string | null;
+          market_size?: string | null;
+          team_members?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ideathon_ideas_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       homeworks: {
         Row: {
           id: string;
