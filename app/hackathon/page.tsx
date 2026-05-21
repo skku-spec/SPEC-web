@@ -42,10 +42,10 @@ export default function HackathonPage() {
       <article className="mx-auto max-w-[720px]">
         <section className="mb-12">
           <p className="mb-6 font-['Pretendard',sans-serif] font-normal text-[18px] leading-[1.7] text-[#16140f]">
-            SPEC MVP 해커톤은 머릿속에만 존재하던 비즈니스 기획과 화면 설계안을 48시간 동안 쉬지 않고 몰입하여 누구나 접속해 사용해볼 수 있는 '동작하는 웹/앱 프로덕트'로 구현하는 극도의 실행 지향형 해커톤입니다.
+            {"SPEC MVP 해커톤은 머릿속에만 존재하던 비즈니스 기획과 화면 설계안을 48시간 동안 쉬지 않고 몰입하여 누구나 접속해 사용해볼 수 있는 '동작하는 웹/앱 프로덕트'로 구현하는 극도의 실행 지향형 해커톤입니다."}
           </p>
           <p className={pClass}>
-            개발 단계에서 마주하는 다양한 리스크와 기술적 제약을 이겨내며, 유저 가치 검증에 필수적인 핵심 기능을 정의하고 빠르게 출시하는 '린 스타트업(Lean Startup)' 정신을 실천합니다.
+            {"개발 단계에서 마주하는 다양한 리스크와 기술적 제약을 이겨내며, 유저 가치 검증에 필수적인 핵심 기능을 정의하고 빠르게 출시하는 '린 스타트업(Lean Startup)' 정신을 실천합니다."}
           </p>
         </section>
 

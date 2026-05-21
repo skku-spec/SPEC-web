@@ -1,8 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
-import { Calendar, MapPin, ChevronDown, HelpCircle, Info } from "lucide-react";
+import { useState, useTransition } from "react";
+import { Calendar, MapPin, ChevronDown, HelpCircle, Info, Lightbulb, CheckCircle2, ArrowRight } from "lucide-react";
+import Link from "next/link";
+import { useUser } from "@/hooks/useUser";
+import { submitIdea } from "@/lib/actions/ideas";
 import { IdeathonScrollHero } from "./IdeathonScrollHero";
 
 const FAQ_ITEMS = [
@@ -59,9 +62,25 @@ const TIMETABLE_DAY2 = [
 
 export default function IdeathonPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const { isAuthenticated, role } = useUser();
+  const [isPending, startTransition] = useTransition();
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const toggleFaq = (idx: number) => {
     setOpenFaq(openFaq === idx ? null : idx);
+  };
+
+  const handleSubmit = (formData: FormData) => {
+    setError(null);
+    startTransition(async () => {
+      const result = await submitIdea(formData);
+      if (result.error) {
+        setError(result.error);
+      } else {
+        setIsSuccess(true);
+      }
+    });
   };
 
   return (
@@ -330,6 +349,177 @@ export default function IdeathonPage() {
                 );
               })}
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Submit Idea Form Section */}
+      <section id="submit" className="relative w-full py-16 md:py-24 border-t border-[#ddd9cc]/60 bg-[#f5f5ee]/30">
+        <div className="relative z-10 mx-auto max-w-[720px] px-6">
+          <div className="rounded-lg border border-[#ddd9cc] bg-white p-6 sm:p-8 shadow-sm">
+            {isSuccess ? (
+              <div className="flex flex-col items-center text-center py-10 space-y-6">
+                <div className="grid h-16 w-16 place-items-center rounded-full bg-green-100 text-[#2f9e44]">
+                  <CheckCircle2 className="h-10 w-10" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="font-['Pretendard',sans-serif] text-xl font-bold text-[#16140f]">
+                    아이디어가 성공적으로 등록되었습니다!
+                  </h3>
+                  <p className="font-['Pretendard',sans-serif] text-sm text-[#6b6b5e]">
+                    제출하신 비즈니스 아이디어가 데이터베이스에 안전하게 저장되었습니다.
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 pt-4 w-full justify-center">
+                  <Link
+                    href="/dashboard/ideas"
+                    className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#16140f] px-6 font-['Pretendard',sans-serif] text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                  >
+                    대시보드에서 목록 확인
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                  <button
+                    onClick={() => setIsSuccess(false)}
+                    className="inline-flex h-10 items-center justify-center rounded-md border border-[#ddd9cc] bg-white px-6 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f] transition-colors hover:bg-gray-50"
+                  >
+                    추가 제출하기
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="mb-8">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Lightbulb className="h-6 w-6 text-[#FF6C0F]" />
+                    <h2 className="font-['Pretendard',sans-serif] text-2xl font-bold text-[#16140f]">
+                      Idea Submission
+                    </h2>
+                  </div>
+                  <p className="font-['Pretendard',sans-serif] text-sm text-[#6b6b5e]">
+                    구상하신 혁신적인 비즈니스 아이디어를 공유해 주세요. 제출된 정보는 SPEC 학회원 모두에게 공유되며 공동창업자 매칭에 활용됩니다.
+                  </p>
+                </div>
+
+                {!isAuthenticated ? (
+                  <div className="flex flex-col items-center text-center py-8 space-y-4">
+                    <p className="font-['Pretendard',sans-serif] text-sm text-[#6b6b5e]">
+                      아이디어를 제출하려면 SPEC 멤버 로그인이 필요합니다.
+                    </p>
+                    <Link
+                      href="/login?redirect=/ideathon#submit"
+                      className="inline-flex h-10 items-center justify-center rounded-md bg-[#16140f] px-6 font-['Pretendard',sans-serif] text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                    >
+                      SPEC 계정으로 로그인
+                    </Link>
+                  </div>
+                ) : !["learner", "alumni", "preneur"].includes(role) ? (
+                  <div className="flex flex-col items-center text-center py-8 space-y-4">
+                    <p className="font-['Pretendard',sans-serif] text-sm text-[#b42318] font-semibold">
+                      아이디어 제출 권한이 없습니다.
+                    </p>
+                    <p className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">
+                      SPEC 4기 러너, 알럼나이, 프러너 권한을 가진 계정으로 로그인해 주세요.
+                    </p>
+                  </div>
+                ) : (
+                  <form action={handleSubmit} className="space-y-6">
+                    {error && (
+                      <div className="rounded-md border border-[#b42318]/20 bg-[#fdecec] p-4 text-sm text-[#b42318] font-['Pretendard',sans-serif]">
+                        {error}
+                      </div>
+                    )}
+
+                    <div className="space-y-1.5">
+                      <label htmlFor="title" className="block font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
+                        아이디어명 / 프로젝트명 <span className="text-[#FF6C0F]">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        id="title"
+                        name="title"
+                        required
+                        placeholder="예: AI 기반 학술 연구 번역 협업 툴"
+                        className="w-full rounded-lg border border-[#ddd9cc] bg-white py-2.5 px-4 font-['Pretendard',sans-serif] text-sm text-[#16140f] placeholder:text-[#16140f]/40 focus:border-[#FF6C0F]/50 focus:ring-2 focus:ring-[#FF6C0F]/10 outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label htmlFor="target_customer" className="block font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
+                        타깃 고객
+                      </label>
+                      <input
+                        type="text"
+                        id="target_customer"
+                        name="target_customer"
+                        placeholder="예: 해외 저널 투고를 준비하는 국내 대학원생 및 신진 연구자"
+                        className="w-full rounded-lg border border-[#ddd9cc] bg-white py-2.5 px-4 font-['Pretendard',sans-serif] text-sm text-[#16140f] placeholder:text-[#16140f]/40 focus:border-[#FF6C0F]/50 focus:ring-2 focus:ring-[#FF6C0F]/10 outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label htmlFor="description" className="block font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
+                        해결하려는 문제 및 솔루션 설명 <span className="text-[#FF6C0F]">*</span>
+                      </label>
+                      <textarea
+                        id="description"
+                        name="description"
+                        required
+                        rows={5}
+                        placeholder="어떤 문제를 어떻게 혁신적으로 해결하고자 하는지 구체적으로 적어주세요."
+                        className="w-full rounded-lg border border-[#ddd9cc] bg-white py-2.5 px-4 font-['Pretendard',sans-serif] text-sm text-[#16140f] placeholder:text-[#16140f]/40 focus:border-[#FF6C0F]/50 focus:ring-2 focus:ring-[#FF6C0F]/10 outline-none transition-colors resize-none"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label htmlFor="competitors" className="block font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
+                        경쟁사 분석 및 차별점
+                      </label>
+                      <textarea
+                        id="competitors"
+                        name="competitors"
+                        rows={3}
+                        placeholder="기존 대안이나 경쟁 서비스는 무엇이며, 본 솔루션만의 차별화 장벽은 무엇인가요?"
+                        className="w-full rounded-lg border border-[#ddd9cc] bg-white py-2.5 px-4 font-['Pretendard',sans-serif] text-sm text-[#16140f] placeholder:text-[#16140f]/40 focus:border-[#FF6C0F]/50 focus:ring-2 focus:ring-[#FF6C0F]/10 outline-none transition-colors resize-none"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label htmlFor="market_size" className="block font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
+                        예상 시장 규모
+                      </label>
+                      <input
+                        type="text"
+                        id="market_size"
+                        name="market_size"
+                        placeholder="예: 국내 연구자 약 50만 명 (유료 타깃 세그먼트 약 500억 원 규모)"
+                        className="w-full rounded-lg border border-[#ddd9cc] bg-white py-2.5 px-4 font-['Pretendard',sans-serif] text-sm text-[#16140f] placeholder:text-[#16140f]/40 focus:border-[#FF6C0F]/50 focus:ring-2 focus:ring-[#FF6C0F]/10 outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label htmlFor="team_members" className="block font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
+                        참여 중인 팀원 / 구하는 파트너 정보
+                      </label>
+                      <input
+                        type="text"
+                        id="team_members"
+                        name="team_members"
+                        placeholder="예: 현재 기획 1명 구성 완료 / React Frontend 개발 경력이 있거나 AI 모델 핏 연구에 관심 있는 개발자 파트너 모집"
+                        className="w-full rounded-lg border border-[#ddd9cc] bg-white py-2.5 px-4 font-['Pretendard',sans-serif] text-sm text-[#16140f] placeholder:text-[#16140f]/40 focus:border-[#FF6C0F]/50 focus:ring-2 focus:ring-[#FF6C0F]/10 outline-none transition-colors"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isPending}
+                      className="w-full flex h-10 items-center justify-center rounded-md bg-[#16140f] font-['Pretendard',sans-serif] text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                    >
+                      {isPending ? "제출 중..." : "아이디어 제출하기"}
+                    </button>
+                  </form>
+                )}
+              </>
+            )}
           </div>
         </div>
       </section>
