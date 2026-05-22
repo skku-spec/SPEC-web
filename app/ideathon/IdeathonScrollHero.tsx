@@ -5,37 +5,62 @@ import { useEffect, useRef, useState } from "react";
 export function IdeathonScrollHero() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoEnded, setVideoEnded] = useState(false);
+  const [src, setSrc] = useState("/videos/IDEATHON.mp4");
+
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) {
+      setTimeout(() => {
+        setSrc("/videos/IDEATHON_mobile.mp4");
+      }, 0);
+    }
+  }, []);
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || !src) return;
+
+    // Reset state on source change
+    setTimeout(() => {
+      setVideoEnded(false);
+    }, 0);
+    video.load();
 
     const handleTimeUpdate = () => {
-      if (video.currentTime >= 6.5) {
+      const limit = video.duration ? Math.min(5.0, video.duration - 0.2) : 5.0;
+      if (video.currentTime >= limit || video.ended) {
         video.pause();
-        video.currentTime = 6.5;
         setVideoEnded(true);
       }
     };
 
+    const handleEnded = () => {
+      setVideoEnded(true);
+    };
+
     video.addEventListener("timeupdate", handleTimeUpdate);
-    return () => video.removeEventListener("timeupdate", handleTimeUpdate);
-  }, []);
+    video.addEventListener("ended", handleEnded);
+    return () => {
+      video.removeEventListener("timeupdate", handleTimeUpdate);
+      video.removeEventListener("ended", handleEnded);
+    };
+  }, [src]);
 
   return (
-    <div className="relative h-[100dvh] w-full overflow-hidden" style={{ backgroundColor: "#000000" }}>
+    <div className="relative h-[100dvh] w-full overflow-hidden bg-black rounded-none" style={{ backgroundColor: "#000000" }}>
       <video
+        key={src}
         ref={videoRef}
-        src="/videos/IDEATHON.mp4"
+        src={src}
         autoPlay
         muted
         playsInline
-        className="absolute inset-0 w-full h-full object-contain md:object-cover"
+        className="absolute inset-0 w-full h-full object-cover bg-black rounded-none border-0 outline-none"
       />
 
       {/* Submit Idea overlay — fades in after video ends */}
       <div
-        className="absolute inset-0 flex flex-col items-center justify-end pb-16 md:pb-24 pointer-events-none z-20"
+        className="absolute inset-0 flex flex-col items-center justify-end pb-36 md:pb-52 pointer-events-none z-20"
         style={{
           opacity: videoEnded ? 1 : 0,
           transition: "opacity 1s ease",

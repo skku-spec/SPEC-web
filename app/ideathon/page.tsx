@@ -28,36 +28,33 @@ const FAQ_ITEMS = [
 ];
 
 const TIMETABLE_DAY1 = [
-  { time: "13:00 - 13:30", title: "참가자 집합 및 행사 안내" },
-  { time: "13:30 - 14:00", title: "아이스브레이킹" },
-  { time: "14:00 - 15:00", title: "아이디어 개별/자유 피칭" },
-  { time: "15:00 - 16:00", title: "팀 스피드 데이팅 및 팀빌딩" },
+  { time: "12:00 - 12:30", title: "참가자 집합 및 행사 안내" },
+  { time: "12:30 - 13:00", title: "아이스브레이킹" },
+  { time: "13:00 - 14:00", title: "아이디어 개별/자유 피칭" },
+  { time: "14:00 - 15:00", title: "팀 스피드 데이팅 및 팀빌딩" },
   {
-    time: "16:00 - 18:00",
+    time: "15:00 - 17:00",
     title: "팀별 아이디어 구체화",
     desc: "문제 정의, 타깃 고객, 해결 방식 정리",
   },
-  { time: "18:00 - 19:00", title: "저녁 식사" },
-  { time: "19:00 - 19:05", title: "오프닝 및 멘토 소개" },
-  { time: "19:05 - 19:25", title: "멘토 창업 스토리 공유" },
+  { time: "17:00 - 18:00", title: "저녁 식사" },
+  { time: "18:00 - 18:05", title: "오프닝 및 멘토 소개" },
+  { time: "18:05 - 18:25", title: "멘토 창업 스토리 공유" },
   {
-    time: "19:25 - 19:50",
+    time: "18:25 - 18:50",
     title: "키워드 토크",
     desc: "아이디어 검증, 팀빌딩, 실행, 첫 고객 등",
   },
-  { time: "19:50 - 20:00", title: "멤버 Q&A" },
-  { time: "20:00 - 20:50", title: "팀별 간단 피칭 및 멘토 피드백" },
-  { time: "20:50 - 21:00", title: "마무리 코멘트" },
-  { time: "21:00 - 23:00", title: "멘토 피드백 반영 및 발표 방향 정리" },
+  { time: "18:50 - 19:00", title: "멤버 Q&A" },
+  { time: "19:00 - 19:50", title: "팀별 간단 피칭 및 멘토 피드백" },
+  { time: "19:50 - 20:00", title: "마무리 코멘트" },
+  { time: "20:00 - 22:00", title: "멘토 피드백 반영 및 발표 방향 정리" },
 ];
 
 const TIMETABLE_DAY2 = [
   { time: "09:00 - 10:00", title: "아침 정리 및 팀별 최종 작업" },
-  { time: "10:00 - 11:30", title: "최종 발표 자료 완성" },
-  { time: "11:30 - 12:30", title: "점심 식사" },
-  { time: "12:30 - 14:30", title: "팀별 최종 발표" },
-  { time: "14:30 - 15:00", title: "심사위원 Q&A 및 총평" },
-  { time: "15:00 - 15:30", title: "시상 및 마무리" },
+  { time: "10:00 - 11:30", title: "팀별 최종 발표" },
+  { time: "11:30 - 12:00", title: "시상 및 마무리" },
 ];
 
 export default function IdeathonPage() {
@@ -97,9 +94,7 @@ export default function IdeathonPage() {
                 BEGIN YOUR JOURNEY.<br />
                 <span className="text-[#FF9900]">MAKE THE IDEA.</span>
               </h2>
-              <p className="mt-4 font-['Pretendard',sans-serif] text-sm font-semibold text-[#6b6b5e] uppercase tracking-wider">
-                팔아라, 만들지 마라
-              </p>
+
             </div>
             <div className="md:col-span-7 bg-white p-6 sm:p-8 rounded-lg border border-[#ddd9cc] shadow-sm">
               <p className="font-['Pretendard',sans-serif] text-[18px] leading-[1.8] text-[#16140f] mb-6 font-medium">
@@ -263,7 +258,7 @@ export default function IdeathonPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
               {/* Alphabrothers */}
               <div className="flex flex-col items-center gap-6 p-8 rounded-xl bg-white border border-[#ddd9cc] shadow-sm text-center">
                 <div className="flex items-center justify-center h-16">
@@ -275,24 +270,79 @@ export default function IdeathonPage() {
                     className="object-contain max-h-16 w-auto"
                   />
                 </div>
+                <div className="flex flex-col gap-1 items-center">
+                  <span className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
+                    알파브라더스
+                  </span>
+                  <a
+                    href="https://www.alphabrothers.co.kr/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-['Pretendard',sans-serif] text-xs text-[#FF6C0F] font-semibold hover:underline"
+                  >
+                    공식 웹사이트
+                  </a>
+                </div>
                 <p className="font-['Pretendard',sans-serif] text-sm text-[#4a4a40] leading-relaxed">
                   검증된 방법론을 바탕으로 혁신 기업의 시작과 성장을 설계하고 조력하는 전문 빌더사입니다. 본 행사 개최 공간 및 실무 멘토링을 제공합니다.
                 </p>
               </div>
 
-              {/* Willer */}
+              {/* Jiheon Bae */}
               <div className="flex flex-col items-center gap-6 p-8 rounded-xl bg-white border border-[#ddd9cc] shadow-sm text-center">
                 <div className="flex items-center justify-center h-16">
                   <Image
-                    src="/images/logos/willer.jpeg"
-                    alt="윌러특허법률사무소"
-                    width={160}
+                    src="/images/logos/jiheon.jpeg"
+                    alt="배지헌 변리사"
+                    width={64}
                     height={64}
-                    className="object-contain max-h-16 w-auto"
+                    className="object-cover h-16 w-16 rounded-full border border-[#ddd9cc]"
                   />
                 </div>
+                <div className="flex flex-col gap-1 items-center">
+                  <span className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
+                    배지헌 변리사
+                  </span>
+                  <a
+                    href="https://www.linkedin.com/in/%EB%B0%B0%EC%A7%80%ED%97%8C/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-['Pretendard',sans-serif] text-xs text-[#FF6C0F] font-semibold hover:underline"
+                  >
+                    LinkedIn 프로필
+                  </a>
+                </div>
                 <p className="font-['Pretendard',sans-serif] text-sm text-[#4a4a40] leading-relaxed">
-                  스타트업 비즈니스의 지식재산권(IP) 보호와 특허 출원 전략을 지원하여, 장기적인 경쟁력 강화를 돕는 핵심 지식재산 전략 파트너입니다.
+                  특허법인 윌러의 파트너 변리사입니다. 스타트업 비즈니스의 지식재산권(IP) 보호와 특허 출원 전략을 지원하여, 장기적인 경쟁력 강화를 돕는 핵심 지식재산 전략 파트너입니다.
+                </p>
+              </div>
+
+              {/* Lee Jeongmin */}
+              <div className="flex flex-col items-center gap-6 p-8 rounded-xl bg-white border border-[#ddd9cc] shadow-sm text-center">
+                <div className="flex items-center justify-center h-16">
+                  <Image
+                    src="/images/logos/jungmin.png"
+                    alt="이정민 대표"
+                    width={64}
+                    height={64}
+                    className="object-cover h-16 w-16 rounded-full border border-[#ddd9cc]"
+                  />
+                </div>
+                <div className="flex flex-col gap-1 items-center">
+                  <span className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
+                    이정민 대표 (Tony Lee)
+                  </span>
+                  <a
+                    href="https://www.linkedin.com/in/jyoung105/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-['Pretendard',sans-serif] text-xs text-[#FF6C0F] font-semibold hover:underline"
+                  >
+                    LinkedIn 프로필
+                  </a>
+                </div>
+                <p className="font-['Pretendard',sans-serif] text-sm text-[#4a4a40] leading-relaxed">
+                  AI 솔로 빌더이자 ABLD의 설립자(전 스모어톡 공동창업자/CSO)입니다. 생성형 AI 모델 활용, 멀티 에이전트 시스템 설계 및 스타트업 실행 전략 멘토링을 제공합니다.
                 </p>
               </div>
             </div>
