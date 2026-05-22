@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-export function IdeathonScrollHero() {
+export function IdeathonScrollHero({ onOpenSubmitModal }: { onOpenSubmitModal: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoEnded, setVideoEnded] = useState(false);
   const [src, setSrc] = useState("/videos/IDEATHON.mp4");
@@ -74,12 +74,13 @@ export function IdeathonScrollHero() {
           }}
           className="flex flex-col items-center gap-6 text-center px-6"
         >
-          <a
-            href="#submit"
-            className="inline-flex h-12 md:h-14 items-center justify-center rounded-md bg-white px-8 md:px-10 font-['Pretendard',sans-serif] text-sm md:text-base font-bold text-[#16140f] transition-all hover:bg-white/90 shadow-lg"
+          <button
+            type="button"
+            onClick={onOpenSubmitModal}
+            className="inline-flex h-12 md:h-14 items-center justify-center rounded-md bg-white px-8 md:px-10 font-['Pretendard',sans-serif] text-sm md:text-base font-bold text-[#16140f] transition-all hover:bg-white/90 shadow-lg cursor-pointer"
           >
             Submit Idea
-          </a>
+          </button>
         </div>
       </div>
     </div>
