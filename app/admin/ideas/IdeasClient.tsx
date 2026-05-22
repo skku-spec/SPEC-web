@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Lightbulb, BookOpen, Trash2, X, Loader2 } from "lucide-react";
+import { Lightbulb, BookOpen, Trash2, X, Loader2, Paperclip } from "lucide-react";
 import { deleteIdea } from "@/lib/actions/ideas";
 
 type Profile = {
@@ -15,6 +15,7 @@ type Idea = {
   user_id: string;
   title: string;
   description: string;
+  pdf_url?: string | null;
   target_customer: string | null;
   competitors: string | null;
   market_size: string | null;
@@ -212,6 +213,23 @@ export function IdeasClient({ ideas }: Props) {
                 <div className="border-t border-[#f0efe6] pt-4">
                   <h3 className="mb-1.5 text-xs font-semibold text-[#6b6b5e] font-['Pretendard',sans-serif] uppercase tracking-wide">참여 팀원 및 구하는 파트너 정보</h3>
                   <p className="font-['Pretendard',sans-serif] text-sm text-[#4a4a40] leading-relaxed">{selectedIdea.team_members}</p>
+                </div>
+              )}
+
+              {selectedIdea.pdf_url && (
+                <div className="border-t border-[#f0efe6] pt-4">
+                  <h3 className="mb-1.5 text-xs font-semibold text-[#6b6b5e] font-['Pretendard',sans-serif] uppercase tracking-wide">첨부 파일 (PDF)</h3>
+                  <div>
+                    <a
+                      href={selectedIdea.pdf_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex h-8 items-center gap-1.5 rounded-md border border-[#ddd9cc] bg-white px-3 font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f] hover:bg-gray-50 transition-colors cursor-pointer"
+                    >
+                      <Paperclip className="h-3.5 w-3.5 text-[#FF6C0F]" />
+                      첨부파일 다운로드 / 보기
+                    </a>
+                  </div>
                 </div>
               )}
             </div>
