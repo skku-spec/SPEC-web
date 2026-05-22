@@ -9,15 +9,11 @@ type ActionResult = {
 };
 
 export async function submitIdea(formData: FormData): Promise<ActionResult> {
-  const title = formData.get("title") as string;
+  const name = formData.get("name") as string;
   const description = formData.get("description") as string;
-  const targetCustomer = formData.get("target_customer") as string;
-  const competitors = formData.get("competitors") as string;
-  const marketSize = formData.get("market_size") as string;
-  const teamMembers = formData.get("team_members") as string;
 
-  if (!title?.trim() || !description?.trim()) {
-    return { error: "아이디어명과 해결안 설명은 필수 입력 항목입니다." };
+  if (!description?.trim()) {
+    return { error: "아이디어를 입력해주세요." };
   }
 
   const supabase = await createClient();
@@ -31,7 +27,7 @@ export async function submitIdea(formData: FormData): Promise<ActionResult> {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, name")
     .eq("id", user.id)
     .single();
 
@@ -39,14 +35,35 @@ export async function submitIdea(formData: FormData): Promise<ActionResult> {
     return { error: "아이디어 제출 권한이 없습니다. SPEC 멤버 계정으로 로그인해주세요." };
   }
 
+  if (name?.trim() && name.trim() !== profile.name) {
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .update({ name: name.trim() })
+      .eq("id", user.id);
+
+    if (profileError) {
+      return { error: `이름 업데이트 실패: ${profileError.message}` };
+    }
+  }
+
+  // Derive title from description: first line, max 50 chars, add ... if truncated or multi-line
+  const fullIdea = description.trim();
+  const lines = fullIdea.split("\n");
+  let title = lines[0].trim();
+  if (title.length > 50) {
+    title = title.substring(0, 50) + "...";
+  } else if (lines.length > 1) {
+    title = title + "...";
+  }
+
   const { error } = await supabase.from("ideathon_ideas").insert({
     user_id: user.id,
-    title: title.trim(),
-    description: description.trim(),
-    target_customer: targetCustomer?.trim() || null,
-    competitors: competitors?.trim() || null,
-    market_size: marketSize?.trim() || null,
-    team_members: teamMembers?.trim() || null,
+    title,
+    description: fullIdea,
+    target_customer: null,
+    competitors: null,
+    market_size: null,
+    team_members: null,
   });
 
   if (error) {
