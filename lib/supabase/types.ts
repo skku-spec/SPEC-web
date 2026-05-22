@@ -563,7 +563,6 @@ export type Database = {
           competitors: string | null;
           market_size: string | null;
           team_members: string | null;
-          pdf_url: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -576,7 +575,6 @@ export type Database = {
           competitors?: string | null;
           market_size?: string | null;
           team_members?: string | null;
-          pdf_url?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -589,7 +587,6 @@ export type Database = {
           competitors?: string | null;
           market_size?: string | null;
           team_members?: string | null;
-          pdf_url?: string | null;
           created_at?: string;
           updated_at?: string;
         };
