@@ -533,18 +533,19 @@ export default function IdeathonPage() {
                       />
                     </div>
 
-                    <div className="space-y-1.5">
-                      <label htmlFor="market_size" className="block font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
-                        예상 시장 규모
-                      </label>
-                      <input
-                        type="text"
-                        id="market_size"
-                        name="market_size"
-                        placeholder="예: 국내 연구자 약 50만 명 (유료 타깃 세그먼트 약 500억 원 규모)"
-                        className="w-full rounded-lg border border-[#ddd9cc] bg-white py-2.5 px-4 font-['Pretendard',sans-serif] text-sm text-[#16140f] placeholder:text-[#16140f]/40 focus:border-[#FF6C0F]/50 focus:ring-2 focus:ring-[#FF6C0F]/10 outline-none transition-colors"
-                      />
-                    </div>
+              <div className="space-y-1.5">
+                <label htmlFor="description" className="block font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
+                  아이디어 (주관식, 100자 내외) <span className="text-[#FF6C0F]">*</span>
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  required
+                  rows={6}
+                  placeholder="어떤 문제를 어떻게 혁신적으로 해결하고자 하는지 100자 내외로 적어주세요."
+                  className="w-full rounded-lg border border-[#ddd9cc] bg-white py-2.5 px-4 font-['Pretendard',sans-serif] text-sm text-[#16140f] placeholder:text-[#16140f]/40 focus:border-[#FF6C0F]/50 focus:ring-2 focus:ring-[#FF6C0F]/10 outline-none transition-colors resize-none"
+                />
+              </div>
 
                     <div className="space-y-1.5">
                       <label htmlFor="team_members" className="block font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
