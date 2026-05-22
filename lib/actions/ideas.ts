@@ -11,6 +11,7 @@ type ActionResult = {
 export async function submitIdea(formData: FormData): Promise<ActionResult> {
   const name = formData.get("name") as string;
   const description = formData.get("description") as string;
+  const pdfUrl = formData.get("pdf_url") as string | null;
 
   if (!description?.trim()) {
     return { error: "아이디어를 입력해주세요." };
@@ -60,6 +61,7 @@ export async function submitIdea(formData: FormData): Promise<ActionResult> {
     user_id: user.id,
     title,
     description: fullIdea,
+    pdf_url: pdfUrl || null,
     target_customer: null,
     competitors: null,
     market_size: null,

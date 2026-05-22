@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState, useTransition } from "react";
-import { Calendar, MapPin, ChevronDown, HelpCircle, Info, Lightbulb, CheckCircle2, ArrowRight, X } from "lucide-react";
+import { Calendar, MapPin, ChevronDown, HelpCircle, Info, Lightbulb, CheckCircle2, ArrowRight, X, Paperclip, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useUser } from "@/hooks/useUser";
 import { submitIdea } from "@/lib/actions/ideas";
@@ -28,27 +28,26 @@ const FAQ_ITEMS = [
 ];
 
 const TIMETABLE_DAY1 = [
-  { time: "12:00 - 12:30", title: "참가자 집합 및 행사 안내" },
-  { time: "12:30 - 13:00", title: "아이스브레이킹" },
-  { time: "13:00 - 14:00", title: "아이디어 개별/자유 피칭" },
-  { time: "14:00 - 15:00", title: "팀 스피드 데이팅 및 팀빌딩" },
+  { time: "12:00 - 13:00", title: "참가자 집합 및 행사 안내", desc: "진행: 전도현" },
+  { time: "13:00 - 13:30", title: "프러너 소개", desc: "진행: 각자" },
+  { time: "13:30 - 14:30", title: "아이디어 개별/자유 피칭 (추후 결정)" },
+  { time: "15:00 - 17:00", title: "팀 스피드 데이팅 및 팀빌딩" },
   {
-    time: "15:00 - 17:00",
+    time: "17:00 - 18:00",
     title: "팀별 아이디어 구체화",
     desc: "문제 정의, 타깃 고객, 해결 방식 정리",
   },
-  { time: "17:00 - 18:00", title: "저녁 식사" },
-  { time: "18:00 - 18:05", title: "오프닝 및 멘토 소개" },
-  { time: "18:05 - 18:25", title: "멘토 창업 스토리 공유" },
+  { time: "18:00 - 19:00", title: "저녁 식사" },
+  { time: "19:00 - 19:05", title: "오프닝 및 멘토 소개" },
+  { time: "19:05 - 19:35", title: "멘토 창업 스토리 공유" },
   {
-    time: "18:25 - 18:50",
-    title: "키워드 토크",
+    time: "19:35 - 20:10",
+    title: "키워드 토크 및 Q&A",
     desc: "아이디어 검증, 팀빌딩, 실행, 첫 고객 등",
   },
-  { time: "18:50 - 19:00", title: "멤버 Q&A" },
-  { time: "19:00 - 19:50", title: "팀별 간단 피칭 및 멘토 피드백" },
-  { time: "19:50 - 20:00", title: "마무리 코멘트" },
-  { time: "20:00 - 22:00", title: "멘토 피드백 반영 및 발표 방향 정리" },
+  { time: "20:10 - 20:50", title: "팀별 간단 피칭 및 멘토 피드백" },
+  { time: "20:50 - 21:00", title: "마무리 코멘트" },
+  { time: "21:00 - 23:00", title: "멘토 피드백 반영 및 발표 방향 정리" },
 ];
 
 const TIMETABLE_DAY2 = [
@@ -426,6 +425,50 @@ function SubmitIdeaModal({ isOpen, setIsOpen }: SubmitIdeaModalProps) {
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pdfName, setPdfName] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+      setError("PDF 파일만 업로드할 수 있습니다.");
+      return;
+    }
+
+    if (file.size > 20 * 1024 * 1024) {
+      setError("파일 크기는 20MB 이하만 가능합니다.");
+      return;
+    }
+
+    setIsUploading(true);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/upload/ideathon-pdf", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "파일 업로드에 실패했습니다.");
+      }
+
+      setPdfUrl(result.url);
+      setPdfName(file.name);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "파일 업로드 중 오류가 발생했습니다.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleSubmit = (formData: FormData) => {
     setError(null);
     startTransition(async () => {
@@ -506,7 +549,11 @@ function SubmitIdeaModal({ isOpen, setIsOpen }: SubmitIdeaModalProps) {
               </Link>
               <button
                 type="button"
-                onClick={() => setIsSuccess(false)}
+                onClick={() => {
+                  setIsSuccess(false);
+                  setPdfUrl(null);
+                  setPdfName(null);
+                }}
                 className="inline-flex h-10 items-center justify-center rounded-md border border-[#ddd9cc] bg-white px-6 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f] transition-colors hover:bg-gray-50 cursor-pointer"
               >
                 추가 제출하기
@@ -563,9 +610,63 @@ function SubmitIdeaModal({ isOpen, setIsOpen }: SubmitIdeaModalProps) {
                 />
               </div>
 
+              <div className="space-y-1.5">
+                <label className="block font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
+                  PDF 자료 첨부 (선택)
+                </label>
+                {pdfUrl ? (
+                  <div className="flex items-center justify-between rounded-lg border border-[#ddd9cc] bg-[#fcfcf8] px-4 py-2 text-sm">
+                    <div className="flex items-center gap-2 text-[#4a4a40] truncate max-w-[80%]">
+                      <Paperclip className="h-4 w-4 text-[#FF6C0F] shrink-0" />
+                      <span className="truncate font-['Pretendard',sans-serif]">{pdfName}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPdfUrl(null);
+                        setPdfName(null);
+                      }}
+                      className="font-['Pretendard',sans-serif] text-xs font-semibold text-[#b42318] hover:underline cursor-pointer"
+                    >
+                      삭제
+                    </button>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <input
+                      type="file"
+                      id="pdf-upload"
+                      accept=".pdf"
+                      disabled={isUploading || isPending}
+                      onChange={handleFileChange}
+                      className="sr-only"
+                    />
+                    <label
+                      htmlFor="pdf-upload"
+                      className={`flex h-10 w-full items-center justify-center gap-2 rounded-md border border-dashed border-[#ddd9cc] bg-white px-4 font-['Pretendard',sans-serif] text-sm text-[#4a4a40] cursor-pointer hover:bg-gray-50 transition-colors ${
+                        (isUploading || isPending) ? "opacity-50 pointer-events-none" : ""
+                      }`}
+                    >
+                      {isUploading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin text-[#FF6C0F]" />
+                          PDF 업로드 중...
+                        </>
+                      ) : (
+                        <>
+                          <Paperclip className="h-4 w-4 text-[#6b6b5e]" />
+                          PDF 파일 선택 (최대 20MB)
+                        </>
+                      )}
+                    </label>
+                  </div>
+                )}
+                <input type="hidden" name="pdf_url" value={pdfUrl || ""} />
+              </div>
+
               <button
                 type="submit"
-                disabled={isPending}
+                disabled={isPending || isUploading}
                 className="w-full flex h-10 items-center justify-center rounded-md bg-[#16140f] font-['Pretendard',sans-serif] text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 cursor-pointer"
               >
                 {isPending ? "제출 중..." : "아이디어 제출하기"}
