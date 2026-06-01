@@ -9,31 +9,34 @@ Your role is to coordinate specialized agents, tools, and skills so work is comp
 
 ### STRUCTURE
 ```
-app/                    # Next.js App Router pages (60 pages, 17 admin)
+app/                    # Next.js App Router pages (66 pages, 19 admin)
   admin/                # Admin CRUD pages (preneur+ access) → see app/admin/AGENTS.md
   spec-log/             # Activity logging feature → see app/spec-log/AGENTS.md
-  blog/                 # Blog with rich editor, tags, reactions
-  apply/                # Recruitment application flow
+  blog/                 # Blog with rich editor, tags, reactions → see app/blog/AGENTS.md
+  apply/                # Recruitment application flow → see app/apply/AGENTS.md
+  dashboard/            # Learner-only attendance/homework dashboard → see app/dashboard/AGENTS.md
   profile/              # User profile management
-  founders/             # Team directory (reads from members table)
+  people/               # Team directory (reads from members table)
   companies/            # Project showcase
   curriculum/           # Curriculum roadmap
 lib/
-  actions/              # 23 server action files (6500 lines) → see lib/actions/AGENTS.md
+  actions/              # 24 server action files (7200+ lines) → see lib/actions/AGENTS.md
   supabase/             # DB clients + types → see lib/supabase/AGENTS.md
   auth.ts               # Server-only auth (getCurrentUser, requireAuth, requireRole)
   auth-shared.ts        # Client-safe auth constants (role arrays, normalizeRole)
   storage.ts            # Image upload utilities (blog + spec-log)
   constants.ts          # CURRENT_BATCH = "4기"
   api.ts                # Static data (companies, people)
-components/             # 58 components → see components/AGENTS.md
-  blog/, profile/, home/, about/, ui/, layout/, project/, partners/, dashboard/
+components/             # 48 components → see components/AGENTS.md
+  blog/                 # Blog cards/editor/comments/reactions → see components/blog/AGENTS.md
+  profile/, home/, about/, ui/, layout/, project/, partners/, dashboard/, curriculum/
 contexts/UserContext.tsx # Client-side auth state with real-time subscription
 hooks/useUser.ts        # Convenience hook for UserContext
-middleware.ts           # Route protection (learner+ for spec-log, preneur+ for admin)
-supabase/migrations/    # 19 timestamped SQL migration files
-e2e/                    # 6 Playwright E2E test files
-__tests__/              # 16 Vitest unit test files
+middleware.ts           # Route protection (admin, blog write/edit, apply, private profile)
+supabase/migrations/    # 31 timestamped SQL migration files → see supabase/AGENTS.md
+scripts/sql/            # 37 historical/manual SQL files → see scripts/sql/AGENTS.md
+e2e/                    # 6 Playwright E2E test files → see e2e/AGENTS.md
+__tests__/              # 20 Vitest unit test files → see __tests__/AGENTS.md
 ```
 
 ### WHERE TO LOOK
@@ -42,10 +45,14 @@ __tests__/              # 16 Vitest unit test files
 | Add server action | `lib/actions/` — follow existing pattern (see lib/actions/AGENTS.md) |
 | Add admin page | `app/admin/` — server page.tsx + *Client.tsx pattern |
 | Add public page | `app/` — use `mx-auto max-w-[960px] px-6` wrapper |
+| Modify blog | `app/blog/` + `components/blog/` + `lib/actions/posts.ts` |
+| Modify application flow | `app/apply/` + `lib/actions/applications.ts` + `lib/actions/recruitment.ts` |
+| Modify learner dashboard | `app/dashboard/` + `components/dashboard/` + `lib/actions/tracker.ts` |
 | Modify auth/roles | `lib/auth-shared.ts` (constants) + `lib/auth.ts` (server functions) |
-| Database schema | `supabase/migrations/` — timestamp-named SQL files |
+| Database schema | `supabase/migrations/` — timestamp-named SQL files (see supabase/AGENTS.md) |
+| Legacy/manual SQL | `scripts/sql/` — reference only unless explicitly asked |
 | Add component | `components/{feature}/` — server by default, client only if interactive |
-| Run tests | `npm run test:unit` (Vitest) / `npm run test` (Playwright) |
+| Run tests | `npm run test:unit` (Vitest) / `npm run test` (Playwright) — see __tests__/AGENTS.md and e2e/AGENTS.md |
 | Type check | `npx tsc --noEmit` |
 | Build | `npm run build` |
 

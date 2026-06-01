@@ -1,6 +1,6 @@
 # Server Actions
 
-23 files, 6500 lines. All marked `"use server"`.
+24 files, 7200+ lines. All marked `"use server"`.
 
 ## PATTERN
 Every action file follows:
@@ -27,6 +27,7 @@ Import role constants from `@/lib/auth` (server) or `@/lib/auth-shared` (client)
 | Auth | auth.ts | signIn, signUp, forgotPassword, resetPassword |
 | Admin | admin.ts | updateUserRole, toggleAdminStatus |
 | Blog | posts.ts, comments.ts, reactions.ts, tags.ts, views.ts | CRUD + tag resolution + emoji toggle |
+| Ideas | ideas.ts | Ideathon idea submit/list/delete |
 | SPEC Log | spec-log.ts, spec-log-comments.ts, spec-log-reactions.ts | Event/log CRUD + batch permission + image handling |
 | Members | members.ts, member-conversion.ts | CRUD + slug gen + CSV export + app→member conversion |
 | Profile | profile.ts, public-profile.ts | User profile + public profile with experiences |
@@ -39,6 +40,7 @@ Import role constants from `@/lib/auth` (server) or `@/lib/auth-shared` (client)
 - Audit logging: `logAuditEvent()` for admin mutations (admin.ts, members.ts, spec-log.ts, site-settings.ts)
 - Slug generation: normalize NFKD → remove special chars → dedupe hyphens
 - Image paths: extract storage path from full URL for deletion
+- Public application submit must not chain `.select()` after INSERT; `applications` SELECT is restricted by RLS
 - No `as any` or `@ts-ignore`
 - No comments in code
 
