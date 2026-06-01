@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 
-import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 
 type ActionResult = {
   success: boolean;
@@ -27,7 +28,7 @@ function slugify(value: string): string {
 }
 
 export async function getTagsWithPostCount(): Promise<TagWithPostCount[]> {
-  const supabase = createAdminClient();
+  const supabase = await createClient();
 
   const { data: tags, error: tagsError } = await supabase
     .from("tags")
@@ -65,6 +66,8 @@ export async function getTagsWithPostCount(): Promise<TagWithPostCount[]> {
 }
 
 export async function createTag(label: string, slug: string): Promise<ActionResult> {
+  await requireAdmin();
+
   try {
     const trimmedLabel = label.trim();
     const trimmedSlug = slug.trim() || slugify(trimmedLabel);
@@ -77,7 +80,7 @@ export async function createTag(label: string, slug: string): Promise<ActionResu
       return { success: false, error: "슬러그를 생성할 수 없습니다." };
     }
 
-    const supabase = createAdminClient();
+    const supabase = await createClient();
 
     const { data: existing } = await supabase
       .from("tags")
@@ -108,6 +111,8 @@ export async function createTag(label: string, slug: string): Promise<ActionResu
 }
 
 export async function updateTag(tagId: string, label: string, slug: string): Promise<ActionResult> {
+  await requireAdmin();
+
   try {
     const trimmedLabel = label.trim();
     const trimmedSlug = slug.trim() || slugify(trimmedLabel);
@@ -120,7 +125,7 @@ export async function updateTag(tagId: string, label: string, slug: string): Pro
       return { success: false, error: "슬러그를 생성할 수 없습니다." };
     }
 
-    const supabase = createAdminClient();
+    const supabase = await createClient();
 
     const { data: existing } = await supabase
       .from("tags")
@@ -153,8 +158,10 @@ export async function updateTag(tagId: string, label: string, slug: string): Pro
 }
 
 export async function deleteTag(tagId: string): Promise<ActionResult> {
+  await requireAdmin();
+
   try {
-    const supabase = createAdminClient();
+    const supabase = await createClient();
 
     const { error: junctionError } = await supabase
       .from("post_tags")

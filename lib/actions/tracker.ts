@@ -2,10 +2,29 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { requireAdmin, requireRole } from "@/lib/auth";
+import { normalizeRole, requireAdmin, requireAuth, requireRole } from "@/lib/auth";
+
+type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
+type PadletResource = {
+  type: string;
+  id: string;
+  attributes?: Record<string, unknown>;
+  relationships?: Record<string, unknown>;
+};
+type PadletSection = { id: string; title: string };
+type PadletPost = {
+  id: string;
+  author?: { name?: string; email?: string; username?: string };
+  section_id?: string;
+};
+type HomeworkTeamAssignment = {
+  team_name: string;
+  user_id: string;
+  task_index: number;
+};
 
 async function syncPadletBoardForHomework(
-  supabase: any,
+  supabase: SupabaseServerClient,
   hw: {
     id: string;
     title: string;
@@ -35,22 +54,22 @@ async function syncPadletBoardForHomework(
       return;
     }
 
-    const json = (await res.json()) as { included?: { type: string; id: string; attributes?: Record<string, unknown>; relationships?: Record<string, unknown> }[] };
+    const json = (await res.json()) as { included?: PadletResource[] };
     const included = json.included || [];
 
-    const resourceMap = new Map<string, { type: string; id: string; attributes?: Record<string, unknown>; relationships?: Record<string, unknown> }>();
+    const resourceMap = new Map<string, PadletResource>();
     for (const r of included) {
       resourceMap.set(`${r.type}:${r.id}`, r);
     }
 
-    const sections = included
+    const sections: PadletSection[] = included
       .filter((r) => r.type === "section")
       .map((r) => ({
         id: r.id,
         title: (r.attributes?.title as string) || "(섹션 없음)",
       }));
 
-    const posts = included
+    const posts: PadletPost[] = included
       .filter((r) => r.type === "post")
       .map((r) => {
         let authorName: string | undefined;
@@ -92,15 +111,15 @@ async function syncPadletBoardForHomework(
       .select("team_name,user_id,task_index")
       .eq("homework_id", hw.id);
 
-    const teamsList = hwTeams || [];
+    const teamsList = (hwTeams || []) as HomeworkTeamAssignment[];
 
     const learnerTeamMap = new Map<string, { teamName: string; memberNames: string[]; memberUsernames: string[] }>();
     if (hw.is_team && teamsList.length > 0) {
       const learnerLookup = new Map(learners.map(r => [r.id, r]));
-      teamsList.forEach((vt: any) => {
-        const teamMembers = teamsList.filter((m: any) => m.team_name === vt.team_name && m.task_index === vt.task_index);
-        const memberNames = teamMembers.map((m: any) => learnerLookup.get(m.user_id)?.name || 'Unknown');
-        const memberUsernames = teamMembers.map((m: any) => learnerLookup.get(m.user_id)?.username || '');
+      teamsList.forEach((vt) => {
+        const teamMembers = teamsList.filter((m) => m.team_name === vt.team_name && m.task_index === vt.task_index);
+        const memberNames = teamMembers.map((m) => learnerLookup.get(m.user_id)?.name || 'Unknown');
+        const memberUsernames = teamMembers.map((m) => learnerLookup.get(m.user_id)?.username || '');
         learnerTeamMap.set(`${vt.user_id}:${vt.task_index}`, { teamName: vt.team_name, memberNames, memberUsernames });
       });
     }
@@ -113,7 +132,7 @@ async function syncPadletBoardForHomework(
     };
 
     const anyPostedInSection = (targetNames: string[], targetUsernames: string[], sectionId: string | undefined) =>
-      posts.some((p: any) => {
+      posts.some((p) => {
         const sMatch = sectionId ? p.section_id === sectionId : !p.section_id;
         if (!sMatch) return false;
 
@@ -137,7 +156,7 @@ async function syncPadletBoardForHomework(
     const now = new Date().toISOString();
 
     learners.forEach(learner => {
-      sections.forEach((s: any) => {
+      sections.forEach((s) => {
         const sConfig = getSectionConfig(s.id);
         let isCompleted = false;
         if (sConfig.type === "team") {
@@ -178,7 +197,13 @@ async function syncPadletBoardForHomework(
  */
 export async function getTrackerData() {
   try {
-    const { profile } = await requireRole("learner");
+    const { profile } = await requireAuth();
+    const isAdminOrPreneur = profile?.is_admin === true || normalizeRole(profile?.role) === "preneur";
+
+    if (!isAdminOrPreneur) {
+      await requireRole("learner");
+    }
+
     const supabase = await createClient();
 
     const currentLearner = profile
@@ -191,8 +216,6 @@ export async function getTrackerData() {
           username: profile.username,
         }
       : null;
-
-    const isAdminOrPreneur = profile?.is_admin || profile?.role === "preneur";
 
     let learnersQuery = supabase
       .from("profiles")
