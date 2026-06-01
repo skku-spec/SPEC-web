@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getMyApplicationDetail } from "@/lib/actions/applications";
+import { formatKoreanDate } from "@/lib/utils/koreanDate";
 
 export const metadata: Metadata = {
   title: "지원 완료 | SPEC",
@@ -23,7 +24,7 @@ const STATUS_BADGE_CLASSES: Record<string, string> = {
 };
 
 function formatLongDate(dateString: string) {
-  return new Intl.DateTimeFormat("ko-KR", { dateStyle: "long" }).format(new Date(dateString));
+  return formatKoreanDate(dateString, { dateStyle: "long" });
 }
 
 export default async function SubmittedApplicationPage() {

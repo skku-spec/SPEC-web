@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Lightbulb, BookOpen, Trash2, X, Loader2, Paperclip } from "lucide-react";
 import { deleteIdea } from "@/lib/actions/ideas";
+import { formatKoreanDate } from "@/lib/utils/koreanDate";
 
 type Profile = {
   name: string;
@@ -56,8 +57,11 @@ export function IdeasClient({ ideas }: Props) {
   };
 
   const formatDate = (dateStr: string) => {
-    const d = new Date(dateStr);
-    return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
+    return formatKoreanDate(dateStr, {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).replaceAll(". ", ".").replace(/\.$/, "");
   };
 
   const getAuthorName = (idea: Idea) => {
@@ -176,7 +180,13 @@ export function IdeasClient({ ideas }: Props) {
                 <div>
                   <h3 className="mb-1 text-xs font-semibold text-[#6b6b5e] font-['Pretendard',sans-serif] uppercase tracking-wide">제출일시</h3>
                   <p className="font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">
-                    {new Date(selectedIdea.created_at).toLocaleString("ko-KR")}
+                    {formatKoreanDate(selectedIdea.created_at, {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </p>
                 </div>
               </div>

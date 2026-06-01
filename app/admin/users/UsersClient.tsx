@@ -6,6 +6,7 @@ import { toggleAdminStatus, updateUserRole } from "@/lib/actions/admin";
 import { normalizeRole, type UserRole } from "@/lib/auth-shared";
 import CustomSelect from "@/components/ui/CustomSelect";
 import type { Database } from "@/lib/supabase/types";
+import { formatKoreanDate } from "@/lib/utils/koreanDate";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -36,11 +37,11 @@ function isProfileRole(value: string): value is UserRole {
 }
 
 function formatJoinedDate(date: string) {
-  return new Intl.DateTimeFormat("ko-KR", {
+  return formatKoreanDate(date, {
     year: "numeric",
     month: "short",
     day: "numeric",
-  }).format(new Date(date));
+  });
 }
 
 export default function UsersClient({ initialProfiles, currentUserIsAdmin }: UsersClientProps) {

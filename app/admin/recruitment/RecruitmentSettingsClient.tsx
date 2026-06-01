@@ -16,6 +16,7 @@ import {
   deleteWaitlistEntry,
 } from "@/lib/actions/recruitment";
 import CustomSelect from "@/components/ui/CustomSelect";
+import { formatKoreanDate } from "@/lib/utils/koreanDate";
 
 type Props = {
   allRecruitments: RecruitmentSettings[];
@@ -85,11 +86,11 @@ function newStep(): LocalTimelineStep {
 }
 
 function formatDate(iso: string) {
-  return new Intl.DateTimeFormat("ko-KR", {
+  return formatKoreanDate(iso, {
     year: "numeric",
     month: "short",
     day: "numeric",
-  }).format(new Date(iso));
+  });
 }
 
 function formatPhone(raw: string) {

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { upsertHomework, replaceHomeworkTeams, getHomeworkSectionSubmissions, upsertHomeworkSectionSubmission, bulkUpsertHomeworkSectionSubmissions } from "@/lib/actions/tracker";
 import { uploadHomeworkFile, uploadHomeworkImage } from "@/lib/storage";
+import { formatKoreanDate } from "@/lib/utils/koreanDate";
 import {
   User,
   Users,
@@ -1205,12 +1206,12 @@ export function HomeworkClient() {
                 <div className="flex items-center gap-4">
                   <div className="text-right hidden sm:block">
                     <p className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">
-                      {new Date(hw.created_at).toLocaleDateString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit' })}
+                      {formatKoreanDate(hw.created_at, { year: "2-digit", month: "2-digit", day: "2-digit" })}
                     </p>
                     <p className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e] mt-0.5">
                       {"마감: "}
                       {hw.due_date
-                        ? new Date(hw.due_date).toLocaleDateString("ko-KR", { year: "2-digit", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })
+                        ? formatKoreanDate(hw.due_date, { year: "2-digit", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })
                         : "없음"}
                     </p>
                   </div>

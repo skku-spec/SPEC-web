@@ -1,4 +1,5 @@
 import { RECRUITMENT_RESULT_ANNOUNCEMENT_DATE } from "@/lib/recruitment-schedule";
+import { formatKoreanDate } from "@/lib/utils/koreanDate";
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "접수완료",
@@ -15,11 +16,11 @@ const STATUS_BADGE_CLASSES: Record<string, string> = {
 };
 
 function formatDate(dateString: string) {
-  return new Intl.DateTimeFormat("ko-KR", {
+  return formatKoreanDate(dateString, {
     year: "numeric",
     month: "long",
     day: "numeric",
-  }).format(new Date(dateString));
+  });
 }
 
 type ApplicationInfo = {
