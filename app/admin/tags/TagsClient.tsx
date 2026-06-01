@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Pencil, Plus } from "lucide-react";
 
 import { createTag, updateTag, deleteTag } from "@/lib/actions/tags";
@@ -21,6 +22,7 @@ function slugify(value: string): string {
 }
 
 export default function TagsClient({ initialTags }: TagsClientProps) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -36,7 +38,10 @@ export default function TagsClient({ initialTags }: TagsClientProps) {
 
         if (!result.success) {
           window.alert(result.error ?? "Action failed.");
+          return;
         }
+
+        router.refresh();
       })();
     });
   };

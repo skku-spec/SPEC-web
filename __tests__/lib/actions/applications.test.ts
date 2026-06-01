@@ -6,6 +6,7 @@ const mockedDeps = vi.hoisted(() => ({
   revalidatePath: vi.fn(),
   rateLimit: vi.fn(() => ({ allowed: true, remaining: 5, retryAfterMs: 0 })),
   getActiveRecruitment: vi.fn(),
+  requireAdmin: vi.fn(),
 }));
 
 const viMockWithVirtual = vi.mock as unknown as (
@@ -40,10 +41,16 @@ vi.mock("@/lib/actions/recruitment", () => ({
   getActiveRecruitment: mockedDeps.getActiveRecruitment,
 }));
 
+vi.mock("@/lib/auth", () => ({
+  requireAdmin: mockedDeps.requireAdmin,
+}));
+
 import {
+  deleteApplication,
   getApplicationByCredentials,
   getMyApplication,
   submitApplication,
+  updateApplicationStatus,
 } from "@/lib/actions/applications";
 
 function makeFormData(overrides: Record<string, string> = {}): FormData {
@@ -120,6 +127,63 @@ function makeMaybeSingleChain(result: {
   return chain;
 }
 
+function makeApplicationMutationClient(options?: {
+  user?: { id: string } | null;
+  profile?: { is_admin: boolean } | null;
+  updateRows?: Array<Record<string, string>> | null;
+  deleteRows?: Array<Record<string, string>> | null;
+  updateError?: { message?: string } | null;
+  deleteError?: { message?: string } | null;
+}) {
+  const profileChain = {
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    single: vi.fn().mockResolvedValue({
+      data: options?.profile ?? { is_admin: false },
+      error: null,
+    }),
+  };
+
+  const updateSelect = vi.fn().mockResolvedValue({
+    data: options?.updateRows ?? [{ id: "app-1" }],
+    error: options?.updateError ?? null,
+  });
+  const updateEq = vi.fn(() => ({ select: updateSelect }));
+  const update = vi.fn(() => ({ eq: updateEq }));
+
+  const deleteSelect = vi.fn().mockResolvedValue({
+    data: options?.deleteRows ?? [{ id: "app-1" }],
+    error: options?.deleteError ?? null,
+  });
+  const deleteEq = vi.fn(() => ({ select: deleteSelect }));
+  const deleteFn = vi.fn(() => ({ eq: deleteEq }));
+
+  const applicationChain = {
+    update,
+    delete: deleteFn,
+  };
+
+  const from = vi.fn((table: string) => {
+    if (table === "profiles") return profileChain;
+    return applicationChain;
+  });
+
+  const getUser = vi.fn().mockResolvedValue({
+    data: { user: options?.user ?? { id: "admin-user" } },
+  });
+
+  return {
+    client: { auth: { getUser }, from },
+    profileChain,
+    update,
+    updateEq,
+    updateSelect,
+    deleteFn,
+    deleteEq,
+    deleteSelect,
+  };
+}
+
 const mockedCreateClient = mockedDeps.createClient;
 const mockedCreateAdminClient = mockedDeps.createAdminClient;
 const mockedRateLimit = mockedDeps.rateLimit;
@@ -148,6 +212,10 @@ beforeEach(() => {
       created_at: "2026-01-01T00:00:00Z",
       updated_at: "2026-01-01T00:00:00Z",
     },
+  });
+  mockedDeps.requireAdmin.mockResolvedValue({
+    user: { id: "admin-user" },
+    profile: { id: "admin-user", role: "preneur", is_admin: true },
   });
 });
 
@@ -295,6 +363,138 @@ describe("submitApplication", () => {
       error: "너무 많은 요청입니다. 1분 후에 다시 시도해주세요.",
     });
     expect(insert).not.toHaveBeenCalled();
+  });
+});
+
+describe("updateApplicationStatus", () => {
+  it("requires canonical admin authorization before creating a Supabase client", async () => {
+    mockedDeps.requireAdmin.mockRejectedValue(new Error("NEXT_REDIRECT"));
+
+    await expect(updateApplicationStatus("app-1", "accepted")).rejects.toThrow("NEXT_REDIRECT");
+
+    expect(mockedCreateClient).not.toHaveBeenCalled();
+  });
+
+  it("allows preneur-shell callers even when the legacy is_admin-only check would fail", async () => {
+    mockedDeps.requireAdmin.mockResolvedValue({
+      user: { id: "preneur-user" },
+      profile: { id: "preneur-user", role: "preneur", is_admin: false },
+    });
+    const { client, update } = makeApplicationMutationClient({
+      profile: { is_admin: false },
+    });
+    mockedCreateClient.mockResolvedValue(client as never);
+
+    const result = await updateApplicationStatus("app-1", "accepted");
+
+    expect(result).toEqual({ success: true });
+    expect(mockedDeps.requireAdmin).toHaveBeenCalledTimes(1);
+    expect(update).toHaveBeenCalledWith({ status: "accepted" });
+  });
+
+  it("allows is_admin callers through the canonical admin helper", async () => {
+    mockedDeps.requireAdmin.mockResolvedValue({
+      user: { id: "flag-admin" },
+      profile: { id: "flag-admin", role: "outsider", is_admin: true },
+    });
+    const { client } = makeApplicationMutationClient({
+      profile: { is_admin: true },
+    });
+    mockedCreateClient.mockResolvedValue(client as never);
+
+    const result = await updateApplicationStatus("app-1", "under_review");
+
+    expect(result).toEqual({ success: true });
+    expect(mockedDeps.requireAdmin).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects invalid statuses before mutating", async () => {
+    const { client, update } = makeApplicationMutationClient();
+    mockedCreateClient.mockResolvedValue(client as never);
+
+    const result = await updateApplicationStatus("app-1", "invalid");
+
+    expect(result).toEqual({ error: "유효하지 않은 상태입니다: invalid" });
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it("returns not found when no rows are updated", async () => {
+    const { client } = makeApplicationMutationClient({ updateRows: [] });
+    mockedCreateClient.mockResolvedValue(client as never);
+
+    const result = await updateApplicationStatus("missing-app", "accepted");
+
+    expect(result).toEqual({ error: "해당 지원서를 찾을 수 없습니다." });
+  });
+
+  it("revalidates each affected application surface once after status changes", async () => {
+    const { client } = makeApplicationMutationClient();
+    mockedCreateClient.mockResolvedValue(client as never);
+
+    const result = await updateApplicationStatus("app-1", "accepted");
+
+    expect(result).toEqual({ success: true });
+    expect(mockedRevalidatePath).toHaveBeenCalledWith("/admin/applications");
+    expect(mockedRevalidatePath).toHaveBeenCalledWith("/apply");
+    expect(mockedRevalidatePath).toHaveBeenCalledWith("/apply/status");
+    expect(mockedRevalidatePath).toHaveBeenCalledWith("/apply/submitted");
+    expect(
+      mockedRevalidatePath.mock.calls.filter((call: string[]) => call[0] === "/admin/applications"),
+    ).toHaveLength(1);
+  });
+});
+
+describe("deleteApplication", () => {
+  it("requires canonical admin authorization before creating a Supabase client", async () => {
+    mockedDeps.requireAdmin.mockRejectedValue(new Error("NEXT_REDIRECT"));
+
+    await expect(deleteApplication("app-1")).rejects.toThrow("NEXT_REDIRECT");
+
+    expect(mockedCreateClient).not.toHaveBeenCalled();
+  });
+
+  it("allows preneur-shell callers even when the legacy is_admin-only check would fail", async () => {
+    mockedDeps.requireAdmin.mockResolvedValue({
+      user: { id: "preneur-user" },
+      profile: { id: "preneur-user", role: "preneur", is_admin: false },
+    });
+    const { client, deleteFn } = makeApplicationMutationClient({
+      profile: { is_admin: false },
+    });
+    mockedCreateClient.mockResolvedValue(client as never);
+
+    const result = await deleteApplication("app-1");
+
+    expect(result).toEqual({ success: true });
+    expect(mockedDeps.requireAdmin).toHaveBeenCalledTimes(1);
+    expect(deleteFn).toHaveBeenCalledTimes(1);
+  });
+
+  it("allows is_admin callers through the canonical admin helper", async () => {
+    mockedDeps.requireAdmin.mockResolvedValue({
+      user: { id: "flag-admin" },
+      profile: { id: "flag-admin", role: "outsider", is_admin: true },
+    });
+    const { client } = makeApplicationMutationClient({
+      profile: { is_admin: true },
+    });
+    mockedCreateClient.mockResolvedValue(client as never);
+
+    const result = await deleteApplication("app-1");
+
+    expect(result).toEqual({ success: true });
+    expect(mockedDeps.requireAdmin).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns not found when no rows are deleted", async () => {
+    const { client } = makeApplicationMutationClient({ deleteRows: [] });
+    mockedCreateClient.mockResolvedValue(client as never);
+
+    const result = await deleteApplication("missing-app");
+
+    expect(result).toEqual({
+      error: "삭제 권한이 없거나 해당 데이터를 찾을 수 없습니다.",
+    });
   });
 });
 

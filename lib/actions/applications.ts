@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { rateLimit } from "@/lib/rate-limit";
@@ -31,6 +32,13 @@ const RATE_LIMIT_CONFIG = {
   maxRequests: 3,
   windowMs: 15 * 60 * 1000, // 15 minutes
 } as const;
+
+function revalidateApplicationSurfaces() {
+  revalidatePath("/admin/applications");
+  revalidatePath("/apply");
+  revalidatePath("/apply/status");
+  revalidatePath("/apply/submitted");
+}
 
 // ── Submit Application ────────────────────────────────────────────────
 
@@ -166,21 +174,9 @@ export async function submitApplication(formData: FormData): Promise<Application
 // ── Delete Application (Admin Only) ───────────────────────────────────
 
 export async function deleteApplication(id: string): Promise<ApplicationState> {
+  await requireAdmin();
+
   const supabase = await createClient();
-
-  // Verify admin permissions
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "로그인이 필요합니다." };
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("is_admin")
-    .eq("id", user.id)
-    .single();
-
-  if (!profile?.is_admin) {
-    return { error: "삭제 권한이 없습니다. 관리자만 삭제 가능합니다." };
-  }
 
   const { data, error } = await supabase
     .from("applications")
@@ -199,7 +195,7 @@ export async function deleteApplication(id: string): Promise<ApplicationState> {
     return { error: "삭제 권한이 없거나 해당 데이터를 찾을 수 없습니다." };
   }
 
-  revalidatePath("/admin/applications");
+  revalidateApplicationSurfaces();
   return { success: true };
 }
 
@@ -219,26 +215,14 @@ export async function updateApplicationStatus(
   id: string,
   status: string,
 ): Promise<ApplicationState> {
-  const supabase = await createClient();
-
-  // Verify admin permissions
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "로그인이 필요합니다." };
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("is_admin")
-    .eq("id", user.id)
-    .single();
-
-  if (!profile?.is_admin) {
-    return { error: "상태 변경 권한이 없습니다. 관리자만 변경 가능합니다." };
-  }
+  await requireAdmin();
 
   // Validate status value
   if (!isValidStatus(status)) {
     return { error: `유효하지 않은 상태입니다: ${status}` };
   }
+
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("applications")
@@ -257,8 +241,7 @@ export async function updateApplicationStatus(
     return { error: "해당 지원서를 찾을 수 없습니다." };
   }
 
-  revalidatePath("/admin/applications");
-  revalidatePath("/admin/applications");
+  revalidateApplicationSurfaces();
   return { success: true };
 }
 
