@@ -70,18 +70,21 @@ export function computeLearnerHomeworkStats(
 
     if (hwSections && hwSections.length > 0) {
       const completedItems = hwSections.filter(s => s.is_completed).length;
-      completedCount += completedItems;
-      notSubmittedCount += Math.max(0, totalItems - completedItems);
+      if (completedItems >= totalItems) {
+        completedCount++;
+      } else {
+        notSubmittedCount++;
+      }
     } else {
       const sub = submissions.find(
         s => s.homework_id === hw.id && s.user_id === learnerId && s.status === "completed"
       );
       if (!sub) {
-        notSubmittedCount += totalItems;
+        notSubmittedCount++;
       } else {
-        completedCount += totalItems;
+        completedCount++;
         if (sub.submitted_at && classifySubmission(sub.submitted_at, hw.due_date) === "late") {
-          lateCount += totalItems;
+          lateCount++;
         }
       }
     }
