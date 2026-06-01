@@ -1,9 +1,9 @@
 # Admin Pages
 
-19 admin pages under `/admin/*`. Preneur+ access is enforced in middleware; some pages also require `is_admin`.
+19 admin pages under `/admin/*`. Admin access is `preneur` role or `is_admin=true`; some mutations still require the stricter `is_admin` flag.
 
 ## LAYOUT
-- `layout.tsx`: `requireRole("preneur")`, desktop sidebar + mobile bottom nav
+- `layout.tsx`: `requireAdmin()` shared guard, desktop sidebar + mobile bottom nav
 - Sidebar: `AdminSidebar.tsx` reads from `nav-items.ts`
 - Mobile: `AdminBottomNav.tsx` (4 tabs) + `AdminMoreSheet.tsx` (overflow)
 - Content: `mx-auto max-w-6xl`, padding `px-5 py-6 sm:px-8 sm:py-10 lg:px-10`
@@ -12,7 +12,7 @@
 Most admin list/CRUD pages follow server → client handoff:
 ```
 page.tsx (server):
-  await requireRole("preneur")
+  // Inherits requireAdmin() from app/admin/layout.tsx.
   const data = await getXxx()
   return <XxxClient initialData={data} />
 
@@ -57,7 +57,7 @@ Defined in `nav-items.ts`. Groups: primary, content, operations, system. Icons: 
 | Audit | AuditClient.tsx | (reads audit_logs directly) |
 
 ## AUTH NUANCE
-- `layout.tsx` uses `requireRole("preneur")` for the admin shell.
-- `/admin/users` and `/admin/ideas` call `requireAdmin()` / `is_admin` checks in addition to the shell guard.
+- `layout.tsx` uses `requireAdmin()` for the admin shell (`preneur` role or `is_admin=true`).
+- `/admin/users` has extra `is_admin` checks for sensitive user-role/admin toggles.
 - Keep mutation-level authorization in server actions; UI gating is only presentation.
 - Detail/create pages may be server-only instead of `*Client.tsx`, but still inherit the admin shell guard.

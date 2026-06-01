@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { requireRole } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { getEventsByBatch } from "@/lib/actions/spec-log";
 import SpecLogAdminClient from "./SpecLogAdminClient";
 
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminSpecLogPage() {
-  await requireRole("preneur");
+  await requireAdmin();
   const results = await Promise.all(BATCHES.map((batch) => getEventsByBatch(batch)));
   const allEvents = results.flatMap((r) => r.data ?? []);
   return <SpecLogAdminClient initialEvents={allEvents} />;

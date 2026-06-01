@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { requireRole } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { HomeworkClient } from "./HomeworkClient";
 
 export const metadata: Metadata = {
@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminHomeworkPage() {
-  await requireRole("preneur");
+  await requireAdmin();
 
   return (
     <HomeworkClient />
