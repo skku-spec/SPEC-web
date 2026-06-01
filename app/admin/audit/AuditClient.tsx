@@ -1,5 +1,7 @@
 "use client";
 
+import { formatKoreanDate } from "@/lib/utils/koreanDate";
+
 export type AuditLogItem = {
   id: string;
   actorName: string | null;
@@ -25,13 +27,13 @@ const ACTION_LABELS: Record<string, string> = {
 };
 
 function formatDateTime(value: string): string {
-  return new Intl.DateTimeFormat("ko-KR", {
+  return formatKoreanDate(value, {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-  }).format(new Date(value));
+  });
 }
 
 function stringifyDetails(details: Record<string, unknown> | null): string {

@@ -10,6 +10,7 @@ import { convertApplicationToMember, getConversionStatusBatch } from "@/lib/acti
 import CustomSelect from "@/components/ui/CustomSelect";
 import DeleteApplicationButton from "@/components/dashboard/DeleteApplicationButton";
 import type { Database } from "@/lib/supabase/types";
+import { formatKoreanDate } from "@/lib/utils/koreanDate";
 
 type Application = Database["public"]["Tables"]["applications"]["Row"];
 
@@ -46,11 +47,11 @@ function isValidApplicationStatus(value: string): value is ApplicationStatus {
 }
 
 function formatDate(date: string) {
-  return new Intl.DateTimeFormat("ko-KR", {
+  return formatKoreanDate(date, {
     year: "numeric",
     month: "short",
     day: "numeric",
-  }).format(new Date(date));
+  });
 }
 
 export default function ApplicationsClient({ initialApplications }: ApplicationsClientProps) {

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import DeleteApplicationButton from "@/components/dashboard/DeleteApplicationButton";
+import { formatKoreanDate } from "@/lib/utils/koreanDate";
 
 
 type PageProps = {
@@ -47,7 +48,7 @@ export default async function AdminApplicationDetailPage({ params }: PageProps) 
             {app.batch}기 지원서
           </span>
           <span className="inline-flex rounded-full bg-[#f0efe6] px-3 py-1 text-xs font-medium text-[#6b6b5e] sm:text-sm">
-            접수일: {new Intl.DateTimeFormat("ko-KR", { dateStyle: "long" }).format(new Date(app.created_at))}
+            접수일: {formatKoreanDate(app.created_at, { dateStyle: "long" })}
           </span>
         </div>
       </div>

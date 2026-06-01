@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { addComment, deleteComment, type CommentWithAuthor } from "@/lib/actions/comments";
 import { useUser } from "@/hooks/useUser";
 import { BLOG_WRITER_ROLES, normalizeRole } from "@/lib/auth-shared";
+import { formatKoreanDate } from "@/lib/utils/koreanDate";
 
 type CommentSectionProps = {
   postId: string;
@@ -17,7 +18,7 @@ type ThreadNode = CommentWithAuthor & {
 };
 
 function formatDate(value: string): string {
-  return new Date(value).toLocaleDateString("ko-KR", {
+  return formatKoreanDate(value, {
     year: "numeric",
     month: "short",
     day: "numeric",

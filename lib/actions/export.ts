@@ -2,6 +2,7 @@
 
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { formatKoreanDate } from "@/lib/utils/koreanDate";
 
 type ExportResult = {
   success?: boolean;
@@ -63,7 +64,7 @@ export async function exportApplicationsCSV(batch?: string): Promise<ExportResul
       a.phone,
       a.batch ? `${a.batch}기` : "",
       a.status,
-      new Date(a.created_at).toLocaleDateString("ko-KR"),
+      formatKoreanDate(a.created_at, { year: "numeric", month: "numeric", day: "numeric" }),
     ]);
 
     const csv = [
