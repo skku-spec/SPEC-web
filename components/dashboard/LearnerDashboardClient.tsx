@@ -60,6 +60,7 @@ export function LearnerDashboardClient({
   const safeLogs = logs || [];
   const safeHomeworks = homeworks || [];
   const safeSubmissions = submissions || [];
+  const safeSectionSubmissions = sectionSubmissions || [];
 
   const userLogs = safeLogs.filter(l => l.user_id === learner.id);
 
@@ -176,7 +177,10 @@ export function LearnerDashboardClient({
 
           <div className="flex flex-wrap gap-2">
             {safeHomeworks.map(h => {
-              const isDone = safeSubmissions.some(s => s.homework_id === h.id && s.user_id === learner.id && s.status === "completed");
+              const hwSecs = safeSectionSubmissions.filter(s => s.homework_id === h.id && s.user_id === learner.id);
+              const isDone = hwSecs.length > 0
+                ? hwSecs.every(s => s.is_completed)
+                : safeSubmissions.some(s => s.homework_id === h.id && s.user_id === learner.id && s.status === "completed");
               return (
                 <div key={h.id} className="group relative">
                   <div className={`h-8 w-8 rounded-md flex items-center justify-center font-['Pretendard',sans-serif] text-[11px] font-semibold transition-all border ${

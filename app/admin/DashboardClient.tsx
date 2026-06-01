@@ -206,10 +206,16 @@ export function DashboardClient({
 
   const getNonSubmitters = useCallback((hwId: string) =>
     safeLearners
-      .filter(l => !safeSubmissions.some(s => s.homework_id === hwId && s.user_id === l.id && s.status === 'completed'))
+      .filter(l => {
+        const hwSecs = safeSectionSubmissions.filter(s => s.homework_id === hwId && s.user_id === l.id);
+        if (hwSecs.length > 0) {
+          return hwSecs.some(s => !s.is_completed);
+        }
+        return !safeSubmissions.some(s => s.homework_id === hwId && s.user_id === l.id && s.status === 'completed');
+      })
       .map(l => l.name)
       .sort((a, b) => a.localeCompare(b, 'ko')),
-  [safeLearners, safeSubmissions]);
+  [safeLearners, safeSubmissions, safeSectionSubmissions]);
 
   const stripPrefix = (s: string) => s.trim().replace(/^\[(개인|팀)\]\s*/g, '');
 
@@ -572,7 +578,10 @@ ${contactSection}
                     <td className="px-4 py-3">
                       <div className="flex gap-1.5">
                         {safeHomeworks.map(hw => {
-                          const isDone = safeSubmissions.some(s => s.homework_id === hw.id && s.user_id === learner.id && s.status === 'completed');
+                          const hwSecs = safeSectionSubmissions.filter(s => s.homework_id === hw.id && s.user_id === learner.id);
+                          const isDone = hwSecs.length > 0
+                            ? hwSecs.every(s => s.is_completed)
+                            : safeSubmissions.some(s => s.homework_id === hw.id && s.user_id === learner.id && s.status === 'completed');
                           return (
                             <div key={hw.id} className="group/dot relative cursor-help">
                               <div className={`h-6 w-6 rounded-md flex items-center justify-center font-['Pretendard',sans-serif] text-[9px] font-semibold ${
