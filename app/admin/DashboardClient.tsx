@@ -126,12 +126,6 @@ export function DashboardClient({
     ? Math.round((actualPresentCount / totalAttendancePointsPossible) * 100) 
     : 0;
 
-  const totalHomeworkPossible = safeLearners.length * safeHomeworks.length;
-  const completedHomeworkCount = safeSubmissions.filter(s => s.status === "completed").length;
-  const homeworkRate = totalHomeworkPossible > 0 
-    ? Math.round((completedHomeworkCount / totalHomeworkPossible) * 100) 
-    : 0;
-
   const learnerStats = safeLearners.map(learner => {
     const userLogs = safeLogs.filter(l => l.user_id === learner.id);
     const totalPresent = userLogs.filter(l => l.status === "present" || l.status === "late").length;
@@ -148,6 +142,12 @@ export function DashboardClient({
       ...hwStats,
     };
   }).sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+
+  const totalHomeworkPossible = safeLearners.length * safeHomeworks.length;
+  const completedHomeworkCount = learnerStats.reduce((sum, l) => sum + l.completedCount, 0);
+  const homeworkRate = totalHomeworkPossible > 0 
+    ? Math.round((completedHomeworkCount / totalHomeworkPossible) * 100) 
+    : 0;
 
   const missingTwoPlus = learnerStats
     .filter(l => l.notSubmittedCount >= 2)
