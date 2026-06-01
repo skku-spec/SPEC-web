@@ -1,20 +1,21 @@
 # Components
 
-58 files across 10 directories. Server-first architecture (69% server, 31% client).
+48 files across 10 directories. Server-first by default; use client components only for interaction.
 
 ## ORGANIZATION
 | Directory | Files | Purpose |
 |-----------|-------|---------|
-| root (22) | Shared + duplicates | Layout, page sections, utilities |
+| root (21) | Shared + duplicates | Layout, page sections, utilities |
 | blog/ (9) | Blog feature | ArticleCard, CommentSection, ReactionBar, BlockNoteEditor |
-| home/ (8) | Landing page | Hero, Philosophy, Manifesto, TwoTracks, etc. |
+| home/ (1) | Landing page | Home-specific section kept outside root |
 | about/ (4) | About page | Achievements, InTheRoom, VCCSection |
 | profile/ (4) | User profile | ProfileEditForm, ProfileAvatarEditor, PublicProfileEditor |
-| layout/ (4) | Global layout | Navbar, Footer, CTA, PageHeader — DUPLICATES of root |
-| ui/ (3) | Primitives | ApplyButton, CustomSelect, RouteLoading |
+| layout/ (1) | Global layout | Duplicate shell component; root versions are canonical |
+| ui/ (4) | Primitives | ApplyButton, CustomSelect, RouteLoading, Toast |
 | project/ (1) | Showcase | CompanyShowcase (DO NOT USE — hotlinked images) |
 | partners/ (2) | Partners | Partners + PartnersContent |
-| dashboard/ (1) | Admin | DeleteApplicationButton |
+| dashboard/ (3) | Learner/admin dashboard | Learner dashboard/homework clients + delete button |
+| curriculum/ (1) | Curriculum | CurriculumCalendar |
 
 ## SERVER vs CLIENT RULE
 - Default: server component (no directive)

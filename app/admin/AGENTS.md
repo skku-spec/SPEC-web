@@ -1,6 +1,6 @@
 # Admin Pages
 
-17 admin pages under `/admin/*`. Preneur+ access (middleware enforced).
+19 admin pages under `/admin/*`. Preneur+ access is enforced in middleware; some pages also require `is_admin`.
 
 ## LAYOUT
 - `layout.tsx`: `requireRole("preneur")`, desktop sidebar + mobile bottom nav
@@ -9,7 +9,7 @@
 - Content: `mx-auto max-w-6xl`, padding `px-5 py-6 sm:px-8 sm:py-10 lg:px-10`
 
 ## PAGE PATTERN
-Every admin page follows server → client handoff:
+Most admin list/CRUD pages follow server → client handoff:
 ```
 page.tsx (server):
   await requireRole("preneur")
@@ -31,7 +31,7 @@ XxxClient.tsx (client):
 - Modal: `fixed inset-0 z-50 bg-black/50`, card `max-w-lg rounded-lg bg-white p-6`
 
 ## NAV ITEMS
-Defined in `nav-items.ts`. Groups: dashboard, content, operations. Icons: lucide-react only.
+Defined in `nav-items.ts`. Groups: primary, content, operations, system. Icons: lucide-react only.
 
 ## PAGES
 | Page | Client file | Server action |
@@ -39,11 +39,14 @@ Defined in `nav-items.ts`. Groups: dashboard, content, operations. Icons: lucide
 | Dashboard | DashboardClient.tsx | tracker.ts |
 | Members | MembersClient.tsx | members.ts |
 | Applications | ApplicationsClient.tsx | applications.ts |
+| Application Detail | applications/[id]/page.tsx | direct Supabase read + DeleteApplicationButton |
 | Attendance | AttendanceClient.tsx | tracker.ts |
 | Homework | HomeworkClient.tsx | tracker.ts |
 | Posts | PostsClient.tsx | posts.ts |
+| New News Post | posts/new/page.tsx | PostEditorForm + posts.ts |
 | Tags | TagsClient.tsx | tags.ts |
 | SPEC Log | SpecLogAdminClient.tsx | spec-log.ts |
+| Ideas | IdeasClient.tsx | ideas.ts |
 | Curriculum | CurriculumClient.tsx | curriculum.ts |
 | FAQ | FaqClient.tsx | faq.ts |
 | Partners | PartnersClient.tsx | partners.ts |
@@ -52,3 +55,9 @@ Defined in `nav-items.ts`. Groups: dashboard, content, operations. Icons: lucide
 | Form Builder | FormBuilderClient.tsx | form-builder.ts |
 | Settings | SettingsClient.tsx | site-settings.ts |
 | Audit | AuditClient.tsx | (reads audit_logs directly) |
+
+## AUTH NUANCE
+- `layout.tsx` uses `requireRole("preneur")` for the admin shell.
+- `/admin/users` and `/admin/ideas` call `requireAdmin()` / `is_admin` checks in addition to the shell guard.
+- Keep mutation-level authorization in server actions; UI gating is only presentation.
+- Detail/create pages may be server-only instead of `*Client.tsx`, but still inherit the admin shell guard.
