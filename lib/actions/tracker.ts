@@ -4,6 +4,173 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin, requireRole } from "@/lib/auth";
 
+async function syncPadletBoardForHomework(
+  supabase: any,
+  hw: {
+    id: string;
+    title: string;
+    padlet_board_id: string | null;
+    is_team: boolean;
+    section_type_config: unknown;
+  },
+  learners: { id: string; name: string; username: string }[]
+) {
+  if (!hw.padlet_board_id) return;
+  const apiKey = process.env.PADLET_API_KEY;
+  if (!apiKey) return;
+
+  try {
+    const res = await fetch(
+      `https://api.padlet.dev/v1/boards/${hw.padlet_board_id}?include=posts,sections`,
+      {
+        headers: {
+          "X-Api-Key": apiKey,
+          "Accept": "application/vnd.api+json",
+        },
+        cache: "no-store",
+      }
+    );
+    if (!res.ok) {
+      console.error(`Padlet API error for homework ${hw.id}: ${res.status}`);
+      return;
+    }
+
+    const json = (await res.json()) as { included?: { type: string; id: string; attributes?: Record<string, unknown>; relationships?: Record<string, unknown> }[] };
+    const included = json.included || [];
+
+    const resourceMap = new Map<string, { type: string; id: string; attributes?: Record<string, unknown>; relationships?: Record<string, unknown> }>();
+    for (const r of included) {
+      resourceMap.set(`${r.type}:${r.id}`, r);
+    }
+
+    const sections = included
+      .filter((r) => r.type === "section")
+      .map((r) => ({
+        id: r.id,
+        title: (r.attributes?.title as string) || "(섹션 없음)",
+      }));
+
+    const posts = included
+      .filter((r) => r.type === "post")
+      .map((r) => {
+        let authorName: string | undefined;
+        let authorEmail: string | undefined;
+        let authorUsername: string | undefined;
+
+        const attrAuthor = r.attributes?.author as Record<string, unknown> | undefined;
+        if (attrAuthor) {
+          authorName = (attrAuthor.fullName as string) || (attrAuthor.name as string) || (attrAuthor.shortName as string);
+          authorEmail = attrAuthor.email as string | undefined;
+          authorUsername = attrAuthor.username as string | undefined;
+        } else {
+          const authorRel = r.relationships?.author as { data?: { type: string; id: string } | null } | undefined;
+          if (authorRel?.data) {
+            const authorResource = resourceMap.get(`${authorRel.data.type}:${authorRel.data.id}`);
+            if (authorResource) {
+              const attrs = authorResource.attributes || {};
+              authorName = (attrs.fullName as string) || (attrs.name as string) || (attrs.display_name as string);
+              authorEmail = attrs.email as string | undefined;
+              authorUsername = attrs.username as string | undefined;
+            }
+          }
+        }
+
+        const sectionRel = r.relationships?.section as { data?: { type: string; id: string } | null } | undefined;
+        const sectionId = sectionRel?.data?.id;
+
+        return {
+          id: r.id,
+          author: authorName || authorEmail || authorUsername
+            ? { name: authorName, email: authorEmail, username: authorUsername }
+            : undefined,
+          section_id: sectionId,
+        };
+      });
+
+    const { data: hwTeams } = await supabase
+      .from("homework_team_assignments")
+      .select("team_name,user_id,task_index")
+      .eq("homework_id", hw.id);
+
+    const teamsList = hwTeams || [];
+
+    const learnerTeamMap = new Map<string, { teamName: string; memberNames: string[]; memberUsernames: string[] }>();
+    if (hw.is_team && teamsList.length > 0) {
+      const learnerLookup = new Map(learners.map(r => [r.id, r]));
+      teamsList.forEach((vt: any) => {
+        const teamMembers = teamsList.filter((m: any) => m.team_name === vt.team_name && m.task_index === vt.task_index);
+        const memberNames = teamMembers.map((m: any) => learnerLookup.get(m.user_id)?.name || 'Unknown');
+        const memberUsernames = teamMembers.map((m: any) => learnerLookup.get(m.user_id)?.username || '');
+        learnerTeamMap.set(`${vt.user_id}:${vt.task_index}`, { teamName: vt.team_name, memberNames, memberUsernames });
+      });
+    }
+
+    const getSectionConfig = (sectionId: string) => {
+      const config = (hw.section_type_config as Record<string, { type: string; task_index?: number } | undefined>) || {};
+      if (config[sectionId]) return config[sectionId];
+      if (hw.is_team) return { type: "team", task_index: 0 };
+      return { type: "individual" };
+    };
+
+    const anyPostedInSection = (targetNames: string[], targetUsernames: string[], sectionId: string | undefined) =>
+      posts.some((p: any) => {
+        const sMatch = sectionId ? p.section_id === sectionId : !p.section_id;
+        if (!sMatch) return false;
+
+        const authorName = (p.author?.name || '').toLowerCase();
+        const authorUsername = (p.author?.username || '').toLowerCase().replace(/^@/, '');
+
+        const matchesName = targetNames.some(n => {
+          const nl = n.toLowerCase();
+          return nl && (authorName.includes(nl) || nl.includes(authorName));
+        });
+
+        const matchesUsername = targetUsernames.some(u => {
+          const ul = u.toLowerCase().replace(/^@/, '');
+          return ul && (authorUsername === ul);
+        });
+
+        return matchesName || matchesUsername;
+      });
+
+    const records: { homework_id: string; user_id: string; section_id: string; is_completed: boolean; updated_at: string }[] = [];
+    const now = new Date().toISOString();
+
+    learners.forEach(learner => {
+      sections.forEach((s: any) => {
+        const sConfig = getSectionConfig(s.id);
+        let isCompleted = false;
+        if (sConfig.type === "team") {
+          const teamInfo = learnerTeamMap.get(`${learner.id}:${sConfig.task_index}`);
+          if (teamInfo) {
+            isCompleted = anyPostedInSection(teamInfo.memberNames, teamInfo.memberUsernames, s.id);
+          } else {
+            isCompleted = anyPostedInSection([learner.name], [learner.username], s.id);
+          }
+        } else {
+          isCompleted = anyPostedInSection([learner.name], [learner.username], s.id);
+        }
+
+        records.push({
+          homework_id: hw.id,
+          user_id: learner.id,
+          section_id: s.id,
+          is_completed: isCompleted,
+          updated_at: now
+        });
+      });
+    });
+
+    if (records.length > 0) {
+      await supabase
+        .from("homework_section_submissions")
+        .upsert(records, { onConflict: "user_id,homework_id,section_id" });
+    }
+  } catch (err) {
+    console.error(`Error in syncPadletBoardForHomework for homework ${hw.id}:`, err);
+  }
+}
+
 /**
  * Fetches all necessary data for the attendance & homework tracker.
  * If the user is an Admin/Preneur, fetches all learners.
@@ -66,6 +233,64 @@ export async function getTrackerData() {
       .select("id, title, is_individual, is_team, padlet_board_id, submission_link, individual_content, team_content, due_date, created_at, section_type_config")
       .order("created_at", { ascending: true });
     if (hwError) return { success: false as const, error: `과제 목록을 불러오지 못했습니다: ${hwError.message}` };
+
+    // ── Padlet Submission Sync on Tracker Load ──────────────────────────────
+    try {
+      const { data: syncStatus } = await supabase
+        .from("homework_section_submissions")
+        .select("homework_id, updated_at");
+
+      const lastSyncMap = new Map<string, string>();
+      if (syncStatus) {
+        for (const row of syncStatus) {
+          if (row.updated_at && !lastSyncMap.has(row.homework_id)) {
+            lastSyncMap.set(row.homework_id, row.updated_at);
+          }
+        }
+      }
+
+      const activeHomeworks = (homeworks || []).filter(hw => {
+        if (!hw.padlet_board_id) return false;
+        const lastSync = lastSyncMap.get(hw.id);
+        if (!lastSync) return true; // Never synced
+
+        // If synced, only sync again if active (due date null, future, or < 30 days ago) AND last sync was > 5 minutes ago
+        if (!hw.due_date) return new Date(lastSync).getTime() < Date.now() - 5 * 60 * 1000;
+        const due = new Date(hw.due_date).getTime();
+        const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+        if (due > thirtyDaysAgo) {
+          return new Date(lastSync).getTime() < Date.now() - 5 * 60 * 1000;
+        }
+        return false;
+      });
+
+      if (activeHomeworks.length > 0) {
+        // Fetch all active profiles for syncing matching
+        const { data: activeMembersForSync } = await supabase
+          .from("members")
+          .select("public_profile_id")
+          .not("public_profile_id", "is", null);
+
+        const activeProfileIdsForSync = (activeMembersForSync ?? [])
+          .map((m) => m.public_profile_id)
+          .filter(Boolean) as string[];
+
+        const { data: syncLearners } = await supabase
+          .from("profiles")
+          .select("id, name, username")
+          .in("id", activeProfileIdsForSync.length > 0 ? activeProfileIdsForSync : ["__none__"]);
+
+        if (syncLearners && syncLearners.length > 0) {
+          await Promise.all(
+            activeHomeworks.map(hw =>
+              syncPadletBoardForHomework(supabase, hw, syncLearners as { id: string; name: string; username: string }[])
+            )
+          );
+        }
+      }
+    } catch (syncErr) {
+      console.error("Automatic Padlet sync error in getTrackerData:", syncErr);
+    }
 
     let logsQuery = supabase.from("attendance_logs").select("*");
     if (!isAdminOrPreneur) {
