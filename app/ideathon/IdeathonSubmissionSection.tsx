@@ -238,7 +238,7 @@ export default function IdeathonSubmissionSection() {
                   </p>
                   <Link
                     href="/login?redirect=/ideathon#submit"
-                    className="inline-flex h-10 items-center justify-center rounded-md bg-[#16140f] px-6 font-['Pretendard',sans-serif] text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                    className="inline-flex h-10 items-center justify-center rounded-md bg-[#16140f] px-6 font-['Pretendard',sans-serif] text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#FF6C0F] active:bg-[#FF6C0F] active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6C0F]/30"
                   >
                     SPEC 계정으로 로그인
                   </Link>

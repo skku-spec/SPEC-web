@@ -224,4 +224,26 @@ describe("IdeathonSubmissionSection", () => {
     expect(descriptionTextareas).toHaveLength(1);
     expect(descriptionTextareas[0]).toBeRequired();
   });
+
+  it("shows visible hover and pressed affordances on submission controls", async () => {
+    mockUseUser.mockReturnValue({
+      ...defaultUser,
+      isAuthenticated: true,
+      role: "learner",
+    });
+    mockGetMyIdeas.mockResolvedValue({ success: true, data: [sampleIdea] });
+
+    render(<IdeathonSubmissionSection />);
+
+    const submitButton = await screen.findByRole("button", { name: "아이디어 제출하기" });
+    const newIdeaButton = screen.getByRole("button", { name: "새 아이디어로 새로 제출" });
+    const editButton = screen.getByRole("button", { name: "기존 아이디어 수정" });
+
+    expect(submitButton.className).toContain("hover:bg-[#FF6C0F]");
+    expect(submitButton.className).toContain("active:bg-[#FF6C0F]");
+    expect(newIdeaButton.className).toContain("hover:border-[#FF6C0F]/50");
+    expect(newIdeaButton.className).toContain("active:bg-[#FFF0E5]");
+    expect(editButton.className).toContain("hover:border-[#FF6C0F]/50");
+    expect(editButton.className).toContain("active:bg-[#FFF0E5]");
+  });
 });

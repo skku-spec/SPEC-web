@@ -74,7 +74,7 @@ export function IdeathonScrollHero() {
         >
           <a
             href="#submit"
-            className="inline-flex h-12 md:h-14 items-center justify-center rounded-md bg-white px-6 md:px-8 font-['Pretendard',sans-serif] text-sm md:text-base font-semibold text-[#16140f] transition-all hover:bg-white/90"
+            className="inline-flex h-12 md:h-14 items-center justify-center rounded-md bg-white px-6 md:px-8 font-['Pretendard',sans-serif] text-sm md:text-base font-semibold text-[#16140f] transition-colors duration-150 hover:bg-[#FF6C0F] hover:text-white active:bg-[#FF6C0F] active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
           >
             Submit Idea
           </a>

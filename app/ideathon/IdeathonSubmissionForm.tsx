@@ -247,7 +247,7 @@ export default function IdeathonSubmissionForm({
               href={formValues.pdfUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f] hover:text-[#FF6C0F]"
+              className="inline-flex items-center gap-2 rounded-md font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f] transition-colors duration-150 hover:text-[#FF6C0F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6C0F]/30"
             >
               <Paperclip className="h-4 w-4 text-[#FF6C0F]" />
               {formValues.pdfName || "첨부된 PDF 보기"}
@@ -255,7 +255,7 @@ export default function IdeathonSubmissionForm({
             <button
               type="button"
               onClick={clearPdf}
-              className="inline-flex h-8 w-fit items-center gap-1 rounded-md border border-[#ddd9cc] bg-white px-3 font-['Pretendard',sans-serif] text-xs font-semibold text-[#b42318] transition-colors hover:bg-[#fcfcf8]"
+              className="inline-flex h-8 w-fit items-center gap-1 rounded-md border border-[#ddd9cc] bg-white px-3 font-['Pretendard',sans-serif] text-xs font-semibold text-[#b42318] transition-colors duration-150 hover:border-[#b42318]/40 hover:bg-[#FEE2E2] active:bg-[#FEE2E2] active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b42318]/20"
             >
               <X className="h-4 w-4" />
               PDF 제거
@@ -273,7 +273,7 @@ export default function IdeathonSubmissionForm({
             />
             <label
               htmlFor="ideathon-pdf-upload"
-              className={`flex h-10 w-full items-center justify-center gap-2 rounded-md border border-dashed border-[#ddd9cc] bg-white px-4 font-['Pretendard',sans-serif] text-sm text-[#4a4a40] transition-colors hover:bg-[#fcfcf8] ${
+              className={`flex h-10 w-full items-center justify-center gap-2 rounded-md border border-dashed border-[#ddd9cc] bg-white px-4 font-['Pretendard',sans-serif] text-sm text-[#4a4a40] transition-colors duration-150 hover:border-[#FF6C0F]/50 hover:bg-[#FFF0E5] hover:text-[#16140f] active:bg-[#FFF0E5] active:translate-y-px ${
                 isUploading || isPending ? "pointer-events-none opacity-50" : "cursor-pointer"
               }`}
             >
@@ -302,7 +302,7 @@ export default function IdeathonSubmissionForm({
         type="button"
         onClick={onSubmit}
         disabled={isPending || isUploading}
-        className="w-full flex h-10 items-center justify-center rounded-md bg-[#16140f] px-6 font-['Pretendard',sans-serif] text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+        className="w-full flex h-10 items-center justify-center rounded-md bg-[#16140f] px-6 font-['Pretendard',sans-serif] text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#FF6C0F] active:bg-[#FF6C0F] active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6C0F]/30 disabled:cursor-not-allowed disabled:bg-[#16140f]/60 disabled:opacity-70 disabled:active:translate-y-0"
       >
         {isPending ? "제출 중..." : selectedIdeaTitle ? "아이디어 수정하기" : "아이디어 제출하기"}
         {!isPending ? <Send className="ml-2 h-4 w-4" /> : null}

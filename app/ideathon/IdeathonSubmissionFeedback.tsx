@@ -24,7 +24,7 @@ export default function IdeathonSubmissionFeedback({
         <button
           type="button"
           onClick={onReset}
-          className="inline-flex h-10 items-center justify-center rounded-md border border-[#ddd9cc] bg-white px-6 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f] transition-colors hover:bg-[#fcfcf8]"
+          className="inline-flex h-10 items-center justify-center rounded-md border border-[#ddd9cc] bg-white px-6 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f] transition-colors duration-150 hover:border-[#FF6C0F]/50 hover:bg-[#FFF0E5] hover:text-[#FF6C0F] active:bg-[#FFF0E5] active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6C0F]/30"
         >
           새 아이디어로 제출
         </button>
@@ -46,7 +46,7 @@ export default function IdeathonSubmissionFeedback({
       <button
         type="button"
         onClick={onReset}
-        className="inline-flex h-10 items-center justify-center rounded-md border border-[#ddd9cc] bg-white px-6 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f] transition-colors hover:bg-[#fcfcf8]"
+        className="inline-flex h-10 items-center justify-center rounded-md border border-[#ddd9cc] bg-white px-6 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f] transition-colors duration-150 hover:border-[#FF6C0F]/50 hover:bg-[#FFF0E5] hover:text-[#FF6C0F] active:bg-[#FFF0E5] active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6C0F]/30"
       >
         추가 제출하기
       </button>

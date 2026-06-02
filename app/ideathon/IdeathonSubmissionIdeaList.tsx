@@ -23,7 +23,7 @@ export default function IdeathonSubmissionIdeaList({
         <button
           type="button"
           onClick={onNewIdea}
-          className="inline-flex items-center gap-1 rounded-md border border-[#ddd9cc] px-3 h-8 font-['Pretendard',sans-serif] text-xs font-semibold text-[#16140f] hover:bg-[#fcfcf8]"
+          className="inline-flex items-center gap-1 rounded-md border border-[#ddd9cc] px-3 h-8 font-['Pretendard',sans-serif] text-xs font-semibold text-[#16140f] transition-colors duration-150 hover:border-[#FF6C0F]/50 hover:bg-[#FFF0E5] hover:text-[#FF6C0F] active:bg-[#FFF0E5] active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6C0F]/30"
         >
           <PlusCircle className="h-4 w-4 text-[#FF6C0F]" />
           새 아이디어로 새로 제출
@@ -47,7 +47,7 @@ export default function IdeathonSubmissionIdeaList({
                   href={idea.pdf_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-3 inline-flex items-center gap-1 font-['Pretendard',sans-serif] text-xs font-semibold text-[#FF6C0F] hover:underline"
+                  className="mt-3 inline-flex items-center gap-1 rounded-md font-['Pretendard',sans-serif] text-xs font-semibold text-[#FF6C0F] transition-colors duration-150 hover:text-[#16140f] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6C0F]/30"
                 >
                   <Paperclip className="h-4 w-4" />
                   첨부 PDF 보기
@@ -56,7 +56,7 @@ export default function IdeathonSubmissionIdeaList({
               <button
                 type="button"
                 onClick={() => onSelectIdea(idea)}
-                className="mt-3 inline-flex items-center gap-1 rounded-md border border-[#ddd9cc] bg-white px-3 h-8 font-['Pretendard',sans-serif] text-xs font-semibold text-[#16140f] transition-colors hover:bg-[#fcfcf8]"
+                className="mt-3 inline-flex items-center gap-1 rounded-md border border-[#ddd9cc] bg-white px-3 h-8 font-['Pretendard',sans-serif] text-xs font-semibold text-[#16140f] transition-colors duration-150 hover:border-[#FF6C0F]/50 hover:bg-[#FFF0E5] hover:text-[#FF6C0F] active:bg-[#FFF0E5] active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6C0F]/30"
               >
                 <PenLine className="h-4 w-4 text-[#FF6C0F]" />
                 {idea.title} 수정
