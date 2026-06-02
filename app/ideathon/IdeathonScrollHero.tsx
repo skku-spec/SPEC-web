@@ -47,7 +47,7 @@ export function IdeathonScrollHero() {
   }, [src]);
 
   return (
-    <div className="relative h-[100dvh] w-full overflow-hidden bg-black rounded-none" style={{ backgroundColor: "#000000" }}>
+    <div className="relative h-[100dvh] w-full overflow-hidden bg-[#16140f] rounded-none" style={{ backgroundColor: "#16140f" }}>
       <video
         key={src}
         ref={videoRef}
@@ -55,7 +55,7 @@ export function IdeathonScrollHero() {
         autoPlay
         muted
         playsInline
-        className="absolute inset-0 w-full h-full object-cover bg-black rounded-none border-0 outline-none"
+        className="absolute inset-0 w-full h-full object-cover bg-[#16140f] rounded-none border-0 outline-none"
       />
 
       {/* Submit Idea overlay — fades in after video ends */}
@@ -76,7 +76,7 @@ export function IdeathonScrollHero() {
         >
           <a
             href="#submit"
-            className="inline-flex h-12 md:h-14 items-center justify-center rounded-md bg-white px-8 md:px-10 font-['Pretendard',sans-serif] text-sm md:text-base font-bold text-[#16140f] transition-all hover:bg-white/90 shadow-lg"
+            className="inline-flex h-12 md:h-14 items-center justify-center rounded-md bg-white px-6 md:px-8 font-['Pretendard',sans-serif] text-sm md:text-base font-semibold text-[#16140f] transition-all hover:bg-white/90"
           >
             Submit Idea
           </a>
