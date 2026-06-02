@@ -28,7 +28,7 @@ const PARTNERS = [
     name: "알파브라더스",
     href: "https://www.alphabrothers.co.kr/",
     linkLabel: "공식 웹사이트",
-    image: { src: "/images/logos/alphabrothers.png", alt: "알파브라더스", width: 160, height: 64, className: "h-auto w-auto object-contain" },
+    image: { src: "/images/logos/alphabrothers.png", alt: "알파브라더스", width: 48, height: 48, className: "h-12 w-12 object-contain" },
     description: "검증된 방법론을 바탕으로 혁신 기업의 시작과 성장을 설계하고 조력하는 전문 빌더사입니다. 본 행사 개최 공간 및 실무 멘토링을 제공합니다.",
   },
   {
