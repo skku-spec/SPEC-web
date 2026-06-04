@@ -2,6 +2,7 @@ import { Calendar, MapPin, Info } from "lucide-react";
 import IdeathonPartnersFaqSection from "./IdeathonPartnersFaqSection";
 import { IdeathonScrollHero } from "./IdeathonScrollHero";
 import IdeathonSubmissionSection from "./IdeathonSubmissionSection";
+import IdeathonTeamBoardSection from "./IdeathonTeamBoardSection";
 
 const TIMETABLE_DAY1 = [
   { time: "12:00 - 12:30", title: "참가자 집합 및 행사 안내" },
@@ -53,7 +54,7 @@ export default function IdeathonPage() {
                 아이디어톤은 10주간의 치열했던 Bootcamp 기간 동안 서로 셔플하며 증명해온 비즈니스 모델을 구체화하는 실전 창업의 첫 게이트웨이입니다.
               </p>
               <p className="font-['Pretendard',sans-serif] text-base leading-[1.8] text-[#4a4a40] mb-6">
-                단순한 상상이나 기획서 제출에서 벗어나, 그간 모아온 리얼 고객 데이터와 가설 검증 결과물을 바탕으로 진행됩니다. 참가자들은 이 세션에서 서로의 강점과 비전을 공유하며, 향후 30주간 프로덕트를 함께 만들고 매출을 극대화할 최적의 핵심 공동창업자를 확정하게 됩니다.
+                단순한 상상이나 기획서 제출에서 벗어나, 그간 모아온 리얼 고객 데이터와 가설 검증 결과물을 바탕으로 진행됩니다. 참가자들은 이 세션에서 서로의 강점과 비전을 공유하며, 12월 데모데이까지 프로덕트를 함께 만들고 매출을 극대화할 최적의 핵심 공동창업자를 확정하게 됩니다.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
                 <div className="p-5 rounded-lg border border-[#ddd9cc] bg-white">
@@ -77,6 +78,8 @@ export default function IdeathonPage() {
           </div>
         </div>
       </section>
+
+      <IdeathonTeamBoardSection />
 
       <section id="schedule" className="relative w-full overflow-hidden" style={{ backgroundColor: "#16140f" }}>
         <div id="timetable" className="relative z-10 mx-auto max-w-[960px] px-6 pt-16 md:pt-24">

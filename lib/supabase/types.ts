@@ -603,6 +603,83 @@ export type Database = {
           }
         ];
       };
+      ideathon_participant_profiles: {
+        Row: {
+          id: string;
+          user_id: string;
+          photo_url: string;
+          department: string;
+          major: string | null;
+          age: number;
+          student_id: string;
+          grade: string;
+          ability_tags: string[];
+          interest_tags: string[];
+          startup_reason: string;
+          team_style: string;
+          december_goal: string;
+          looking_for_teammates: string;
+          appeal: string | null;
+          portfolio_url: string | null;
+          sns_url: string | null;
+          published_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          photo_url: string;
+          department: string;
+          major?: string | null;
+          age: number;
+          student_id: string;
+          grade: string;
+          ability_tags: readonly string[];
+          interest_tags?: readonly string[];
+          startup_reason: string;
+          team_style: string;
+          december_goal: string;
+          looking_for_teammates: string;
+          appeal?: string | null;
+          portfolio_url?: string | null;
+          sns_url?: string | null;
+          published_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          photo_url?: string;
+          department?: string;
+          major?: string | null;
+          age?: number;
+          student_id?: string;
+          grade?: string;
+          ability_tags?: readonly string[];
+          interest_tags?: readonly string[];
+          startup_reason?: string;
+          team_style?: string;
+          december_goal?: string;
+          looking_for_teammates?: string;
+          appeal?: string | null;
+          portfolio_url?: string | null;
+          sns_url?: string | null;
+          published_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ideathon_participant_profiles_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: true;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       homeworks: {
         Row: {
           id: string;

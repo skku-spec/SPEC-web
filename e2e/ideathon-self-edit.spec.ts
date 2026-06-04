@@ -20,8 +20,9 @@ test("ideathon page keeps unauthenticated submission regression stable", async (
   expect(response, "/ideathon should return a response").not.toBeNull();
   expect(response?.ok(), "/ideathon should return OK").toBeTruthy();
 
-  await page.locator("#submit").scrollIntoViewIfNeeded();
-  await expect(page.getByRole("link", { name: "SPEC 계정으로 로그인" })).toBeVisible();
+  const submissionSection = page.locator("#submit");
+  await submissionSection.scrollIntoViewIfNeeded();
+  await expect(submissionSection.getByRole("link", { name: "SPEC 계정으로 로그인" })).toBeVisible();
   await expect(page.getByRole("button", { name: "아이디어 제출하기" })).toHaveCount(0);
   await expect(page.locator('textarea[name="description"]')).toHaveCount(0);
 

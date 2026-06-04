@@ -11,6 +11,7 @@ export {
   SPEC_LOG_ENGAGE_ROLES,
   ADMIN_PAGE_ROLES,
   DASHBOARD_ROLES,
+  IDEATHON_BOARD_ROLES,
   normalizeRole,
   isAdmin,
   canWrite,
