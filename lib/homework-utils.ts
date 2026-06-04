@@ -60,28 +60,27 @@ export function computeLearnerHomeworkStats(
   let notSubmittedCount = 0;
 
   for (const hw of homeworks) {
-    const individualItems = Array.isArray(hw.individual_content) ? hw.individual_content : [];
-    const teamItems = Array.isArray(hw.team_content) ? hw.team_content : [];
-    const totalItems = Math.max(individualItems.length + teamItems.length, 1);
-
     const hwSections = sectionSubmissions?.filter(
       s => s.homework_id === hw.id && s.user_id === learnerId
     );
 
     if (hwSections && hwSections.length > 0) {
-      const completedItems = hwSections.filter(s => s.is_completed).length;
-      completedCount += completedItems;
-      notSubmittedCount += Math.max(0, totalItems - completedItems);
+      const isCompleted = hwSections.every(s => s.is_completed);
+      if (isCompleted) {
+        completedCount++;
+      } else {
+        notSubmittedCount++;
+      }
     } else {
       const sub = submissions.find(
         s => s.homework_id === hw.id && s.user_id === learnerId && s.status === "completed"
       );
       if (!sub) {
-        notSubmittedCount += totalItems;
+        notSubmittedCount++;
       } else {
-        completedCount += totalItems;
+        completedCount++;
         if (sub.submitted_at && classifySubmission(sub.submitted_at, hw.due_date) === "late") {
-          lateCount += totalItems;
+          lateCount++;
         }
       }
     }
