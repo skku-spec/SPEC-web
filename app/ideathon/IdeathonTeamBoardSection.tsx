@@ -139,7 +139,7 @@ export default function IdeathonTeamBoardSection() {
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
                     placeholder="이름, 학과, 태그 검색"
-                    className="h-10 w-full rounded-lg border border-[#ddd9cc] bg-white py-2.5 pl-10 pr-4 font-['Pretendard',sans-serif] text-sm text-[#16140f] placeholder:text-[#16140f]/40 focus:border-[#FF6C0F]/50 focus:outline-none focus:ring-2 focus:ring-[#FF6C0F]/10"
+                    className="h-10 w-full rounded-lg border border-[#ddd9cc] bg-white py-2.5 pl-10 pr-4 font-['Pretendard',sans-serif] text-sm text-[#16140f] placeholder:text-[#6b6b5e] focus:border-[#FF6C0F]/50 focus:outline-none focus:ring-2 focus:ring-[#FF6C0F]/10"
                   />
                 </label>
                 <label className="grid gap-1">

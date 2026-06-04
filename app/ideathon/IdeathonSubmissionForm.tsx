@@ -46,7 +46,7 @@ const textFields = [
 ] as const;
 
 const COMMON_FIELD_CLASS =
-  "w-full rounded-lg border border-[#ddd9cc] bg-white py-2.5 px-4 font-['Pretendard',sans-serif] text-sm text-[#16140f] placeholder:text-[#16140f]/40 focus:border-[#FF6C0F]/50 focus:ring-2 focus:ring-[#FF6C0F]/10 outline-none transition-colors";
+  "w-full rounded-lg border border-[#ddd9cc] bg-white py-2.5 px-4 font-['Pretendard',sans-serif] text-sm text-[#16140f] placeholder:text-[#6b6b5e] focus:border-[#FF6C0F]/50 focus:ring-2 focus:ring-[#FF6C0F]/10 outline-none transition-colors";
 
 type UploadResponse = {
   success: boolean;

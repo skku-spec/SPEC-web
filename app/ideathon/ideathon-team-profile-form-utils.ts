@@ -24,6 +24,101 @@ export type UploadResult = {
   readonly error?: string;
 };
 
+export type IdeathonPreparedImage = {
+  readonly width: number;
+  readonly height: number;
+  readonly close: () => void;
+  readonly toJpegBlob: (width: number, height: number, quality: number) => Promise<Blob | null>;
+};
+
+export type ImagePreparationRuntime = {
+  readonly decode: (file: File) => Promise<IdeathonPreparedImage>;
+};
+
+const MAX_PROFILE_IMAGE_DIMENSION = 1280;
+const PROFILE_IMAGE_QUALITY = 0.82;
+
+function resizedDimension(width: number, height: number): { readonly width: number; readonly height: number } {
+  const longestSide = Math.max(width, height);
+  const scale = longestSide > MAX_PROFILE_IMAGE_DIMENSION ? MAX_PROFILE_IMAGE_DIMENSION / longestSide : 1;
+
+  return {
+    width: Math.max(1, Math.round(width * scale)),
+    height: Math.max(1, Math.round(height * scale)),
+  };
+}
+
+function jpegFileName(fileName: string): string {
+  const baseName = fileName.replace(/\.[^.]+$/, "").trim();
+  return `${baseName || "profile"}.jpg`;
+}
+
+async function canvasToJpegBlob(canvas: HTMLCanvasElement, quality: number): Promise<Blob | null> {
+  return new Promise((resolve) => {
+    canvas.toBlob(resolve, "image/jpeg", quality);
+  });
+}
+
+function createBrowserImagePreparationRuntime(): ImagePreparationRuntime | null {
+  if (typeof document === "undefined" || typeof createImageBitmap !== "function") {
+    return null;
+  }
+
+  return {
+    decode: async (file) => {
+      const bitmap = await createImageBitmap(file);
+
+      return {
+        width: bitmap.width,
+        height: bitmap.height,
+        close: () => bitmap.close(),
+        toJpegBlob: async (width, height, quality) => {
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+
+          const context = canvas.getContext("2d");
+          if (!context) {
+            return null;
+          }
+
+          context.drawImage(bitmap, 0, 0, width, height);
+          return canvasToJpegBlob(canvas, quality);
+        },
+      };
+    },
+  };
+}
+
+export async function prepareIdeathonProfileImageForUpload(
+  file: File,
+  runtime: ImagePreparationRuntime | null = createBrowserImagePreparationRuntime(),
+): Promise<File> {
+  if (!runtime) {
+    return file;
+  }
+
+  let preparedImage: IdeathonPreparedImage | null = null;
+
+  try {
+    preparedImage = await runtime.decode(file);
+    const size = resizedDimension(preparedImage.width, preparedImage.height);
+    const blob = await preparedImage.toJpegBlob(size.width, size.height, PROFILE_IMAGE_QUALITY);
+    if (!blob || blob.size >= file.size) {
+      return file;
+    }
+
+    return new File([blob], jpegFileName(file.name), {
+      type: "image/jpeg",
+      lastModified: file.lastModified,
+    });
+  } catch {
+    return file;
+  } finally {
+    preparedImage?.close();
+  }
+}
+
 export function buildInitialTeamProfileFormState(data: IdeathonBoardData): TeamProfileFormState {
   const profile = data.myProfile;
   return {

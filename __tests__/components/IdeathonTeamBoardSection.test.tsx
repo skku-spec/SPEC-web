@@ -195,6 +195,22 @@ describe("IdeathonTeamBoardSection", () => {
     expect(screen.getByText("김프러너")).toBeInTheDocument();
   });
 
+  it("renders the authenticated mobile profile form surface with visible writing placeholders", async () => {
+    mockUseUser.mockReturnValue({ ...defaultUser, isAuthenticated: true, role: "learner" });
+
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: 390 });
+    Object.defineProperty(window, "innerHeight", { configurable: true, value: 844 });
+    window.dispatchEvent(new Event("resize"));
+    render(<IdeathonTeamBoardSection />);
+
+    expect(await screen.findByText("내 소개 작성하기")).toBeInTheDocument();
+    expect(screen.getByLabelText("사진 업로드")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("왜 지금 창업을 해보고 싶은지 솔직하게 적어주세요.")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("일할 때 편한 방식, 의사결정 스타일, 강한 역할을 적어주세요.")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("12월까지 팀과 함께 만들고 싶은 결과를 적어주세요.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "내 소개 저장하기" })).toBeInTheDocument();
+  });
+
   it("switches to table view and opens a participant modal", async () => {
     const user = userEvent.setup();
     mockUseUser.mockReturnValue({ ...defaultUser, isAuthenticated: true, role: "learner" });
