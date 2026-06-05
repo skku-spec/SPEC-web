@@ -24,6 +24,7 @@ export default function IdeathonTeamBoardSection() {
   const [abilityFilter, setAbilityFilter] = useState("all");
   const [interestFilter, setInterestFilter] = useState("all");
   const [selectedProfile, setSelectedProfile] = useState<IdeathonBoardProfile | null>(null);
+  const [profileEditRequestId, setProfileEditRequestId] = useState(0);
   const allowed = isAuthenticated && canViewBoard(role);
 
   const loadBoard = useCallback(async () => {
@@ -128,7 +129,7 @@ export default function IdeathonTeamBoardSection() {
           </div>
         ) : (
           <div className="space-y-8">
-            {boardData ? <IdeathonTeamProfileForm data={boardData} onSaved={loadBoard} /> : null}
+            {boardData ? <IdeathonTeamProfileForm data={boardData} editRequestId={profileEditRequestId} onSaved={loadBoard} /> : null}
 
             <div className="space-y-5">
               <div className="grid gap-3 md:grid-cols-[1fr_140px_150px_150px_auto]">
@@ -214,7 +215,10 @@ export default function IdeathonTeamBoardSection() {
           onClose={() => setSelectedProfile(null)}
           onEdit={() => {
             setSelectedProfile(null);
-            document.getElementById("ideathon-team-profile-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+            setProfileEditRequestId((current) => current + 1);
+            window.setTimeout(() => {
+              document.getElementById("ideathon-team-profile-form")?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+            }, 0);
           }}
         />
       ) : null}

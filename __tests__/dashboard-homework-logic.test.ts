@@ -177,7 +177,7 @@ describe("computeLearnerHomeworkStats", () => {
 
   it("uses hwSections.length for total count when section submissions are present", () => {
     const homeworks = [{ id: "hw-1", due_date: "2026-04-10T09:00:00Z", individual_content: ["task-1", "task-2"], team_content: ["task-3"] }];
-    const submissions: any[] = [];
+    const submissions: Parameters<typeof computeLearnerHomeworkStats>[2] = [];
     const sectionSubmissions = [
       { homework_id: "hw-1", user_id: userId, section_id: "sec-1", is_completed: true },
       { homework_id: "hw-1", user_id: userId, section_id: "sec-2", is_completed: false },

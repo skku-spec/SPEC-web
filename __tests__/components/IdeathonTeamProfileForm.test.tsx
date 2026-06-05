@@ -73,6 +73,72 @@ function mockSuccessfulUploadFetch() {
 }
 
 describe("IdeathonTeamProfileForm", () => {
+  it("collapses completed profile into a summary card and reopens the form for editing", async () => {
+    // Given
+    const user = userEvent.setup();
+
+    render(<IdeathonTeamProfileForm data={existingProfileData} onSaved={async () => {}} />);
+
+    // Then
+    expect(screen.getByText("소개 작성 완료")).toBeInTheDocument();
+    expect(screen.getByAltText("홍길동 팀빌딩 보드 사진")).toBeInTheDocument();
+    expect(screen.getByText("홍길동")).toBeInTheDocument();
+    expect(screen.getByText("경영학과")).toBeInTheDocument();
+    expect(screen.getByText("개발, 기획")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "내 소개 저장하기" })).not.toBeInTheDocument();
+
+    // When
+    await user.click(screen.getByRole("button", { name: "내 소개 수정하기" }));
+
+    // Then
+    expect(screen.getByRole("button", { name: "내 소개 저장하기" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "개발" })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("keeps the form open after a failed profile save", async () => {
+    // Given
+    const user = userEvent.setup();
+    mockUpsertMyIdeathonProfile.mockResolvedValueOnce({ success: false, error: "저장에 실패했습니다." });
+
+    render(<IdeathonTeamProfileForm data={existingProfileData} onSaved={async () => {}} />);
+
+    // When
+    await user.click(screen.getByRole("button", { name: "내 소개 수정하기" }));
+    await user.click(screen.getByRole("button", { name: "내 소개 저장하기" }));
+
+    // Then
+    expect(await screen.findByText("저장에 실패했습니다.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "내 소개 저장하기" })).toBeInTheDocument();
+    expect(screen.queryByText("소개 작성 완료")).not.toBeInTheDocument();
+  });
+
+  it("collapses the form after a successful first save and keeps the submitted summary visible", async () => {
+    // Given
+    const user = userEvent.setup();
+    const onSaved = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
+    mockSuccessfulUploadFetch();
+    mockUpsertMyIdeathonProfile.mockResolvedValueOnce({ success: true });
+
+    render(<IdeathonTeamProfileForm data={formData} onSaved={onSaved} />);
+
+    // When
+    await user.upload(screen.getByLabelText("사진 업로드"), new File([new Uint8Array(1024)], "profile.png", { type: "image/png" }));
+    await screen.findByText("사진이 업로드되었습니다.");
+    await user.type(screen.getByLabelText("학과"), "컴퓨터교육과");
+    await user.click(screen.getByRole("button", { name: "개발" }));
+    await user.click(screen.getByRole("button", { name: "내 소개 저장하기" }));
+
+    // Then
+    expect(await screen.findByText("소개 작성 완료")).toBeInTheDocument();
+    expect(screen.getByAltText("홍길동 팀빌딩 보드 사진")).toBeInTheDocument();
+    expect(screen.getByText("홍길동")).toBeInTheDocument();
+    expect(screen.getByText("컴퓨터교육과")).toBeInTheDocument();
+    expect(screen.getByText("개발")).toBeInTheDocument();
+    expect(screen.getByText("내 소개가 저장되었습니다.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "내 소개 저장하기" })).not.toBeInTheDocument();
+    expect(onSaved).toHaveBeenCalledTimes(1);
+  });
+
   it("renders selectable ability tag chips and submits selected chips as ability_tags FormData values", async () => {
     const user = userEvent.setup();
     mockUpsertMyIdeathonProfile.mockResolvedValueOnce({ success: true });
@@ -101,6 +167,8 @@ describe("IdeathonTeamProfileForm", () => {
     });
 
     render(<IdeathonTeamProfileForm data={existingProfileData} onSaved={async () => {}} />);
+
+    await user.click(screen.getByRole("button", { name: "내 소개 수정하기" }));
 
     expect(screen.getByRole("button", { name: "개발" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("button", { name: "기획" })).toHaveAttribute("aria-pressed", "true");

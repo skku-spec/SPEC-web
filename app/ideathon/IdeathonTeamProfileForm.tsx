@@ -2,8 +2,10 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { ImagePlus, Save, Upload } from "lucide-react";
+import Image from "next/image";
 
 import IdeathonAbilityTagSelector from "@/app/ideathon/IdeathonAbilityTagSelector";
+import IdeathonTeamProfileSummary from "@/app/ideathon/IdeathonTeamProfileSummary";
 import {
   buildInitialTeamProfileFormState,
   isUploadResult,
@@ -16,13 +18,16 @@ import type { TeamProfileFormState } from "@/app/ideathon/ideathon-team-profile-
 
 type Props = {
   readonly data: IdeathonBoardData;
+  readonly editRequestId?: number;
   readonly onSaved: () => Promise<void>;
+  readonly saveProfile?: typeof upsertMyIdeathonProfile;
 };
 
 type UploadPhase = "idle" | "preparing" | "uploading";
 
-export default function IdeathonTeamProfileForm({ data, onSaved }: Props) {
+export default function IdeathonTeamProfileForm({ data, editRequestId, onSaved, saveProfile = upsertMyIdeathonProfile }: Props) {
   const [form, setForm] = useState<TeamProfileFormState>(() => buildInitialTeamProfileFormState(data));
+  const [isEditing, setIsEditing] = useState(() => data.myProfile === null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -31,7 +36,17 @@ export default function IdeathonTeamProfileForm({ data, onSaved }: Props) {
 
   useEffect(() => {
     setForm(buildInitialTeamProfileFormState(data));
+    setIsEditing(data.myProfile === null);
   }, [data]);
+
+  useEffect(() => {
+    if (!editRequestId) {
+      return;
+    }
+    setError(null);
+    setNotice(null);
+    setIsEditing(true);
+  }, [editRequestId]);
 
   const updateField = (key: keyof TeamProfileFormState, value: string) => {
     setForm((previous) => ({ ...previous, [key]: value }));
@@ -92,7 +107,7 @@ export default function IdeathonTeamProfileForm({ data, onSaved }: Props) {
       payload.set("portfolio_url", form.portfolioUrl.trim());
       payload.set("sns_url", form.snsUrl.trim());
 
-      const result = await upsertMyIdeathonProfile(payload);
+      const result = await saveProfile(payload);
       if (!result.success) {
         setError(result.error);
         return;
@@ -100,6 +115,7 @@ export default function IdeathonTeamProfileForm({ data, onSaved }: Props) {
 
       setNotice("내 소개가 저장되었습니다.");
       await onSaved();
+      setIsEditing(false);
     });
   };
 
@@ -107,6 +123,21 @@ export default function IdeathonTeamProfileForm({ data, onSaved }: Props) {
   const textareaClass = `${inputClass} min-h-[104px] resize-y leading-6`;
   const labelClass = "font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]";
   const uploadLabel = uploadPhase === "preparing" ? "사진 줄이는 중" : uploadPhase === "uploading" ? "사진 업로드 중" : "사진 업로드";
+
+  if (!isEditing) {
+    return (
+      <IdeathonTeamProfileSummary
+        data={data}
+        form={form}
+        notice={notice}
+        onEdit={() => {
+          setError(null);
+          setNotice(null);
+          setIsEditing(true);
+        }}
+      />
+    );
+  }
 
   return (
     <section id="ideathon-team-profile-form" className="rounded-lg border border-[#ddd9cc] bg-white p-5 sm:p-6">
@@ -128,8 +159,15 @@ export default function IdeathonTeamProfileForm({ data, onSaved }: Props) {
         <div className="w-full max-w-[240px] md:max-w-none">
           <div className="aspect-[4/5] overflow-hidden rounded-lg border border-[#ddd9cc] bg-[#e8e6dc]">
             {form.imageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={form.imageUrl} alt="내 팀빌딩 보드 사진" className="h-full w-full object-cover" />
+              <div className="relative h-full w-full">
+                <Image
+                  src={form.imageUrl}
+                  alt="내 팀빌딩 보드 사진"
+                  fill
+                  sizes="(min-width: 768px) 180px, 240px"
+                  className="object-cover"
+                />
+              </div>
             ) : (
               <div className="grid h-full place-items-center">
                 <ImagePlus className="h-8 w-8 text-[#6b6b5e]" strokeWidth={1.5} />

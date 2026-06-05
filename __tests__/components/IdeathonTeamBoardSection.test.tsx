@@ -180,22 +180,23 @@ describe("IdeathonTeamBoardSection", () => {
 
     render(<IdeathonTeamBoardSection />);
 
-    expect(await screen.findByText("홍길동")).toBeInTheDocument();
-    expect(screen.getByText("김프러너")).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "홍길동 열어보기" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "김프러너 열어보기" })).toBeInTheDocument();
 
     await user.selectOptions(screen.getByLabelText("관심 태그 필터"), "SaaS");
 
-    expect(screen.queryByText("홍길동")).not.toBeInTheDocument();
-    expect(screen.getByText("김프러너")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "홍길동 열어보기" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "김프러너 열어보기" })).toBeInTheDocument();
 
     await user.selectOptions(screen.getByLabelText("관심 태그 필터"), "all");
     await user.selectOptions(screen.getByLabelText("능력 태그 필터"), "영업");
 
-    expect(screen.queryByText("홍길동")).not.toBeInTheDocument();
-    expect(screen.getByText("김프러너")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "홍길동 열어보기" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "김프러너 열어보기" })).toBeInTheDocument();
   });
 
-  it("renders the authenticated mobile profile form surface with visible writing placeholders", async () => {
+  it("renders the authenticated mobile profile summary and reopens writing placeholders", async () => {
+    const user = userEvent.setup();
     mockUseUser.mockReturnValue({ ...defaultUser, isAuthenticated: true, role: "learner" });
 
     Object.defineProperty(window, "innerWidth", { configurable: true, value: 390 });
@@ -203,7 +204,10 @@ describe("IdeathonTeamBoardSection", () => {
     window.dispatchEvent(new Event("resize"));
     render(<IdeathonTeamBoardSection />);
 
-    expect(await screen.findByText("내 소개 작성하기")).toBeInTheDocument();
+    expect(await screen.findByText("소개 작성 완료")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "내 소개 수정하기" }));
+
+    expect(screen.getByText("내 소개 작성하기")).toBeInTheDocument();
     expect(screen.getByLabelText("사진 업로드")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("왜 지금 창업을 해보고 싶은지 솔직하게 적어주세요.")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("일할 때 편한 방식, 의사결정 스타일, 강한 역할을 적어주세요.")).toBeInTheDocument();
@@ -230,7 +234,7 @@ describe("IdeathonTeamBoardSection", () => {
     expect(within(dialog).getByText("데모데이까지 실제 매출을 만들고 싶습니다.")).toBeInTheDocument();
   });
 
-  it("shows an edit CTA in the current user's own modal", async () => {
+  it("opens the profile form when the current user's modal edit CTA is clicked", async () => {
     const user = userEvent.setup();
     mockUseUser.mockReturnValue({ ...defaultUser, isAuthenticated: true, role: "learner" });
 
@@ -239,7 +243,11 @@ describe("IdeathonTeamBoardSection", () => {
     await user.click(await screen.findByRole("button", { name: "홍길동 열어보기" }));
 
     const dialog = screen.getByRole("dialog", { name: "홍길동 소개" });
-    expect(within(dialog).getByRole("button", { name: "내 소개 수정하기" })).toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: "내 소개 수정하기" }));
+
+    expect(screen.queryByRole("dialog", { name: "홍길동 소개" })).not.toBeInTheDocument();
+    expect(screen.getByText("내 소개 작성하기")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "내 소개 저장하기" })).toBeInTheDocument();
   });
 
   it("submits the current user's edited profile as FormData", async () => {
@@ -248,7 +256,8 @@ describe("IdeathonTeamBoardSection", () => {
 
     render(<IdeathonTeamBoardSection />);
 
-    await screen.findByDisplayValue("진실되게 오래 달릴 팀을 찾고 있습니다.");
+    await user.click(await screen.findByRole("button", { name: "내 소개 수정하기" }));
+    expect(screen.getByDisplayValue("진실되게 오래 달릴 팀을 찾고 있습니다.")).toBeInTheDocument();
     await user.clear(screen.getByLabelText(/자유 어필/));
     await user.type(screen.getByLabelText(/자유 어필/), "고객에게 오래 머무는 팀원이 되고 싶습니다.");
     await user.click(screen.getByRole("button", { name: "내 소개 저장하기" }));
