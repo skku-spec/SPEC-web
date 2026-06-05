@@ -174,4 +174,16 @@ describe("computeLearnerHomeworkStats", () => {
       completedCount: 0, totalCount: 1, lateCount: 0, notSubmittedCount: 1,
     });
   });
+
+  it("uses hwSections.length for total count when section submissions are present", () => {
+    const homeworks = [{ id: "hw-1", due_date: "2026-04-10T09:00:00Z", individual_content: ["task-1", "task-2"], team_content: ["task-3"] }];
+    const submissions: any[] = [];
+    const sectionSubmissions = [
+      { homework_id: "hw-1", user_id: userId, section_id: "sec-1", is_completed: true },
+      { homework_id: "hw-1", user_id: userId, section_id: "sec-2", is_completed: false },
+    ];
+    expect(computeLearnerHomeworkStats(userId, homeworks, submissions, sectionSubmissions)).toEqual({
+      completedCount: 1, totalCount: 2, lateCount: 0, notSubmittedCount: 1,
+    });
+  });
 });
