@@ -288,20 +288,11 @@ export async function getTrackerData() {
       });
 
       if (activeHomeworks.length > 0) {
-        // Fetch all active profiles for syncing matching
-        const { data: activeMembersForSync } = await supabase
-          .from("members")
-          .select("public_profile_id")
-          .not("public_profile_id", "is", null);
-
-        const activeProfileIdsForSync = (activeMembersForSync ?? [])
-          .map((m) => m.public_profile_id)
-          .filter(Boolean) as string[];
-
+        // Fetch all active profiles with role = 'learner' for syncing matching
         const { data: syncLearners } = await supabase
           .from("profiles")
           .select("id, name, username")
-          .in("id", activeProfileIdsForSync.length > 0 ? activeProfileIdsForSync : ["__none__"]);
+          .eq("role", "learner");
 
         if (syncLearners && syncLearners.length > 0) {
           await Promise.all(
