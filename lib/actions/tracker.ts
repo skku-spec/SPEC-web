@@ -152,11 +152,22 @@ async function syncPadletBoardForHomework(
         return matchesName || matchesUsername;
       });
 
-    const records: { homework_id: string; user_id: string; section_id: string; is_completed: boolean; updated_at: string }[] = [];
+    // Fetch overrides for this homework to prevent overwriting them
+    const { data: overrides } = await supabase
+      .from("homework_section_submissions")
+      .select("user_id, section_id")
+      .eq("homework_id", hw.id)
+      .eq("is_override", true);
+
+    const overrideSet = new Set(overrides?.map(o => `${o.user_id}:${o.section_id}`) || []);
+
+    const records: { homework_id: string; user_id: string; section_id: string; is_completed: boolean; is_override: boolean; updated_at: string }[] = [];
     const now = new Date().toISOString();
 
     learners.forEach(learner => {
       sections.forEach((s) => {
+        if (overrideSet.has(`${learner.id}:${s.id}`)) return; // Skip overridden records
+
         const sConfig = getSectionConfig(s.id);
         let isCompleted = false;
         if (sConfig.type === "team") {
@@ -175,6 +186,7 @@ async function syncPadletBoardForHomework(
           user_id: learner.id,
           section_id: s.id,
           is_completed: isCompleted,
+          is_override: false,
           updated_at: now
         });
       });
@@ -505,7 +517,7 @@ export async function getHomeworkSectionSubmissions(homeworkId: string) {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("homework_section_submissions")
-      .select("user_id, section_id, is_completed")
+      .select("user_id, section_id, is_completed, is_override")
       .eq("homework_id", homeworkId);
     if (error) return { success: false as const, error: error.message };
     return { success: true as const, data: data ?? [] };
@@ -524,11 +536,31 @@ export async function bulkUpsertHomeworkSectionSubmissions(
     await requireAdmin();
     if (records.length === 0) return { success: true as const };
     const supabase = await createClient();
+
+    // Fetch existing overrides for these homeworks to prevent overwriting them
+    const hwIds = Array.from(new Set(records.map(r => r.homework_id)));
+    const { data: overrides } = await supabase
+      .from("homework_section_submissions")
+      .select("homework_id, user_id, section_id")
+      .in("homework_id", hwIds)
+      .eq("is_override", true);
+
+    const overrideSet = new Set(
+      overrides?.map(o => `${o.homework_id}:${o.user_id}:${o.section_id}`) || []
+    );
+
+    // Filter out overridden records
+    const filteredRecords = records.filter(
+      r => !overrideSet.has(`${r.homework_id}:${r.user_id}:${r.section_id}`)
+    );
+
+    if (filteredRecords.length === 0) return { success: true as const };
+
     const now = new Date().toISOString();
     const { error } = await supabase
       .from("homework_section_submissions")
       .upsert(
-        records.map(r => ({ ...r, updated_at: now })),
+        filteredRecords.map(r => ({ ...r, is_override: false, updated_at: now })),
         { onConflict: "user_id,homework_id,section_id" }
       );
     if (error) return { success: false as const, error: error.message };
@@ -553,7 +585,14 @@ export async function upsertHomeworkSectionSubmission(
     const { error } = await supabase
       .from("homework_section_submissions")
       .upsert(
-        { homework_id: homeworkId, user_id: userId, section_id: sectionId, is_completed: isCompleted, updated_at: new Date().toISOString() },
+        { 
+          homework_id: homeworkId, 
+          user_id: userId, 
+          section_id: sectionId, 
+          is_completed: isCompleted, 
+          is_override: true, 
+          updated_at: new Date().toISOString() 
+        },
         { onConflict: "user_id,homework_id,section_id" }
       );
     if (error) return { success: false as const, error: error.message };

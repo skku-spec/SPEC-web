@@ -426,7 +426,9 @@ export function HomeworkClient() {
 
     const overrides: Record<string, boolean> = {};
     result.data.forEach(row => {
-      overrides[`${hwId}:${row.user_id}:${row.section_id}`] = row.is_completed;
+      if (row.is_override) {
+        overrides[`${hwId}:${row.user_id}:${row.section_id}`] = row.is_completed;
+      }
     });
     setCellOverrides(prev => ({ ...prev, ...overrides }));
   };
