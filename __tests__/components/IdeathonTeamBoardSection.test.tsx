@@ -1,4 +1,4 @@
-import { act, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -258,8 +258,9 @@ describe("IdeathonTeamBoardSection", () => {
 
     await user.click(await screen.findByRole("button", { name: "내 소개 수정하기" }));
     expect(screen.getByDisplayValue("진실되게 오래 달릴 팀을 찾고 있습니다.")).toBeInTheDocument();
-    await user.clear(screen.getByLabelText(/자유 어필/));
-    await user.type(screen.getByLabelText(/자유 어필/), "고객에게 오래 머무는 팀원이 되고 싶습니다.");
+    fireEvent.change(screen.getByLabelText(/자유 어필/), {
+      target: { value: "고객에게 오래 머무는 팀원이 되고 싶습니다." },
+    });
     await user.click(screen.getByRole("button", { name: "내 소개 저장하기" }));
 
     expect(mockUpsertMyIdeathonProfile).toHaveBeenCalledWith(expect.any(FormData));
