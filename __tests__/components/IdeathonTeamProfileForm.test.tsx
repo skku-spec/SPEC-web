@@ -27,6 +27,32 @@ const formData: IdeathonBoardData = {
   profiles: [],
 };
 
+const existingProfileData: IdeathonBoardData = {
+  ...formData,
+  myProfile: {
+    id: "board-1",
+    user_id: "user-1",
+    photo_url: uploadUrl,
+    department: "경영학과",
+    major: "경영학",
+    age: 23,
+    student_id: "2020123456",
+    grade: "3학년",
+    ability_tags: ["개발", "기획"],
+    interest_tags: ["B2B"],
+    startup_reason: "문제를 직접 풀어보고 싶어서 창업에 관심이 생겼습니다.",
+    team_style: "빠르게 정리하고 실행하는 편입니다.",
+    december_goal: "12월 데모데이까지 고객 검증을 끝내고 싶습니다.",
+    looking_for_teammates: "고객 검증을 끝까지 같이 해볼 팀원을 찾고 있습니다.",
+    appeal: "진실되게 오래 달릴 팀을 찾고 있습니다.",
+    portfolio_url: "https://example.com/",
+    sns_url: null,
+    published_at: "2026-06-04T00:00:00.000Z",
+    created_at: "2026-06-04T00:00:00.000Z",
+    updated_at: "2026-06-04T00:00:00.000Z",
+  },
+};
+
 afterEach(() => {
   vi.clearAllMocks();
   vi.unstubAllGlobals();
@@ -47,6 +73,50 @@ function mockSuccessfulUploadFetch() {
 }
 
 describe("IdeathonTeamProfileForm", () => {
+  it("renders selectable ability tag chips and submits selected chips as ability_tags FormData values", async () => {
+    const user = userEvent.setup();
+    mockUpsertMyIdeathonProfile.mockResolvedValueOnce({ success: true });
+
+    render(<IdeathonTeamProfileForm data={formData} onSaved={async () => {}} />);
+
+    expect(screen.queryByPlaceholderText("예: 기획, 개발, 디자인")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "기획" }));
+    await user.click(screen.getByRole("button", { name: "개발" }));
+    await user.click(screen.getByRole("button", { name: "내 소개 저장하기" }));
+
+    expect(mockUpsertMyIdeathonProfile).toHaveBeenCalledWith(expect.any(FormData));
+    const [payload] = mockUpsertMyIdeathonProfile.mock.calls[0] ?? [];
+    expect(payload).toBeInstanceOf(FormData);
+    if (payload instanceof FormData) {
+      expect(payload.getAll("ability_tags")).toEqual(["기획", "개발"]);
+    }
+  });
+
+  it("deselects all ability tags without preserving stale selected values", async () => {
+    const user = userEvent.setup();
+    mockUpsertMyIdeathonProfile.mockResolvedValueOnce({
+      success: false,
+      error: "사진과 본인을 나타내는 능력 태그는 필수입니다.",
+    });
+
+    render(<IdeathonTeamProfileForm data={existingProfileData} onSaved={async () => {}} />);
+
+    expect(screen.getByRole("button", { name: "개발" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "기획" })).toHaveAttribute("aria-pressed", "true");
+
+    await user.click(screen.getByRole("button", { name: "개발" }));
+    await user.click(screen.getByRole("button", { name: "기획" }));
+    await user.click(screen.getByRole("button", { name: "내 소개 저장하기" }));
+
+    const [payload] = mockUpsertMyIdeathonProfile.mock.calls[0] ?? [];
+    expect(payload).toBeInstanceOf(FormData);
+    if (payload instanceof FormData) {
+      expect(payload.getAll("ability_tags")).toEqual([]);
+    }
+    expect(await screen.findByText("사진과 본인을 나타내는 능력 태그는 필수입니다.")).toBeInTheDocument();
+  });
+
   it("renders visible placeholder copy for mobile writing fields", () => {
     render(<IdeathonTeamProfileForm data={formData} onSaved={async () => {}} />);
 
