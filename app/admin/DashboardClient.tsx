@@ -204,6 +204,32 @@ export function DashboardClient({
     return sessionList[0];
   }, []);
 
+  const getHomeworkWeek = useCallback((hw: HwRow) => {
+    const weekMatch = hw.title.match(/(\d+)주차/);
+    if (weekMatch) {
+      return parseInt(weekMatch[1], 10);
+    }
+    const session = getAssignedSession(hw, sortedSessionsAll);
+    if (session) {
+      const idx = sortedSessionsAll.findIndex(s => s.id === session.id);
+      if (idx !== -1) return idx + 1;
+    }
+    return 1;
+  }, [sortedSessionsAll, getAssignedSession]);
+
+  const maxWeek = useMemo(() => {
+    let max = safeSessions.length;
+    for (const hw of safeHomeworks) {
+      const match = hw.title.match(/(\d+)주차/);
+      if (match) {
+        const w = parseInt(match[1], 10);
+        if (w > max) max = w;
+      }
+    }
+    return max || 1;
+  }, [safeSessions.length, safeHomeworks]);
+
+
   const getNonSubmitters = useCallback((hwId: string) =>
     safeLearners
       .filter(l => {
@@ -235,20 +261,30 @@ export function DashboardClient({
   // ── Preview data (reactive) ────────────────────────────────────────────────
   const previewData = useMemo(() => {
     const effStart = startWeek > 0 ? startWeek : 1;
-    const effEnd = endWeek > 0 ? endWeek : sortedSessionsAll.length;
-    const sessionsInPeriod = sortedSessionsAll.slice(effStart - 1, effEnd);
-    const sessionIdSet = new Set(sessionsInPeriod.map(s => s.id));
+    const effEnd = endWeek > 0 ? endWeek : maxWeek;
 
-    const homeworksInPeriod = safeHomeworks.filter(hw => {
-      const a = getAssignedSession(hw, sortedSessionsAll);
-      return a ? sessionIdSet.has(a.id) : false;
+    const activeWeeks = [];
+    for (let w = effStart; w <= effEnd; w++) {
+      activeWeeks.push(w);
+    }
+
+    const sessionsInPeriod = sortedSessionsAll.filter((_, idx) => {
+      const w = idx + 1;
+      return w >= effStart && w <= effEnd;
     });
 
-    const sessionHwMap = new Map<string, typeof homeworksInPeriod>();
-    sessionsInPeriod.forEach(s => sessionHwMap.set(s.id, []));
+    const homeworksInPeriod = safeHomeworks.filter(hw => {
+      const w = getHomeworkWeek(hw);
+      return w >= effStart && w <= effEnd;
+    });
+
+    const weekHwMap = new Map<number, typeof homeworksInPeriod>();
+    activeWeeks.forEach(w => weekHwMap.set(w, []));
     homeworksInPeriod.forEach(hw => {
-      const s = getAssignedSession(hw, sortedSessionsAll);
-      if (s && sessionHwMap.has(s.id)) sessionHwMap.get(s.id)!.push(hw);
+      const w = getHomeworkWeek(hw);
+      if (weekHwMap.has(w)) {
+        weekHwMap.get(w)!.push(hw);
+      }
     });
 
     const getUnsubmittedLines = (hw: HwRow, learnerId: string): { prefix: string; name: string }[] => {
@@ -301,8 +337,8 @@ export function DashboardClient({
       const k = l.missedCount; if (!acc[k]) acc[k] = []; acc[k].push(l); return acc;
     }, {});
 
-    return { effStart, effEnd, sessionsInPeriod, sessionHwMap, cumGroups, cumStats };
-  }, [startWeek, endWeek, sortedSessionsAll, safeHomeworks, safeLearners, safeSubmissions, safeSectionSubmissions, getAssignedSession, hwLines]);
+    return { effStart, effEnd, activeWeeks, sessionsInPeriod, weekHwMap, cumGroups, cumStats };
+  }, [startWeek, endWeek, maxWeek, sortedSessionsAll, safeHomeworks, safeLearners, safeSubmissions, safeSectionSubmissions, getHomeworkWeek, hwLines]);
 
   const generateReportHTML = useCallback(() => {
     const fmtDate = (iso: string) => {
@@ -310,17 +346,18 @@ export function DashboardClient({
       return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
     };
 
-    const { effStart, effEnd, sessionsInPeriod, sessionHwMap, cumGroups, cumStats } = previewData;
+    const { effStart, effEnd, activeWeeks, weekHwMap, cumGroups, cumStats } = previewData;
 
     const contactList = cumStats.filter(l => l.missedCount >= 2 && contactNeeded[l.id] !== false);
-    const periodText = sortedSessionsAll.length > 0 ? `${effStart}주차 ~ ${effEnd}주차` : '전체 기간';
+    const periodText = `${effStart}주차 ~ ${effEnd}주차`;
 
     // Build HTML sections
     let weekSections = '';
-    sessionsInPeriod.forEach((session, i) => {
-      const sessionIdx = sortedSessionsAll.indexOf(session) + 1;
-      const hws = sessionHwMap.get(session.id) ?? [];
-      weekSections += `<h2>${sessionIdx}주차 현황</h2>`;
+    activeWeeks.forEach((w, i) => {
+      const hws = weekHwMap.get(w) ?? [];
+      const session = sortedSessionsAll[w - 1];
+      const sessionTitleText = session ? ` (${session.title})` : '';
+      weekSections += `<h2>${w}주차 현황${sessionTitleText}</h2>`;
       if (hws.length === 0) {
         weekSections += `<p class="no-hw">이 주차에 해당하는 과제가 없습니다.</p>`;
       } else {
@@ -335,13 +372,13 @@ export function DashboardClient({
           });
         });
       }
-      if (i < sessionsInPeriod.length - 1) weekSections += '<hr class="divider">';
+      if (i < activeWeeks.length - 1) weekSections += '<hr class="divider">';
     });
 
-    const totalHwCount = [...sessionHwMap.values()].reduce((s, a) => s + a.length, 0);
+    const totalHwCount = [...weekHwMap.values()].reduce((s, a) => s + a.length, 0);
     let cumulativeSection = '';
     if (totalHwCount > 0 && effEnd > 0) {
-      cumulativeSection += `<h2>${effEnd}회차 세션까지 현황 (${sessionsInPeriod.length}주차 과제, 미완료자)</h2>`;
+      cumulativeSection += `<h2>${effEnd}주차까지 현황 (${activeWeeks.length}주차 과제, 미완료자)</h2>`;
       const maxCount = Math.max(...Object.keys(cumGroups).map(Number));
       Object.entries(cumGroups)
         .sort(([a], [b]) => Number(b) - Number(a))
@@ -352,8 +389,8 @@ export function DashboardClient({
           });
           cumulativeSection += `</div>`;
         });
-    } else if (sessionsInPeriod.length === 0) {
-      cumulativeSection = `<p class="no-hw">선택한 기간 내 세션이 없습니다.</p>`;
+    } else if (activeWeeks.length === 0) {
+      cumulativeSection = `<p class="no-hw">선택한 기간 내 주차가 없습니다.</p>`;
     }
 
     let contactSection = `<h2>연락 명단</h2>`;
@@ -787,8 +824,8 @@ ${contactSection}
               <h2 className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">기간 설정</h2>
               <span className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">보고서에 포함할 주차 범위를 선택합니다.</span>
             </div>
-            {safeSessions.length === 0 ? (
-              <p className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">등록된 세션이 없습니다.</p>
+            {maxWeek === 0 ? (
+              <p className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">등록된 세션이나 과제가 없습니다.</p>
             ) : (
               <div className="flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-2">
@@ -803,11 +840,9 @@ ${contactSection}
                     className="h-8 rounded-md border border-[#ddd9cc] px-2 font-['Pretendard',sans-serif] text-xs text-[#16140f] focus:outline-none focus:ring-1 focus:ring-[#16140f] bg-white"
                   >
                     <option value={0}>1주차 (처음)</option>
-                    {[...safeSessions]
-                      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-                      .map((s, i) => (
-                        <option key={s.id} value={i + 1}>{i + 1}주차</option>
-                      ))}
+                    {Array.from({ length: maxWeek }, (_, i) => i + 1).map(w => (
+                      <option key={w} value={w}>{w}주차</option>
+                    ))}
                   </select>
                 </div>
                 <span className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">~</span>
@@ -822,12 +857,10 @@ ${contactSection}
                     }}
                     className="h-8 rounded-md border border-[#ddd9cc] px-2 font-['Pretendard',sans-serif] text-xs text-[#16140f] focus:outline-none focus:ring-1 focus:ring-[#16140f] bg-white"
                   >
-                    <option value={0}>{safeSessions.length}주차 (마지막)</option>
-                    {[...safeSessions]
-                      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-                      .map((s, i) => (
-                        <option key={s.id} value={i + 1}>{i + 1}주차</option>
-                      ))}
+                    <option value={0}>{maxWeek}주차 (마지막)</option>
+                    {Array.from({ length: maxWeek }, (_, i) => i + 1).map(w => (
+                      <option key={w} value={w}>{w}주차</option>
+                    ))}
                   </select>
                 </div>
                 {(startWeek > 0 || endWeek > 0) && (
@@ -840,7 +873,7 @@ ${contactSection}
                   </button>
                 )}
                 <span className="font-['Pretendard',sans-serif] text-xs font-medium text-[#16140f]">
-                  {(startWeek > 0 ? startWeek : 1)}주차 ~ {(endWeek > 0 ? endWeek : safeSessions.length)}주차
+                  {(startWeek > 0 ? startWeek : 1)}주차 ~ {(endWeek > 0 ? endWeek : maxWeek)}주차
                 </span>
               </div>
             )}
@@ -928,18 +961,19 @@ ${contactSection}
               </div>
             </div>
             <div className="overflow-y-auto max-h-[600px] px-6 py-5 font-['Pretendard',sans-serif] text-sm leading-relaxed text-[#16140f]">
-              {previewData.sessionsInPeriod.length === 0 ? (
-                <p className="text-[#6b6b5e] text-xs italic">선택한 기간 내 세션이 없습니다.</p>
+              {previewData.activeWeeks.length === 0 ? (
+                <p className="text-[#6b6b5e] text-xs italic">선택한 기간 내 주차가 없습니다.</p>
               ) : (
                 <>
                   {/* 주차별 현황 */}
-                  {previewData.sessionsInPeriod.map((session, i) => {
-                    const sessionIdx = sortedSessionsAll.indexOf(session) + 1;
-                    const hws = previewData.sessionHwMap.get(session.id) ?? [];
+                  {previewData.activeWeeks.map((w, i) => {
+                    const hws = previewData.weekHwMap.get(w) ?? [];
+                    const session = sortedSessionsAll[w - 1];
+                    const sessionTitleText = session ? ` (${session.title})` : '';
                     return (
-                      <div key={session.id} className={i > 0 ? 'mt-6 pt-6 border-t border-[#ece8db]' : ''}>
+                      <div key={w} className={i > 0 ? 'mt-6 pt-6 border-t border-[#ece8db]' : ''}>
                         <p className="text-base font-black text-[#16140f] mb-3">
-                          <span className="text-[#aaa] mr-1">##</span>{sessionIdx}주차 현황
+                          <span className="text-[#aaa] mr-1">##</span>{w}주차 현황{sessionTitleText}
                         </p>
                         {hws.length === 0 ? (
                           <p className="text-xs text-[#aaa] italic ml-4">이 주차에 해당하는 과제가 없습니다.</p>
@@ -970,8 +1004,8 @@ ${contactSection}
                   {/* 누적 현황 */}
                   <div>
                     <p className="text-base font-black text-[#16140f] mb-3">
-                      <span className="text-[#aaa] mr-1">##</span>{previewData.effEnd}회차 세션까지 현황
-                      <span className="ml-2 text-xs font-normal text-[#6b6b5e]">({previewData.sessionsInPeriod.length}주차 과제, 미완료자)</span>
+                      <span className="text-[#aaa] mr-1">##</span>{previewData.effEnd}주차까지 현황
+                      <span className="ml-2 text-xs font-normal text-[#6b6b5e]">({previewData.activeWeeks.length}주차 과제, 미완료자)</span>
                     </p>
                     {Object.keys(previewData.cumGroups).length === 0 ? (
                       <p className="text-[#2f9e44] text-sm ml-4">전원 제출 완료</p>
@@ -1036,7 +1070,7 @@ ${contactSection}
                 <h2 className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f] mb-0.5">보고서 출력</h2>
                 <p className="font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">
                   {(startWeek > 0 || endWeek > 0)
-                    ? `${startWeek > 0 ? startWeek : 1}주차 ~ ${endWeek > 0 ? endWeek : safeSessions.length}주차 기간의 보고서를 PDF로 출력합니다.`
+                    ? `${startWeek > 0 ? startWeek : 1}주차 ~ ${endWeek > 0 ? endWeek : maxWeek}주차 기간의 보고서를 PDF로 출력합니다.`
                     : '전체 기간 보고서를 PDF로 출력합니다. 기간 설정으로 범위를 좁힐 수 있습니다.'}
                 </p>
                 <p className="font-['Pretendard',sans-serif] text-[11px] text-[#aaa] mt-1">
