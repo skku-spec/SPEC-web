@@ -5,6 +5,8 @@ import { splitTeamProfileTags } from "@/app/ideathon/ideathon-team-profile-form-
 type Props = {
   readonly value: string;
   readonly onChange: (value: string) => void;
+  readonly helperText?: string;
+  readonly ariaLabel?: string;
 };
 
 const ABILITY_TAG_OPTIONS = ["기획", "개발", "디자인", "마케팅", "영업", "리서치", "운영", "재무", "데이터", "AI"] as const;
@@ -19,7 +21,12 @@ function serializeTags(tags: readonly string[]): string {
   return tags.join(", ");
 }
 
-export default function IdeathonAbilityTagSelector({ value, onChange }: Props) {
+export default function IdeathonAbilityTagSelector({
+  value,
+  onChange,
+  helperText = "본인을 가장 잘 보여주는 능력을 선택해 주세요.",
+  ariaLabel = "능력 태그 선택",
+}: Props) {
   const selectedTags = splitTeamProfileTags(value);
   const options = mergeTagOptions(selectedTags);
 
@@ -32,7 +39,7 @@ export default function IdeathonAbilityTagSelector({ value, onChange }: Props) {
 
   return (
     <div className="grid gap-2">
-      <div className="flex flex-wrap gap-2" role="group" aria-label="능력 태그 선택">
+      <div className="flex flex-wrap gap-2" role="group" aria-label={ariaLabel}>
         {options.map((tag) => {
           const isSelected = selectedTags.includes(tag);
           return (
@@ -53,7 +60,7 @@ export default function IdeathonAbilityTagSelector({ value, onChange }: Props) {
         })}
       </div>
       <p className="font-['Pretendard',sans-serif] text-xs leading-5 text-[#6b6b5e]">
-        본인을 가장 잘 보여주는 능력을 선택해 주세요.
+        {helperText}
       </p>
     </div>
   );

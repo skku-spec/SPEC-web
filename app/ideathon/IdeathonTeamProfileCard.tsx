@@ -2,6 +2,7 @@
 
 import { ExternalLink, UserRound } from "lucide-react";
 
+import { getIdeathonProfileFocusText, getIdeathonTeamProfileCopy } from "@/app/ideathon/ideathon-team-profile-copy";
 import type { IdeathonBoardProfile } from "@/lib/actions/ideathon-profiles";
 
 type Props = {
@@ -9,11 +10,9 @@ type Props = {
   readonly onOpen: (profile: IdeathonBoardProfile) => void;
 };
 
-function roleLabel(role: IdeathonBoardProfile["role"]): string {
-  return role === "preneur" ? "프러너" : "러너";
-}
-
 export default function IdeathonTeamProfileCard({ profile, onOpen }: Props) {
+  const copy = getIdeathonTeamProfileCopy(profile.role);
+
   return (
     <article className="overflow-hidden rounded-lg border border-[#ddd9cc] bg-white">
       <button
@@ -37,20 +36,27 @@ export default function IdeathonTeamProfileCard({ profile, onOpen }: Props) {
               </p>
             </div>
             <span className="rounded-full bg-[#FFF0E5] px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold text-[#FF6C0F]">
-              {roleLabel(profile.role)}
+              {copy.roleLabel}
             </span>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            {profile.ability_tags.slice(0, 4).map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full border border-[#ddd9cc] bg-white px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold text-[#4a4a40]"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
+          {profile.ability_tags.length > 0 ? (
+            <div className="grid gap-2">
+              <p className="font-['Pretendard',sans-serif] text-xs font-semibold text-[#6b6b5e]">
+                {copy.cardAbilityLabel}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {profile.ability_tags.slice(0, 4).map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full border border-[#ddd9cc] bg-white px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold text-[#4a4a40]"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
 
           {profile.interest_tags.length > 0 ? (
             <p className="font-['Pretendard',sans-serif] text-xs font-semibold text-[#2563EB]">
@@ -59,7 +65,7 @@ export default function IdeathonTeamProfileCard({ profile, onOpen }: Props) {
           ) : null}
 
           <p className="line-clamp-3 font-['Pretendard',sans-serif] text-sm leading-6 text-[#4a4a40]">
-            {profile.december_goal}
+            {getIdeathonProfileFocusText(profile)}
           </p>
 
           <span className="inline-flex h-8 items-center gap-2 rounded-md border border-[#ddd9cc] px-3 font-['Pretendard',sans-serif] text-xs font-semibold text-[#16140f]">

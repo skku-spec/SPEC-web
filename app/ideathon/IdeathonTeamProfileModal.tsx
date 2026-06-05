@@ -2,6 +2,7 @@
 
 import { ExternalLink, X } from "lucide-react";
 
+import { getIdeathonTeamProfileCopy } from "@/app/ideathon/ideathon-team-profile-copy";
 import type { IdeathonBoardProfile } from "@/lib/actions/ideathon-profiles";
 
 type Props = {
@@ -10,10 +11,6 @@ type Props = {
   readonly onClose: () => void;
   readonly onEdit: () => void;
 };
-
-function roleLabel(role: IdeathonBoardProfile["role"]): string {
-  return role === "preneur" ? "프러너" : "러너";
-}
 
 function FieldBlock({ title, body }: { readonly title: string; readonly body: string }) {
   return (
@@ -29,6 +26,8 @@ function FieldBlock({ title, body }: { readonly title: string; readonly body: st
 }
 
 export default function IdeathonTeamProfileModal({ profile, isOwner, onClose, onEdit }: Props) {
+  const copy = getIdeathonTeamProfileCopy(profile.role);
+
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#16140f]/60 px-4 py-6 sm:items-center">
       <div
@@ -40,7 +39,7 @@ export default function IdeathonTeamProfileModal({ profile, isOwner, onClose, on
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#ece8db] bg-white px-5 py-4">
           <div>
             <p className="font-['Pretendard',sans-serif] text-xs font-semibold text-[#FF6C0F]">
-              {roleLabel(profile.role)}
+              {copy.roleLabel}
             </p>
             <h2 className="font-['Pretendard',sans-serif] text-xl font-semibold text-[#16140f]">
               {profile.name} 소개
@@ -77,11 +76,11 @@ export default function IdeathonTeamProfileModal({ profile, isOwner, onClose, on
           </div>
 
           <div className="space-y-6">
-            <FieldBlock title="창업인 이유" body={profile.startup_reason} />
-            <FieldBlock title="팀에서의 성향" body={profile.team_style} />
-            <FieldBlock title="12월 데모데이까지 얻어가고 싶은 것" body={profile.december_goal} />
-            <FieldBlock title="함께 찾는 팀원" body={profile.looking_for_teammates} />
-            {profile.appeal ? <FieldBlock title="자유 어필" body={profile.appeal} /> : null}
+            <FieldBlock title={copy.startupReason.label} body={profile.startup_reason} />
+            <FieldBlock title={copy.teamStyle.label} body={profile.team_style} />
+            <FieldBlock title={copy.decemberGoal.label} body={profile.december_goal} />
+            <FieldBlock title={copy.lookingForTeammates.label} body={profile.looking_for_teammates} />
+            {profile.appeal ? <FieldBlock title={copy.freeAppeal.modalLabel} body={profile.appeal} /> : null}
             {isOwner ? (
               <button
                 type="button"

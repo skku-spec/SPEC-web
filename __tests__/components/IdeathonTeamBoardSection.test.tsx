@@ -125,11 +125,11 @@ const sampleData: IdeathonBoardData = {
       grade: "4학년",
       ability_tags: ["영업", "운영"],
       interest_tags: ["SaaS"],
-      startup_reason: "고객을 직접 만나 문제를 해결하는 과정이 좋아서입니다.",
-      team_style: "논의는 짧게, 검증은 빠르게 가져갑니다.",
-      december_goal: "데모데이까지 실제 매출을 만들고 싶습니다.",
-      looking_for_teammates: "세일즈와 고객 인터뷰를 함께 밀어붙일 팀원을 찾고 있습니다.",
-      appeal: "고객 인터뷰와 세일즈를 끈질기게 가져갈 수 있습니다.",
+      startup_reason: "저는 고객 인터뷰와 GTM을 오래 해본 프러너입니다.",
+      team_style: "러너 팀 옆에서 가설을 좁히고 고객 검증 흐름을 같이 잡습니다.",
+      december_goal: "데모데이까지 러너 팀이 검증된 스토리를 말할 수 있게 돕고 싶습니다.",
+      looking_for_teammates: "B2B 문제를 파고드는 초기 팀을 잘 도울 수 있습니다.",
+      appeal: "고객 인터뷰와 세일즈 경험을 나누겠습니다.",
       portfolio_url: null,
       sns_url: "https://instagram.com/spec",
       published_at: "2026-06-04T00:00:00.000Z",
@@ -193,6 +193,8 @@ describe("IdeathonTeamBoardSection", () => {
 
     expect(screen.queryByRole("button", { name: "홍길동 열어보기" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "김프러너 열어보기" })).toBeInTheDocument();
+    expect(screen.getByText("도움 가능")).toBeInTheDocument();
+    expect(screen.getByText("러너 팀 옆에서 가설을 좁히고 고객 검증 흐름을 같이 잡습니다.")).toBeInTheDocument();
   });
 
   it("renders the authenticated mobile profile summary and reopens writing placeholders", async () => {
@@ -226,12 +228,17 @@ describe("IdeathonTeamBoardSection", () => {
 
     const table = screen.getByRole("table", { name: "아이디어톤 러너 프러너 명단" });
     expect(within(table).getByText("이름")).toBeInTheDocument();
+    expect(within(table).getByText("능력/도움 태그")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "김프러너 열어보기" }));
 
     const dialog = screen.getByRole("dialog", { name: "김프러너 소개" });
     expect(dialog).toBeInTheDocument();
-    expect(within(dialog).getByText("데모데이까지 실제 매출을 만들고 싶습니다.")).toBeInTheDocument();
+    expect(within(dialog).getByText("저는 이런 사람입니다")).toBeInTheDocument();
+    expect(within(dialog).getByText("팀을 도울 때의 방식")).toBeInTheDocument();
+    expect(within(dialog).getByText("제가 잘 도울 수 있는 팀")).toBeInTheDocument();
+    expect(within(dialog).queryByText("창업인 이유")).not.toBeInTheDocument();
+    expect(within(dialog).getByText("데모데이까지 러너 팀이 검증된 스토리를 말할 수 있게 돕고 싶습니다.")).toBeInTheDocument();
   });
 
   it("opens the profile form when the current user's modal edit CTA is clicked", async () => {

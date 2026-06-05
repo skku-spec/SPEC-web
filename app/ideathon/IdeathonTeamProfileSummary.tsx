@@ -3,6 +3,7 @@
 import { CheckCircle, ImagePlus, PencilLine } from "lucide-react";
 import Image from "next/image";
 
+import { getIdeathonTeamProfileCopy } from "@/app/ideathon/ideathon-team-profile-copy";
 import { splitTeamProfileTags } from "@/app/ideathon/ideathon-team-profile-form-utils";
 import type { IdeathonBoardData } from "@/lib/actions/ideathon-profiles";
 import type { TeamProfileFormState } from "@/app/ideathon/ideathon-team-profile-form-utils";
@@ -18,6 +19,8 @@ export default function IdeathonTeamProfileSummary({ data, form, notice, onEdit 
   const abilityTags = splitTeamProfileTags(form.abilityTags);
   const department = form.department.trim() || data.member?.department || "학과 미입력";
   const photoUrl = form.imageUrl.trim();
+  const copy = getIdeathonTeamProfileCopy(data.currentUser.role);
+  const abilityText = abilityTags.join(", ");
 
   return (
     <section id="ideathon-team-profile-form" className="rounded-lg border border-[#ddd9cc] bg-white p-5 sm:p-6">
@@ -54,7 +57,7 @@ export default function IdeathonTeamProfileSummary({ data, form, notice, onEdit 
             </p>
             {abilityTags.length > 0 ? (
               <p className="mt-2 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
-                {abilityTags.join(", ")}
+                {copy.summaryAbilityPrefix ? `${copy.summaryAbilityPrefix}: ${abilityText}` : abilityText}
               </p>
             ) : null}
             {notice ? (

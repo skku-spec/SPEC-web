@@ -28,6 +28,7 @@ export default function IdeathonTeamProfilePhotoField({ imageUrl, uploadLabel, o
         {uploadLabel}
         <input
           type="file"
+          name="ideathon_profile_image"
           accept="image/jpeg,image/png,image/webp,image/avif"
           className="sr-only"
           onChange={(event) => {

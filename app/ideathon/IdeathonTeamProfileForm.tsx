@@ -6,6 +6,7 @@ import { Save } from "lucide-react";
 import IdeathonAbilityTagSelector from "@/app/ideathon/IdeathonAbilityTagSelector";
 import IdeathonTeamProfilePhotoField from "@/app/ideathon/IdeathonTeamProfilePhotoField";
 import IdeathonTeamProfileSummary from "@/app/ideathon/IdeathonTeamProfileSummary";
+import { getIdeathonTeamProfileCopy } from "@/app/ideathon/ideathon-team-profile-copy";
 import {
   buildInitialTeamProfileFormState,
   isUploadResult,
@@ -33,6 +34,7 @@ export default function IdeathonTeamProfileForm({ data, editRequestId, onSaved, 
   const [isPending, startTransition] = useTransition();
   const [uploadPhase, setUploadPhase] = useState<UploadPhase>("idle");
   const isUploading = uploadPhase !== "idle";
+  const copy = getIdeathonTeamProfileCopy(data.currentUser.role);
 
   useEffect(() => {
     setForm(buildInitialTeamProfileFormState(data));
@@ -144,14 +146,14 @@ export default function IdeathonTeamProfileForm({ data, editRequestId, onSaved, 
       <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h3 className="font-['Pretendard',sans-serif] text-xl font-semibold text-[#16140f]">
-            내 소개 작성하기
+            {copy.formTitle}
           </h3>
           <p className="mt-2 font-['Pretendard',sans-serif] text-sm leading-6 text-[#6b6b5e]">
-            지금 형성되는 팀은 12월 데모데이까지 함께 달리게 됩니다. 본인을 진실되게 써주세요.
+            {copy.formDescription}
           </p>
         </div>
         <span className="rounded-full bg-[#FFF0E5] px-2.5 py-1 font-['Pretendard',sans-serif] text-xs font-semibold text-[#FF6C0F]">
-          {data.currentUser.role === "preneur" ? "프러너" : "러너"}
+          {copy.roleLabel}
         </span>
       </div>
 
@@ -168,66 +170,71 @@ export default function IdeathonTeamProfileForm({ data, editRequestId, onSaved, 
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="grid gap-2">
               <span className={labelClass}>이름</span>
-              <input className={inputClass} value={data.currentUser.name} readOnly />
+              <input className={inputClass} name="name" value={data.currentUser.name} readOnly />
             </label>
             <label className="grid gap-2">
               <span className={labelClass}>학과</span>
-              <input className={inputClass} placeholder="예: 경영학과" value={form.department} onChange={(event) => updateField("department", event.target.value)} />
+              <input className={inputClass} name="department" placeholder="예: 경영학과" value={form.department} onChange={(event) => updateField("department", event.target.value)} />
             </label>
             <label className="grid gap-2">
               <span className={labelClass}>나이</span>
-              <input className={inputClass} placeholder="예: 23" value={form.age} inputMode="numeric" onChange={(event) => updateField("age", event.target.value)} />
+              <input className={inputClass} name="age" placeholder="예: 23" value={form.age} inputMode="numeric" onChange={(event) => updateField("age", event.target.value)} />
             </label>
             <label className="grid gap-2">
               <span className={labelClass}>학번</span>
-              <input className={inputClass} placeholder="예: 2024123456" value={form.studentId} onChange={(event) => updateField("studentId", event.target.value)} />
+              <input className={inputClass} name="student_id" placeholder="예: 2024123456" value={form.studentId} onChange={(event) => updateField("studentId", event.target.value)} />
             </label>
             <label className="grid gap-2">
               <span className={labelClass}>학년</span>
-              <input className={inputClass} placeholder="예: 2학년" value={form.grade} onChange={(event) => updateField("grade", event.target.value)} />
+              <input className={inputClass} name="grade" placeholder="예: 2학년" value={form.grade} onChange={(event) => updateField("grade", event.target.value)} />
             </label>
             <label className="grid gap-2">
               <span className={labelClass}>전공</span>
-              <input className={inputClass} placeholder="예: 글로벌경영" value={form.major} onChange={(event) => updateField("major", event.target.value)} />
+              <input className={inputClass} name="major" placeholder="예: 글로벌경영" value={form.major} onChange={(event) => updateField("major", event.target.value)} />
             </label>
           </div>
 
           <div className="grid gap-2">
-            <span className={labelClass}>능력 태그</span>
-            <IdeathonAbilityTagSelector value={form.abilityTags} onChange={(value) => updateField("abilityTags", value)} />
+            <span className={labelClass}>{copy.abilityLabel}</span>
+            <IdeathonAbilityTagSelector
+              value={form.abilityTags}
+              helperText={copy.abilityHelper}
+              ariaLabel={`${copy.abilityLabel} 선택`}
+              onChange={(value) => updateField("abilityTags", value)}
+            />
           </div>
           <label className="grid gap-2">
-            <span className={labelClass}>관심 분야 태그</span>
-            <input className={inputClass} placeholder="예: B2B, SaaS, 커머스" value={form.interestTags} onChange={(event) => updateField("interestTags", event.target.value)} />
+            <span className={labelClass}>{copy.interestLabel}</span>
+            <input className={inputClass} name="interest_tags" placeholder={copy.interestPlaceholder} value={form.interestTags} onChange={(event) => updateField("interestTags", event.target.value)} />
           </label>
           <label className="grid gap-2">
-            <span className={labelClass}>창업인 이유</span>
-            <textarea className={textareaClass} rows={3} placeholder="왜 지금 창업을 해보고 싶은지 솔직하게 적어주세요." value={form.startupReason} onChange={(event) => updateField("startupReason", event.target.value)} />
+            <span className={labelClass}>{copy.startupReason.label}</span>
+            <textarea className={textareaClass} name="startup_reason" rows={3} placeholder={copy.startupReason.placeholder} value={form.startupReason} onChange={(event) => updateField("startupReason", event.target.value)} />
           </label>
           <label className="grid gap-2">
-            <span className={labelClass}>팀에서의 성향</span>
-            <textarea className={textareaClass} rows={3} placeholder="일할 때 편한 방식, 의사결정 스타일, 강한 역할을 적어주세요." value={form.teamStyle} onChange={(event) => updateField("teamStyle", event.target.value)} />
+            <span className={labelClass}>{copy.teamStyle.label}</span>
+            <textarea className={textareaClass} name="team_style" rows={3} placeholder={copy.teamStyle.placeholder} value={form.teamStyle} onChange={(event) => updateField("teamStyle", event.target.value)} />
           </label>
           <label className="grid gap-2">
-            <span className={labelClass}>12월 데모데이까지 얻어가고 싶은 것</span>
-            <textarea className={textareaClass} rows={3} placeholder="12월까지 팀과 함께 만들고 싶은 결과를 적어주세요." value={form.decemberGoal} onChange={(event) => updateField("decemberGoal", event.target.value)} />
+            <span className={labelClass}>{copy.decemberGoal.label}</span>
+            <textarea className={textareaClass} name="december_goal" rows={3} placeholder={copy.decemberGoal.placeholder} value={form.decemberGoal} onChange={(event) => updateField("decemberGoal", event.target.value)} />
           </label>
           <label className="grid gap-2">
-            <span className={labelClass}>함께 찾는 팀원</span>
-            <textarea className={textareaClass} rows={3} placeholder="어떤 동료와 함께 달리고 싶은지 적어주세요." value={form.lookingForTeammates} onChange={(event) => updateField("lookingForTeammates", event.target.value)} />
+            <span className={labelClass}>{copy.lookingForTeammates.label}</span>
+            <textarea className={textareaClass} name="looking_for_teammates" rows={3} placeholder={copy.lookingForTeammates.placeholder} value={form.lookingForTeammates} onChange={(event) => updateField("lookingForTeammates", event.target.value)} />
           </label>
           <label className="grid gap-2">
-            <span className={labelClass}>자유 어필 (선택)</span>
-            <textarea className={textareaClass} rows={3} placeholder="본인을 더 잘 보여줄 수 있는 말을 자유롭게 적어주세요." value={form.freeAppeal} onChange={(event) => updateField("freeAppeal", event.target.value)} />
+            <span className={labelClass}>{copy.freeAppeal.label}</span>
+            <textarea className={textareaClass} name="appeal" rows={3} placeholder={copy.freeAppeal.placeholder} value={form.freeAppeal} onChange={(event) => updateField("freeAppeal", event.target.value)} />
           </label>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="grid gap-2">
               <span className={labelClass}>포트폴리오</span>
-              <input className={inputClass} placeholder="https://..." value={form.portfolioUrl} onChange={(event) => updateField("portfolioUrl", event.target.value)} />
+              <input className={inputClass} name="portfolio_url" placeholder="https://..." value={form.portfolioUrl} onChange={(event) => updateField("portfolioUrl", event.target.value)} />
             </label>
             <label className="grid gap-2">
               <span className={labelClass}>SNS</span>
-              <input className={inputClass} placeholder="https://instagram.com/..." value={form.snsUrl} onChange={(event) => updateField("snsUrl", event.target.value)} />
+              <input className={inputClass} name="sns_url" placeholder="https://instagram.com/..." value={form.snsUrl} onChange={(event) => updateField("snsUrl", event.target.value)} />
             </label>
           </div>
         </div>

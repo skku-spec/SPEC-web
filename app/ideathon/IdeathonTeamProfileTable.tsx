@@ -2,6 +2,7 @@
 
 import { TableProperties } from "lucide-react";
 
+import { getIdeathonProfileFocusText, getIdeathonTeamProfileCopy } from "@/app/ideathon/ideathon-team-profile-copy";
 import type { IdeathonBoardProfile } from "@/lib/actions/ideathon-profiles";
 
 type Props = {
@@ -9,17 +10,15 @@ type Props = {
   readonly onOpen: (profile: IdeathonBoardProfile) => void;
 };
 
-function roleLabel(role: IdeathonBoardProfile["role"]): string {
-  return role === "preneur" ? "프러너" : "러너";
-}
-
 export default function IdeathonTeamProfileTable({ profiles, onOpen }: Props) {
+  const tableCopy = getIdeathonTeamProfileCopy("learner");
+
   return (
     <div className="overflow-x-auto rounded-lg border border-[#ddd9cc] bg-white">
       <table className="min-w-[860px] w-full" aria-label="아이디어톤 러너 프러너 명단">
         <thead className="bg-[#f0efe6] text-left">
           <tr>
-            {["사진", "이름", "구분", "학과", "학번", "학년", "능력 태그", "관심 태그", "12월 목표", "열람"].map((header) => (
+            {["사진", "이름", "구분", "학과", "학번", "학년", tableCopy.tableAbilityHeader, "관심 태그", tableCopy.tableFocusHeader, "열람"].map((header) => (
               <th key={header} className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
                 {header}
               </th>
@@ -46,7 +45,7 @@ export default function IdeathonTeamProfileTable({ profiles, onOpen }: Props) {
                   {profile.name}
                 </td>
                 <td className="px-4 py-3 font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">
-                  {roleLabel(profile.role)}
+                  {getIdeathonTeamProfileCopy(profile.role).roleLabel}
                 </td>
                 <td className="px-4 py-3 font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">
                   {profile.department}
@@ -64,7 +63,7 @@ export default function IdeathonTeamProfileTable({ profiles, onOpen }: Props) {
                   {profile.interest_tags.join(", ") || "-"}
                 </td>
                 <td className="max-w-[220px] px-4 py-3 font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">
-                  <span className="line-clamp-2">{profile.december_goal}</span>
+                  <span className="line-clamp-2">{getIdeathonProfileFocusText(profile)}</span>
                 </td>
                 <td className="px-4 py-3">
                   <button
