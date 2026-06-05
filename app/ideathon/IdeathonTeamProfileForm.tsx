@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { ImagePlus, Save, Upload } from "lucide-react";
 
+import IdeathonAbilityTagSelector from "@/app/ideathon/IdeathonAbilityTagSelector";
 import {
   buildInitialTeamProfileFormState,
   isUploadResult,
@@ -180,10 +181,10 @@ export default function IdeathonTeamProfileForm({ data, onSaved }: Props) {
             </label>
           </div>
 
-          <label className="grid gap-2">
+          <div className="grid gap-2">
             <span className={labelClass}>능력 태그</span>
-            <input className={inputClass} placeholder="예: 기획, 개발, 디자인" value={form.abilityTags} onChange={(event) => updateField("abilityTags", event.target.value)} />
-          </label>
+            <IdeathonAbilityTagSelector value={form.abilityTags} onChange={(value) => updateField("abilityTags", value)} />
+          </div>
           <label className="grid gap-2">
             <span className={labelClass}>관심 분야 태그</span>
             <input className={inputClass} placeholder="예: B2B, SaaS, 커머스" value={form.interestTags} onChange={(event) => updateField("interestTags", event.target.value)} />
