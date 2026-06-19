@@ -1,109 +1,225 @@
 import type { Metadata } from "next";
 import PageHeader from "@/components/PageHeader";
+import { Target, CheckCircle2, Calendar, LayoutGrid, ClipboardList, Clock } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "MVP Hackathon | SPEC",
+  title: "SPEC Execution Camp | SPEC",
   description:
-    "SPEC MVP 해커톤 — 기획안을 바탕으로 실제 동작하는 프로덕트를 빌드하고 라이브 배포를 진행하는 1박 2일 몰입형 해커톤",
+    "문제 정의부터 가설 검증 결과물 제작까지를 1박 2일 안에 완료하는 SPEC Execution Camp",
 };
 
-const pClass =
-  "mb-6 font-['Pretendard',sans-serif] font-normal text-[16px] leading-[1.7] text-[#4a4a40] last:mb-0";
+const DAY1_TIMETABLE = [
+  { time: "12:00", session: "킥오프", content: "행사 컨셉 · 레이스 · 진행 방식 안내", leader: "" },
+  { time: "14:00", session: "세션 A 멘토링", content: "문제 정의 / 솔루션 / BM 멘토링", leader: "" },
+  { time: "16:00", session: "멘토 네트워킹", content: "멘토 개별 네트워킹 (멘토 참석 시)", leader: "" },
+  { time: "17:00", session: "세션 A 작업", content: "팀별 문제 정의 · 솔루션 · BM 정리 및 회의", leader: "" },
+  { time: "18:00", session: "저녁 식사", content: "—", leader: "" },
+  { time: "19:00", session: "세션 A 작업 (계속)", content: "팀별 문제 정의 · 솔루션 · BM 정리 및 회의", leader: "" },
+  { time: "20:00", session: "세션 A 중간 피칭", content: "문제 정의 / 솔루션 / BM 발표 · 피드백", leader: "" },
+  { time: "21:00", session: "세션 B 멘토링", content: "가설 검증 방법 / KPI 설정 / 로드맵 멘토링", leader: "" },
+  { time: "23:00", session: "세션 B 작업", content: "팀별 가설 검증 방식 적용 및 결과물 제작 (야식 제공)", leader: "" },
+];
+
+const DAY2_TIMETABLE = [
+  { time: "08:00", session: "파이널 피칭 · 피드백", content: "가설 검증 방식 + 결과물 발표 · 팀별 즉석 피드백 (프리토타입 / 페이크도어 / 설문조사 페이지 등)", leader: "" },
+  { time: "10:00", session: "정리 및 퇴실", content: "—", leader: "" },
+];
 
 export default function HackathonPage() {
-  const sections = [
-    {
-      title: "기능 명세 및 범위 확정 (WBS & Spec Definition)",
-      desc: "단기간 내 배포와 검증이 가능한 핵심 기능만을 선별하여 Figjam 및 Figma 화면 설계서를 완성하고 일정을 설계합니다.",
-    },
-    {
-      title: "48시간 릴레이 빌드 스프린트 (48-Hour Coding Sprint)",
-      desc: "개발자, 디자이너, 기획자가 한자리에 모여 실시간으로 피드백을 주고받으며 집중적으로 프로덕트를 구현하고 결합합니다.",
-    },
-    {
-      title: "바이브 코딩 및 배포 멘토링 (Live Deployment)",
-      desc: "프러너 코치 및 현직 전문가 멘토들과 함께 깃(Git) 협업 전략, CI/CD 배포 자동화, 서버 환경 셋업 등을 함께 진단하고 고도화합니다.",
-    },
-    {
-      title: "데이터 트래킹 및 고객 피드백 연동 (Analytics & Feedback)",
-      desc: "해커톤 종료 시점과 동시에 실사용자가 접근할 수 있도록 라이브 배포를 진행하고, 유저 행동을 트래킹하기 위한 분석 도구를 셋업합니다.",
-    },
-  ];
-
   return (
-    <main className="flex-1 px-5 py-6 sm:px-8 sm:py-10 lg:px-10 pb-24 pt-14 md:pt-20">
-      <div className="mx-auto max-w-[720px]">
+    <main className="flex-1 px-5 py-12 sm:px-8 sm:py-16 lg:px-10 pb-24 pt-14 md:pt-20">
+      <div className="mx-auto max-w-[960px] px-6">
         <PageHeader 
-          title="MVP Hackathon" 
-          subtitle="기획에서 실제 라이브 배포까지, 48시간 동안 동작하는 MVP를 빌드하는 개발 스프린트"
+          title="SPEC Execution Camp" 
+          subtitle="문제 정의부터 가설 검증 결과물 제작까지, 1박 2일간의 실전 액션 캠프"
         />
-      </div>
+        
+        <article className="mx-auto max-w-[720px] space-y-16">
+          {/* 개요 */}
+          <section className="space-y-4">
+            <h2 className="font-['Pretendard',sans-serif] text-xl font-semibold text-[#16140f] flex items-center gap-2">
+              <ClipboardList className="h-5 w-5 text-[#FF6C0F]" strokeWidth={1.5} />
+              <span>캠프 개요</span>
+            </h2>
+            <div className="space-y-4">
+              <p className="font-['Pretendard',sans-serif] font-medium text-[18px] leading-[1.8] text-[#16140f]">
+                {"문제 정의부터 가설 검증 결과물 제작까지를 1박 2일 안에 완료하는 것이 목표입니다."}
+              </p>
+              <p className="font-['Pretendard',sans-serif] font-normal text-[16px] leading-[1.7] text-[#4a4a40]">
+                {"8월 말 피칭 세션까지 이어지는 레이스의 시작점으로, 이 캠프에서 각 팀은 실제 고객 반응을 측정할 수 있는 결과물을 완성합니다."}
+              </p>
+            </div>
+          </section>
 
-      <article className="mx-auto max-w-[720px]">
-        <section className="mb-12">
-          <p className="mb-6 font-['Pretendard',sans-serif] font-normal text-[18px] leading-[1.7] text-[#16140f]">
-            {"SPEC MVP 해커톤은 머릿속에만 존재하던 비즈니스 기획과 화면 설계안을 48시간 동안 쉬지 않고 몰입하여 누구나 접속해 사용해볼 수 있는 '동작하는 웹/앱 프로덕트'로 구현하는 극도의 실행 지향형 해커톤입니다."}
-          </p>
-          <p className={pClass}>
-            {"개발 단계에서 마주하는 다양한 리스크와 기술적 제약을 이겨내며, 유저 가치 검증에 필수적인 핵심 기능을 정의하고 빠르게 출시하는 '린 스타트업(Lean Startup)' 정신을 실천합니다."}
-          </p>
-        </section>
+          {/* 목표 */}
+          <section className="space-y-6">
+            <h2 className="font-['Pretendard',sans-serif] text-xl font-semibold text-[#16140f] flex items-center gap-2">
+              <Target className="h-5 w-5 text-[#FF6C0F]" strokeWidth={1.5} />
+              <span>핵심 목표</span>
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="rounded-lg border border-[#ddd9cc] bg-[#fcfcf8] p-5">
+                <div className="mb-2 font-['Pretendard',sans-serif] text-xs font-semibold text-[#FF6C0F]">GOAL 01</div>
+                <h3 className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f] leading-relaxed">
+                  문제 정의 · 솔루션 · BM 구조 정리
+                </h3>
+              </div>
+              <div className="rounded-lg border border-[#ddd9cc] bg-[#fcfcf8] p-5">
+                <div className="mb-2 font-['Pretendard',sans-serif] text-xs font-semibold text-[#FF6C0F]">GOAL 02</div>
+                <h3 className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f] leading-relaxed">
+                  가설 검증 방법론 습득 및 팀 아이템 직접 적용
+                </h3>
+              </div>
+              <div className="rounded-lg border border-[#ddd9cc] bg-[#fcfcf8] p-5">
+                <div className="mb-2 font-['Pretendard',sans-serif] text-xs font-semibold text-[#FF6C0F]">GOAL 03</div>
+                <h3 className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f] leading-relaxed">
+                  가설 검증 결과물 제작 및 발표
+                </h3>
+              </div>
+            </div>
+          </section>
 
-        <section className="mb-12">
-          <h2 className="mb-6 font-['Pretendard',sans-serif] text-xl font-semibold text-[#16140f]">
-            핵심 프로그램 구성
-          </h2>
-          <div className="space-y-4">
-            {sections.map((item, idx) => (
-              <div 
-                key={idx} 
-                className="rounded-lg border border-[#ddd9cc] bg-[#fcfcf8] p-5 transition-colors hover:bg-[#fcfcf8]/60"
-              >
-                <h3 className="mb-2 font-['Pretendard',sans-serif] text-base font-semibold text-[#16140f]">
-                  {item.title}
+          {/* 세션 구조 */}
+          <section className="space-y-6">
+            <h2 className="font-['Pretendard',sans-serif] text-xl font-semibold text-[#16140f] flex items-center gap-2">
+              <LayoutGrid className="h-5 w-5 text-[#FF6C0F]" strokeWidth={1.5} />
+              <span>세션 구조</span>
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="rounded-lg border border-[#ddd9cc] bg-[#fcfcf8] p-6">
+                <h3 className="mb-3 font-['Pretendard',sans-serif] text-base font-semibold text-[#16140f]">
+                  세션 A — 문제 정의 · 솔루션 · BM
                 </h3>
                 <p className="font-['Pretendard',sans-serif] text-sm text-[#4a4a40] leading-relaxed">
-                  {item.desc}
+                  문제가 실재하는지, 솔루션이 그 문제를 해결하는지, 수익 구조가 성립하는지를 점검합니다. 개념 강의 후 각 팀 아이템에 직접 적용합니다.
                 </p>
               </div>
-            ))}
-          </div>
-        </section>
+              <div className="rounded-lg border border-[#ddd9cc] bg-[#fcfcf8] p-6">
+                <h3 className="mb-3 font-['Pretendard',sans-serif] text-base font-semibold text-[#16140f]">
+                  세션 B — 가설 검증 · KPI · 로드맵
+                </h3>
+                <p className="font-['Pretendard',sans-serif] text-sm text-[#4a4a40] leading-relaxed">
+                  검증할 가설을 특정하고, 방법과 일정을 구조화합니다. 개념 강의 후 팀별 적용합니다. 세션 B의 산출물이 파이널 피칭의 발표 내용이 됩니다.
+                </p>
+              </div>
+            </div>
+          </section>
 
-        <section className="rounded-lg border border-[#ddd9cc] bg-white p-6">
-          <h2 className="mb-4 font-['Pretendard',sans-serif] text-lg font-semibold text-[#16140f]">
-            행사 안내
-          </h2>
-          <table className="w-full border-collapse">
-            <tbody>
-              <tr className="border-b border-[#ece8db]">
-                <td className="py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f] w-24">
-                  대상
-                </td>
-                <td className="py-3 font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">
-                  SPEC 4기 러너 및 프러너 전원 (팀 단위 참여)
-                </td>
-              </tr>
-              <tr className="border-b border-[#ece8db]">
-                <td className="py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
-                  일정
-                </td>
-                <td className="py-3 font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">
-                  2026년 6월 27일 (토) ~ 6월 28일 (일) / 1박 2일
-                </td>
-              </tr>
-              <tr>
-                <td className="py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
-                  장소
-                </td>
-                <td className="py-3 font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">
-                  성균관대학교 자연과학캠퍼스 유림아트홀
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </section>
-      </article>
+          {/* 최종 산출물 */}
+          <section className="space-y-6">
+            <h2 className="font-['Pretendard',sans-serif] text-xl font-semibold text-[#16140f] flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-[#FF6C0F]" strokeWidth={1.5} />
+              <span>최종 산출물 제출 안내</span>
+            </h2>
+            <div className="rounded-lg border border-[#ddd9cc] bg-white p-6">
+              <p className="mb-4 font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">
+                각 팀은 캠프 종료 시점까지 아래 중 하나 이상의 형태를 선택하여 실제 고객 반응을 측정하고 제출합니다.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {[
+                  "고객 인터뷰 질문지 + 섭외 페이지",
+                  "프리토타입 (Pretotype)",
+                  "페이크도어 (Fake Door)",
+                  "랜딩페이지 / 홈페이지",
+                  "그 외 실제 고객 반응을 측정할 수 있는 형태",
+                ].map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-3 p-3 rounded-lg bg-[#fcfcf8] border border-[#ece8db]">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#FF6C0F]/10 text-[#FF6C0F] font-['Pretendard',sans-serif] text-xs font-bold">
+                      {idx + 1}
+                    </span>
+                    <span className="font-['Pretendard',sans-serif] text-sm text-[#16140f] font-medium">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* 타임테이블 */}
+          <section className="space-y-8">
+            <h2 className="font-['Pretendard',sans-serif] text-xl font-semibold text-[#16140f] flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-[#FF6C0F]" strokeWidth={1.5} />
+              <span>캠프 타임테이블</span>
+            </h2>
+            
+            <div className="space-y-8">
+              {/* Day 1 */}
+              <div className="space-y-3">
+                <h3 className="font-['Pretendard',sans-serif] text-base font-semibold text-[#16140f] flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded bg-[#FF6C0F]/10 text-xs font-bold text-[#FF6C0F]">Day 1</span>
+                  <span>6월 27일 (금)</span>
+                </h3>
+                <div className="overflow-x-auto rounded-lg border border-[#ddd9cc] bg-white">
+                  <table className="w-full min-w-[500px] border-collapse">
+                    <thead>
+                      <tr className="bg-[#f0efe6] text-left">
+                        <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f] w-24">시간</th>
+                        <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f] w-40">세션</th>
+                        <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">내용</th>
+                        <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f] w-32">담당 프러너</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {DAY1_TIMETABLE.map((row, idx) => (
+                        <tr key={idx} className="border-t border-[#ece8db] hover:bg-[#fcfcf8]/50">
+                          <td className="px-4 py-3 font-['Pretendard',sans-serif] text-sm text-[#16140f] font-semibold tabular-nums">{row.time}</td>
+                          <td className="px-4 py-3 font-['Pretendard',sans-serif] text-sm text-[#16140f] font-semibold">{row.session}</td>
+                          <td className="px-4 py-3 font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">{row.content}</td>
+                          <td className="px-4 py-3 font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">{row.leader}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Day 2 */}
+              <div className="space-y-3">
+                <h3 className="font-['Pretendard',sans-serif] text-base font-semibold text-[#16140f] flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded bg-[#FF6C0F]/10 text-xs font-bold text-[#FF6C0F]">Day 2</span>
+                  <span>6월 28일 (토)</span>
+                </h3>
+                <div className="overflow-x-auto rounded-lg border border-[#ddd9cc] bg-white">
+                  <table className="w-full min-w-[500px] border-collapse">
+                    <thead>
+                      <tr className="bg-[#f0efe6] text-left">
+                        <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f] w-24">시간</th>
+                        <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f] w-40">세션</th>
+                        <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">내용</th>
+                        <th className="px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f] w-32">담당 프러너</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {DAY2_TIMETABLE.map((row, idx) => (
+                        <tr key={idx} className="border-t border-[#ece8db] hover:bg-[#fcfcf8]/50">
+                          <td className="px-4 py-3 font-['Pretendard',sans-serif] text-sm text-[#16140f] font-semibold tabular-nums">{row.time}</td>
+                          <td className="px-4 py-3 font-['Pretendard',sans-serif] text-sm text-[#16140f] font-semibold">{row.session}</td>
+                          <td className="px-4 py-3 font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">{row.content}</td>
+                          <td className="px-4 py-3 font-['Pretendard',sans-serif] text-sm text-[#4a4a40]">{row.leader}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* 안내 정보 */}
+          <section className="rounded-lg border border-[#ddd9cc] bg-[#f5f5ee] p-6 flex items-start gap-4">
+            <Clock className="h-5 w-5 text-[#FF6C0F] shrink-0 mt-0.5" strokeWidth={1.5} />
+            <div>
+              <h3 className="font-['Pretendard',sans-serif] text-sm font-bold text-[#16140f] mb-1">
+                캠프 진행 및 혜택 안내
+              </h3>
+              <ul className="list-disc pl-4 space-y-1 font-['Pretendard',sans-serif] text-xs text-[#4a4a40]">
+                <li>세션 B 작업 시간 중 야식이 제공됩니다.</li>
+                <li>파이널 피칭 시 프리토타입, 페이크도어, 설문조사 페이지 등 실제 고객 반응 측정 도구를 활용하여 팀별 피드백이 즉석으로 제공됩니다.</li>
+                <li>1박 2일 몰입 기간 동안 안전에 각별히 유의해 주시기 바랍니다.</li>
+              </ul>
+            </div>
+          </section>
+        </article>
+      </div>
     </main>
   );
 }
