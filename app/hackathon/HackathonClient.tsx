@@ -177,33 +177,18 @@ export default function HackathonClient() {
     <main className="relative flex-1 bg-white text-[#16140f] min-h-screen">
       {/* Hero Section */}
       <div 
-        className="relative h-[100dvh] w-full overflow-hidden bg-[#16140f] flex flex-col justify-between rounded-none"
+        className="relative h-[100dvh] w-full overflow-hidden bg-[#16140f] flex flex-col justify-center rounded-none"
         style={{
           backgroundImage: "linear-gradient(to bottom, rgba(22, 20, 15, 0.45), rgba(22, 20, 15, 0.95)), url('/images/heroes/4.jpg')",
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
       >
-        <div className="flex-1 flex flex-col items-center justify-center text-center px-6 mt-16 md:mt-24">
-          <span className="font-['Pretendard',sans-serif] text-xs md:text-sm font-extrabold uppercase tracking-[0.3em] text-[#FF6C0F] mb-4">
-            SPEC 4기 · 1박 2일 몰입 캠프
-          </span>
-          <h1 className="font-['Pretendard',sans-serif] text-[clamp(2.25rem,6vw,5rem)] font-black uppercase tracking-tight text-white leading-none">
-            BEGIN THE RACE.<br />
-            <span className="text-[#FF6C0F]">TEST THE HYPOTHESIS.</span>
+        <div className="flex flex-col items-center justify-center text-center px-6">
+          <h1 className="font-['Pretendard',sans-serif] text-[clamp(1.75rem,4.5vw,3.25rem)] font-black tracking-tight text-white leading-[1.4]">
+            문제 정의부터 가설 검증 결과물 제작까지<br />
+            <span className="text-[#FF6C0F]">1박 2일 안에 완성하는 SPEC Execution Camp</span>
           </h1>
-          <p className="mt-6 max-w-[600px] font-['Pretendard',sans-serif] text-sm md:text-lg text-white/80 leading-relaxed font-medium">
-            문제 정의부터 가설 검증 결과물 제작까지 1박 2일 안에 완성하는 SPEC Execution Camp
-          </p>
-        </div>
-
-        <div className="pb-16 flex flex-col items-center gap-4 text-center">
-          <a
-            href="#intro"
-            className="inline-flex h-12 md:h-14 items-center justify-center rounded-md bg-white px-6 md:px-8 font-['Pretendard',sans-serif] text-sm md:text-base font-semibold text-[#16140f] transition-all duration-200 hover:bg-[#FF6C0F] hover:text-white active:translate-y-px"
-          >
-            캠프 소개 보기
-          </a>
         </div>
       </div>
 
