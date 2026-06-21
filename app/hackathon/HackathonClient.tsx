@@ -96,25 +96,18 @@ const FAQ_ITEMS = [
 
 const PARTNERS = [
   {
-    name: "알파브라더스",
-    href: "https://www.alphabrothers.co.kr/",
+    name: "아이엠브릿지",
+    href: "http://allthatcampus.com/main/main.html",
     linkLabel: "공식 웹사이트",
-    image: { src: "/images/logos/alphabrothers.png", alt: "알파브라더스", width: 48, height: 48, className: "h-12 w-12 object-contain" },
-    description: "검증된 방법론을 바탕으로 혁신 기업의 시작과 성장을 설계하고 조력하는 전문 빌더사입니다. 본 행사 개최 공간 및 실무 멘토링을 제공합니다.",
+    image: { src: "/images/logos/imbridge.png", alt: "아이엠브릿지", width: 140, height: 48, className: "h-12 w-auto object-contain" },
+    description: "대학생 창업 교육, 브랜드 마케팅 및 다양한 파트너 연계를 지원하는 창업 파트너사입니다. 본 행사 개최 공간 및 실무 멘토링을 제공합니다.",
   },
   {
-    name: "배지헌 변리사",
-    href: "https://www.linkedin.com/in/%EB%B0%B0%EC%A7%80%ED%97%8C/",
-    linkLabel: "LinkedIn 프로필",
-    image: { src: "/images/logos/jiheon.jpeg", alt: "배지헌 변리사", width: 64, height: 64, className: "object-cover h-16 w-16 rounded-full border border-[#ddd9cc]" },
-    description: "특허법인 윌러의 파트너 변리사입니다. 스타트업 비즈니스의 지식재산권 보호와 특허 출원 전략을 지원합니다.",
-  },
-  {
-    name: "이정민 대표 (Tony Lee)",
-    href: "https://www.linkedin.com/in/jyoung105/",
-    linkLabel: "LinkedIn 프로필",
-    image: { src: "/images/logos/jungmin.png", alt: "이정민 대표", width: 64, height: 64, className: "object-cover h-16 w-16 rounded-full border border-[#ddd9cc]" },
-    description: "AI 솔로 빌더이자 ABLD의 설립자입니다. 생성형 AI 모델 활용, 멀티 에이전트 시스템 설계 및 스타트업 실행 전략 멘토링을 제공합니다.",
+    name: "김중철",
+    href: "https://eopage.com/",
+    linkLabel: "EO 공식 웹사이트",
+    image: { src: "/images/logos/jungchul.png", alt: "김중철", width: 64, height: 64, className: "object-cover h-16 w-16 rounded-full border border-[#ddd9cc]" },
+    description: "EO에서 국내 플랫폼 사업부 리드를 맡고 있으며, 스타트업의 단계별 성장 과정을 연구하고 있습니다. 베스트셀러 '오늘도 개발자가 안된다고 말했다'의 저자이기도 합니다.",
   },
 ] as const;
 
@@ -381,7 +374,7 @@ export default function HackathonClient() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
               {PARTNERS.map((partner) => (
                 <div key={partner.name} className="flex flex-col items-center gap-6 p-6 rounded-lg bg-white border border-[#ddd9cc] text-center">
                   <div className="flex items-center justify-center h-16">
