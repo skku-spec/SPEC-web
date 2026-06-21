@@ -185,10 +185,14 @@ export default function HackathonClient() {
         }}
       >
         <div className="flex flex-col items-center justify-center text-center px-6">
-          <h1 className="font-['Pretendard',sans-serif] text-[clamp(1.75rem,4.5vw,3.25rem)] font-black tracking-tight text-white leading-[1.4]">
-            문제 정의부터 가설 검증 결과물 제작까지<br />
-            <span className="text-[#FF6C0F]">1박 2일 안에 완성하는 SPEC Execution Camp</span>
+          <h1 className="font-['Pretendard',sans-serif] text-[clamp(2.25rem,6vw,5rem)] font-black uppercase tracking-tight text-white leading-none">
+            BEGIN THE RACE.<br />
+            <span className="text-[#FF6C0F]">TEST THE HYPOTHESIS.</span>
           </h1>
+          <p className="mt-6 max-w-[600px] font-['Pretendard',sans-serif] text-sm md:text-lg text-white/80 leading-relaxed font-medium">
+            문제 정의부터 가설 검증 결과물 제작까지<br />
+            1박 2일 안에 완성하는 SPEC Execution Camp
+          </p>
         </div>
       </div>
 
