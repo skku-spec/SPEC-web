@@ -84,8 +84,8 @@ const FAQ_ITEMS = [
     answer: "고객 반응을 측정할 수 있는 형태라면 제한이 없습니다. 고객 인터뷰 질문지+섭외 페이지, 프리토타입, 페이크도어, 랜딩페이지 중 팀 아이템에 적합한 형태를 선택하여 제출하게 됩니다.",
   },
   {
-    question: "장소인 유림아트홀은 어떻게 가나요?",
-    answer: "성균관대학교 자연과학캠퍼스 내 유림아트홀에서 진행됩니다. 상세 위치는 커뮤니티 공지사항을 참고해 주세요.",
+    question: "장소인 올댓캠퍼스는 어떻게 가나요?",
+    answer: "올댓캠퍼스에서 진행됩니다. 상세 위치는 커뮤니티 공지사항을 참고해 주세요.",
   },
   {
     question: "식사나 야식이 제공되나요?",
@@ -334,7 +334,7 @@ export default function HackathonClient() {
                   VENUE
                 </h3>
                 <p className="font-['Pretendard',sans-serif] text-[15px] text-white font-bold mb-1">
-                  성균관대학교 자연과학캠퍼스 유림아트홀
+                  올댓캠퍼스
                 </p>
                 <p className="font-['Pretendard',sans-serif] text-sm text-white/75">
                   문제 정의와 가설 검증을 극대화할 수 있는 창의적인 코워킹 플레이스입니다.
