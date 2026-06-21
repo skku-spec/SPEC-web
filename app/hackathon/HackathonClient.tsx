@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import Image from "next/image";
 import { 
   Calendar, 
@@ -99,14 +98,14 @@ const PARTNERS = [
     name: "아이엠브릿지",
     href: "http://allthatcampus.com/main/main.html",
     linkLabel: "공식 웹사이트",
-    image: { src: "/images/logos/imbridge.png", alt: "아이엠브릿지", width: 140, height: 48, className: "h-12 w-auto object-contain" },
-    description: "대학생 창업 교육, 브랜드 마케팅 및 다양한 파트너 연계를 지원하는 창업 파트너사입니다. 본 행사 개최 공간 및 실무 멘토링을 제공합니다.",
+    image: { src: "/images/logos/imbridge.png", alt: "아이엠브릿지", width: 140, height: 48, className: "h-12 w-auto object-contain mx-auto" },
+    description: "Be a Success Bridge, 온라인과 오프라인의 경계를 넘어 가장 젊은 감각으로 마케팅 솔루션을 제공하며 청년창업과 브랜드를 연결하는 파트너사입니다. 본 행사 개최 공간 및 실무 멘토링을 제공합니다.",
   },
   {
     name: "김중철",
     href: "https://eopage.com/",
     linkLabel: "EO 공식 웹사이트",
-    image: { src: "/images/logos/jungchul.png", alt: "김중철", width: 64, height: 64, className: "object-cover h-16 w-16 rounded-full border border-[#ddd9cc]" },
+    image: { src: "/images/logos/jungchul.png", alt: "김중철", width: 64, height: 64, className: "object-cover h-16 w-16 rounded-full border border-[#ddd9cc] mx-auto" },
     description: "EO에서 국내 플랫폼 사업부 리드를 맡고 있으며, 스타트업의 단계별 성장 과정을 연구하고 있습니다. 베스트셀러 '오늘도 개발자가 안된다고 말했다'의 저자이기도 합니다.",
   },
 ] as const;
@@ -377,7 +376,7 @@ export default function HackathonClient() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
               {PARTNERS.map((partner) => (
                 <div key={partner.name} className="flex flex-col items-center gap-6 p-6 rounded-lg bg-white border border-[#ddd9cc] text-center">
-                  <div className="flex items-center justify-center h-16">
+                  <div className="w-full flex items-center justify-center h-16">
                     <Image
                       src={partner.image.src}
                       alt={partner.image.alt}
@@ -469,31 +468,6 @@ export default function HackathonClient() {
         </div>
       </section>
 
-      {/* Bottom CTA Section */}
-      <section className="relative w-full py-16 md:py-24 bg-white border-t border-[#ddd9cc]/60">
-        <div className="mx-auto max-w-[960px] px-6 text-center">
-          <h2 className="font-['Pretendard',sans-serif] text-2xl md:text-3xl font-bold text-[#16140f] mb-4">
-            가설을 통해 당신의 비즈니스를 증명하세요.
-          </h2>
-          <p className="font-['Pretendard',sans-serif] text-sm md:text-base text-[#6b6b5e] mb-8 max-w-[600px] mx-auto">
-            문제 정의에서 시작해 실질적인 가설 검증 결과물 제작까지, SPEC의 강력한 레이스에 함께 동참하세요.
-          </p>
-          <div className="flex justify-center gap-4">
-            <Link
-              href="/curriculum"
-              className="inline-flex h-12 items-center justify-center rounded-md bg-[#16140f] px-6 font-['Pretendard',sans-serif] text-sm font-semibold text-white transition-colors hover:bg-[#FF6C0F]"
-            >
-              전체 커리큘럼 보기
-            </Link>
-            <Link
-              href="/profile"
-              className="inline-flex h-12 items-center justify-center rounded-md border border-[#ddd9cc] bg-white px-6 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f] transition-colors hover:bg-[#fcfcf8]"
-            >
-              내 프로필로 이동
-            </Link>
-          </div>
-        </div>
-      </section>
     </main>
   );
 }
