@@ -8,6 +8,7 @@ import {
   Tag,
   BookOpen,
   CalendarDays,
+  Network,
   Cog,
   FormInput,
   GraduationCap,
@@ -42,6 +43,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { label: "커리큘럼", href: "/admin/curriculum", icon: GraduationCap, group: "content" },
   { label: "SPEC 로그", href: "/admin/spec-log", icon: ScrollText, group: "content" },
   { label: "아이디어", href: "/admin/ideas", icon: Lightbulb, group: "content" },
+  { label: "팀빌딩", href: "/admin/teams", icon: Network, group: "content" },
 
   /* ── Operations (더보기 시트 — 운영) ──────────── */
   { label: "폼 빌더", href: "/admin/form-builder", icon: FormInput, group: "operations" },

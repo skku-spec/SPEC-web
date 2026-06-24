@@ -124,3 +124,29 @@ export async function uploadHomeworkFile(file: File): Promise<{ name: string; ur
     url: result.url,
   };
 }
+
+export async function uploadTeamBuildingImage(teamId: string, file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append("team_id", teamId);
+  formData.append("image", file);
+
+  const response = await fetch("/api/upload/team-building-image", { method: "POST", body: formData });
+  const result = await response.json();
+  if (!response.ok || !result.success) {
+    throw new Error(result.error || "이미지 업로드에 실패했습니다.");
+  }
+  return result.url;
+}
+
+export async function uploadTeamBuildingFile(teamId: string, file: File): Promise<{ name: string; url: string }> {
+  const formData = new FormData();
+  formData.append("team_id", teamId);
+  formData.append("file", file);
+
+  const response = await fetch("/api/upload/team-building-file", { method: "POST", body: formData });
+  const result = await response.json();
+  if (!response.ok || !result.success) {
+    throw new Error(result.error || "파일 업로드에 실패했습니다.");
+  }
+  return { name: result.name, url: result.url };
+}

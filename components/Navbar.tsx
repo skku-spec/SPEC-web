@@ -9,8 +9,6 @@ import { useUser } from "@/hooks/useUser";
 import { DASHBOARD_ROLES, normalizeRole } from "@/lib/auth-shared";
 import { createClient } from "@/lib/supabase/client";
 
-import ApplyButton from "@/components/ui/ApplyButton";
-
 const ROLE_LABEL: Record<string, string> = {
   outsider: "외부인",
   learner: "러너",
@@ -141,8 +139,8 @@ export default function Navbar() {
                   <Link href="/companies" className={`dropdown-item block px-4 py-2 ${dropdownText} rounded text-sm font-['Pretendard',sans-serif]`}>
                     프로젝트 목록
                   </Link>
-                  <Link href="/people" className={`dropdown-item block px-4 py-2 ${dropdownText} rounded text-sm font-['Pretendard',sans-serif]`}>
-                    팀원 디렉토리
+                  <Link href="/team-building-2026" className={`dropdown-item block px-4 py-2 ${dropdownText} rounded text-sm font-['Pretendard',sans-serif]`}>
+                    2026 Team Building
                   </Link>
                   <div className={`mx-4 my-2 h-px ${isHome ? "bg-white/10" : "bg-[#16140f]/10"}`} />
                   <Link href="/spec-log" className={`dropdown-item block px-4 py-2 ${isHome ? "text-[#FF6C0F]" : "text-[#FF6C0F]"} hover:bg-white/5 rounded text-sm font-medium font-['Pretendard',sans-serif]`}>
@@ -204,7 +202,16 @@ export default function Navbar() {
           </div>
 
           <div className="absolute right-8 lg:right-10 flex items-center gap-3">
-            <ApplyButton size="sm">Apply</ApplyButton>
+            <Link
+              href="/team-space/my"
+              className={`inline-flex h-9 items-center justify-center rounded-md border px-4 font-['Pretendard',sans-serif] text-sm font-semibold transition-colors ${
+                isHome
+                  ? "border-white/25 bg-white/10 text-white hover:bg-white/20"
+                  : "border-[#16140f]/15 bg-[#16140f] text-white hover:bg-[#FF6C0F] hover:border-[#FF6C0F]"
+              }`}
+            >
+              Team Space
+            </Link>
 
 
             {isAuthenticated ? (
@@ -247,6 +254,10 @@ export default function Navbar() {
                         대시보드
                       </Link>
                     )}
+
+                    <Link href="/team-space/my" className="dropdown-item block px-4 py-2 text-[#16140f] hover:bg-gray-100 rounded text-sm font-['Pretendard',sans-serif]">
+                      Team Space
+                    </Link>
 
 
 
@@ -352,8 +363,8 @@ export default function Navbar() {
                 <Link href="/companies" onClick={() => setMenuOpen(false)} className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}>
                   프로젝트 목록
                 </Link>
-                <Link href="/people" onClick={() => setMenuOpen(false)} className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}>
-                  팀원 디렉토리
+                <Link href="/team-building-2026" onClick={() => setMenuOpen(false)} className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}>
+                  2026 Team Building
                 </Link>
                 <Link href="/spec-log" onClick={() => setMenuOpen(false)} className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-[#FF6C0F] hover:bg-white/5" : "text-[#FF6C0F] hover:bg-[#16140f]/5"}`}>
                   SPEC 로그
@@ -390,11 +401,15 @@ export default function Navbar() {
 
               <div className="mb-6">
                 <Link
-                  href="/apply"
+                  href="/team-space/my"
                   onClick={() => setMenuOpen(false)}
-                  className="flex w-full items-center justify-center rounded-full bg-[#FF6C0F] py-3 font-['Source_Serif_4',serif] text-sm font-semibold italic text-white transition-all hover:brightness-[1.08]"
+                  className={`flex w-full items-center justify-center rounded-md border py-3 font-['Pretendard',sans-serif] text-sm font-semibold transition-colors ${
+                    isHome
+                      ? "border-white/20 bg-white/10 text-white hover:bg-white/20"
+                      : "border-[#16140f]/15 bg-[#16140f] text-white hover:bg-[#FF6C0F] hover:border-[#FF6C0F]"
+                  }`}
                 >
-                  Apply Now
+                  Team Space
                 </Link>
               </div>
 
@@ -413,6 +428,13 @@ export default function Navbar() {
                         대시보드
                       </Link>
                     )}
+                    <Link
+                      href="/team-space/my"
+                      onClick={() => setMenuOpen(false)}
+                      className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}
+                    >
+                      Team Space
+                    </Link>
                   </div>
                 </>
               )}

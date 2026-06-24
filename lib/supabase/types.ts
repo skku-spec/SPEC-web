@@ -19,6 +19,7 @@ export type PostType = "news" | "blog";
 export type MemberType = "러너" | "프러너" | "alumni";
 
 export type ProjectStatus = "Active" | "Inactive" | "Acquired" | "Public";
+export type TeamKpiStatus = "planned" | "in_progress" | "achieved" | "missed" | "blocked";
 export type Database = {
   public: {
     Tables: {
@@ -675,6 +676,374 @@ export type Database = {
             foreignKeyName: "ideathon_participant_profiles_user_id_fkey";
             columns: ["user_id"];
             isOneToOne: true;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      startup_teams: {
+        Row: {
+          id: string;
+          name: string;
+          description: string;
+          batch: string;
+          lead_preneur_id: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description?: string;
+          batch?: string;
+          lead_preneur_id?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          description?: string;
+          batch?: string;
+          lead_preneur_id?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "startup_teams_lead_preneur_id_fkey";
+            columns: ["lead_preneur_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "startup_teams_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      startup_team_members: {
+        Row: {
+          id: string;
+          team_id: string;
+          profile_id: string;
+          role_in_team: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          team_id: string;
+          profile_id: string;
+          role_in_team?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          team_id?: string;
+          profile_id?: string;
+          role_in_team?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "startup_team_members_team_id_fkey";
+            columns: ["team_id"];
+            isOneToOne: false;
+            referencedRelation: "startup_teams";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "startup_team_members_profile_id_fkey";
+            columns: ["profile_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      team_kpis: {
+        Row: {
+          id: string;
+          team_id: string;
+          title: string;
+          description: string;
+          owner_id: string | null;
+          period_start: string | null;
+          period_end: string | null;
+          measurement_type: "numeric" | "reduce" | "checklist";
+          start_value: number | null;
+          target_value: number;
+          current_value: number;
+          unit: string;
+          is_measured: boolean;
+          checklist_items: Array<{ id: string; text: string; done: boolean }>;
+          status: TeamKpiStatus;
+          progress_note: string;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          team_id: string;
+          title: string;
+          description?: string;
+          owner_id?: string | null;
+          period_start?: string | null;
+          period_end?: string | null;
+          measurement_type?: "numeric" | "reduce" | "checklist";
+          start_value?: number | null;
+          target_value?: number;
+          current_value?: number;
+          unit?: string;
+          is_measured?: boolean;
+          checklist_items?: Array<{ id: string; text: string; done: boolean }>;
+          status?: TeamKpiStatus;
+          progress_note?: string;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          team_id?: string;
+          title?: string;
+          description?: string;
+          owner_id?: string | null;
+          period_start?: string | null;
+          period_end?: string | null;
+          measurement_type?: "numeric" | "reduce" | "checklist";
+          start_value?: number | null;
+          target_value?: number;
+          current_value?: number;
+          unit?: string;
+          is_measured?: boolean;
+          checklist_items?: Array<{ id: string; text: string; done: boolean }>;
+          status?: TeamKpiStatus;
+          progress_note?: string;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "team_kpis_team_id_fkey";
+            columns: ["team_id"];
+            isOneToOne: false;
+            referencedRelation: "startup_teams";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "team_kpis_owner_id_fkey";
+            columns: ["owner_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      team_kpi_templates: {
+        Row: {
+          id: string;
+          key: string;
+          title: string;
+          description: string;
+          category: string;
+          unit: string;
+          default_target_value: number;
+          sort_order: number;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          key: string;
+          title: string;
+          description?: string;
+          category?: string;
+          unit?: string;
+          default_target_value?: number;
+          sort_order?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          key?: string;
+          title?: string;
+          description?: string;
+          category?: string;
+          unit?: string;
+          default_target_value?: number;
+          sort_order?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      team_review_posts: {
+        Row: {
+          id: string;
+          team_id: string;
+          author_id: string | null;
+          title: string;
+          content: string;
+          content_blocks: Array<
+            | { type: "text"; text: string; variant?: "paragraph" | "heading1" | "heading2" | "heading3" }
+            | { type: "blocknote"; blocks: unknown[]; markdown?: string }
+            | { type: "kpi"; kpiId: string }
+            | { type: "image"; url: string; width?: number }
+            | { type: "file"; name: string; url: string }
+          >;
+          kpi_ids: string[];
+          image_urls: string[];
+          file_attachments: Array<{ name: string; url: string }>;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          team_id: string;
+          author_id?: string | null;
+          title: string;
+          content?: string;
+          content_blocks?: Array<
+            | { type: "text"; text: string; variant?: "paragraph" | "heading1" | "heading2" | "heading3" }
+            | { type: "blocknote"; blocks: unknown[]; markdown?: string }
+            | { type: "kpi"; kpiId: string }
+            | { type: "image"; url: string; width?: number }
+            | { type: "file"; name: string; url: string }
+          >;
+          kpi_ids?: string[];
+          image_urls?: string[];
+          file_attachments?: Array<{ name: string; url: string }>;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          team_id?: string;
+          author_id?: string | null;
+          title?: string;
+          content?: string;
+          content_blocks?: Array<
+            | { type: "text"; text: string; variant?: "paragraph" | "heading1" | "heading2" | "heading3" }
+            | { type: "blocknote"; blocks: unknown[]; markdown?: string }
+            | { type: "kpi"; kpiId: string }
+            | { type: "image"; url: string; width?: number }
+            | { type: "file"; name: string; url: string }
+          >;
+          kpi_ids?: string[];
+          image_urls?: string[];
+          file_attachments?: Array<{ name: string; url: string }>;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "team_review_posts_team_id_fkey";
+            columns: ["team_id"];
+            isOneToOne: false;
+            referencedRelation: "startup_teams";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "team_review_posts_author_id_fkey";
+            columns: ["author_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      office_hours: {
+        Row: {
+          id: string;
+          team_id: string;
+          held_at: string;
+          next_due_at: string | null;
+          summary: string;
+          decisions: string;
+          next_actions: string;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          team_id: string;
+          held_at?: string;
+          next_due_at?: string | null;
+          summary?: string;
+          decisions?: string;
+          next_actions?: string;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          team_id?: string;
+          held_at?: string;
+          next_due_at?: string | null;
+          summary?: string;
+          decisions?: string;
+          next_actions?: string;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "office_hours_team_id_fkey";
+            columns: ["team_id"];
+            isOneToOne: false;
+            referencedRelation: "startup_teams";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      office_hour_attendees: {
+        Row: {
+          id: string;
+          office_hour_id: string;
+          profile_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          office_hour_id: string;
+          profile_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          office_hour_id?: string;
+          profile_id?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "office_hour_attendees_office_hour_id_fkey";
+            columns: ["office_hour_id"];
+            isOneToOne: false;
+            referencedRelation: "office_hours";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "office_hour_attendees_profile_id_fkey";
+            columns: ["profile_id"];
+            isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["id"];
           }

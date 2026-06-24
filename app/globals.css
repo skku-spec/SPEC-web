@@ -122,6 +122,40 @@ body {
   display: none;
 }
 
+.team-review-editor .bn-root .bn-editor,
+.team-review-editor .bn-editor,
+.team-review-editor [contenteditable="true"] {
+  min-height: 11rem !important;
+  margin-left: 0 !important;
+  padding-inline: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  padding-block: 0 !important;
+  text-indent: 0 !important;
+}
+
+.team-review-editor .bn-container,
+.team-review-editor .bn-default-styles,
+.team-review-editor .ProseMirror {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+.team-review-editor .bn-block-group {
+  margin-left: 0 !important;
+}
+
+.team-review-editor .bn-block-outer,
+.team-review-editor .bn-block {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+.team-review-editor .bn-block-content {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
 .nav-link {
   font-family: "Outfit", sans-serif;
   font-size: 14px;

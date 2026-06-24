@@ -8,6 +8,7 @@ export const SPEC_LOG_ENGAGE_ROLES: readonly UserRole[] = ["learner", "alumni", 
 export const ADMIN_PAGE_ROLES: readonly UserRole[] = ["preneur"] as const;
 export const DASHBOARD_ROLES: readonly UserRole[] = ["learner", "preneur"] as const;
 export const IDEATHON_BOARD_ROLES: readonly UserRole[] = ["learner", "preneur"] as const;
+export const TEAM_SPACE_ROLES: readonly UserRole[] = ["learner", "preneur"] as const;
 
 export function normalizeRole(role: string | null | undefined): UserRole {
   if (role === "preneur") return "preneur";

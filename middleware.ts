@@ -8,6 +8,7 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
 const WRITER_ROLES = ["learner", "alumni", "preneur"];
+const TEAM_SPACE_ROLES = ["learner", "preneur"];
 type UserRole = "outsider" | "learner" | "alumni" | "preneur";
 
 function isAdminRoute(pathname: string) {
@@ -28,6 +29,14 @@ export function isPrivateProfileRoute(pathname: string) {
 
 function isResetPasswordRoute(pathname: string) {
   return pathname === "/reset-password";
+}
+
+function isTeamSpaceRoute(pathname: string) {
+  return pathname === "/team-space" || pathname.startsWith("/team-space/");
+}
+
+function isTeamBuildingRoute(pathname: string) {
+  return pathname === "/team-building-2026" || pathname.startsWith("/team-building-2026/");
 }
 
 const BLOCKED_ROUTES = [
@@ -107,7 +116,8 @@ export async function middleware(request: NextRequest) {
   const needsWriter = isBlogWriteRoute(pathname) || isBlogEditRoute(pathname);
   const isApplyRoute = (pathname === "/apply" || pathname.startsWith("/apply/")) &&
                        !pathname.startsWith("/apply/status");
-  const needsAuth = isPrivateProfileRoute(pathname) || isResetPasswordRoute(pathname) || isApplyRoute;
+  const needsTeamSpace = isTeamSpaceRoute(pathname) || isTeamBuildingRoute(pathname);
+  const needsAuth = isPrivateProfileRoute(pathname) || isResetPasswordRoute(pathname) || isApplyRoute || needsTeamSpace;
 
   if (!needsAdmin && !needsWriter && !needsAuth) {
     return response;
@@ -128,6 +138,10 @@ export async function middleware(request: NextRequest) {
   }
 
   if (needsWriter && !WRITER_ROLES.includes(role)) {
+    return redirectWithCookies(request, response, "/");
+  }
+
+  if (needsTeamSpace && !TEAM_SPACE_ROLES.includes(role) && !isAdmin) {
     return redirectWithCookies(request, response, "/");
   }
 

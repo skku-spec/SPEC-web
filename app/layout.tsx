@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import "@blocknote/core/fonts/inter.css";
+import "@blocknote/mantine/style.css";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import RecruitmentBanner from "@/components/RecruitmentBanner";
