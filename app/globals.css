@@ -171,14 +171,18 @@ body {
 /* dropdown */
 .dropdown-menu {
   position: absolute;
-  top: 100%;
+  top: calc(100% - 1px);
   left: 50%;
   transform: translateX(-50%);
-  padding-top: 8px;
+  padding-top: 0;
   z-index: 100;
 }
-.nav-item:hover .dropdown-menu {
+.nav-item:hover .dropdown-menu,
+.nav-item:focus-within .dropdown-menu {
   display: block !important;
+}
+.dropdown-menu .dropdown-container {
+  margin-top: 0;
 }
 .dropdown-container {
   background: #ffffff;
