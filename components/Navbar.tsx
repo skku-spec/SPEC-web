@@ -59,6 +59,12 @@ export default function Navbar() {
   const initials = useMemo(() => getInitials(displayName), [displayName]);
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const prefetchTeamSpace = useCallback(() => {
+    router.prefetch("/team-space/my");
+  }, [router]);
+  const prefetchTeamBuilding = useCallback(() => {
+    router.prefetch("/team-building-2026");
+  }, [router]);
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
@@ -139,7 +145,7 @@ export default function Navbar() {
                   <Link href="/companies" className={`dropdown-item block px-4 py-2 ${dropdownText} rounded text-sm font-['Pretendard',sans-serif]`}>
                     프로젝트 목록
                   </Link>
-                  <Link href="/team-building-2026" className={`dropdown-item block px-4 py-2 ${dropdownText} rounded text-sm font-['Pretendard',sans-serif]`}>
+                  <Link href="/team-building-2026" onMouseEnter={prefetchTeamBuilding} onFocus={prefetchTeamBuilding} className={`dropdown-item block px-4 py-2 ${dropdownText} rounded text-sm font-['Pretendard',sans-serif]`}>
                     2026 Team Building
                   </Link>
                   <div className={`mx-4 my-2 h-px ${isHome ? "bg-white/10" : "bg-[#16140f]/10"}`} />
@@ -204,6 +210,8 @@ export default function Navbar() {
           <div className="absolute right-8 lg:right-10 flex items-center gap-3">
             <Link
               href="/team-space/my"
+              onMouseEnter={prefetchTeamSpace}
+              onFocus={prefetchTeamSpace}
               className={`inline-flex h-9 items-center justify-center rounded-md border px-4 font-['Pretendard',sans-serif] text-sm font-semibold transition-colors ${
                 isHome
                   ? "border-white/25 bg-white/10 text-white hover:bg-white/20"
