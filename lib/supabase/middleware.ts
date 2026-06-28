@@ -1,12 +1,20 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import type { User } from "@supabase/supabase-js";
 
 import type { Database } from "@/lib/supabase/types";
 
+export type SessionClaims = {
+  sub?: string;
+  email?: string;
+  user_role?: string;
+  role?: string;
+  is_admin?: boolean;
+  [key: string]: unknown;
+} | null;
+
 type SessionResult = {
   response: NextResponse;
-  user: User | null;
+  claims: SessionClaims;
 };
 
 export async function updateSession(request: NextRequest): Promise<SessionResult> {
@@ -14,7 +22,7 @@ export async function updateSession(request: NextRequest): Promise<SessionResult
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    return { response: NextResponse.next({ request }), user: null };
+    return { response: NextResponse.next({ request }), claims: null };
   }
 
   let response = NextResponse.next({
@@ -42,9 +50,10 @@ export async function updateSession(request: NextRequest): Promise<SessionResult
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getClaims() verifies the JWT locally when asymmetric signing keys are
+  // enabled (no network round-trip), and only falls back to a network call
+  // otherwise — a safe drop-in replacement for the always-remote getUser().
+  const { data } = await supabase.auth.getClaims();
 
-  return { response, user };
+  return { response, claims: (data?.claims ?? null) as SessionClaims };
 }

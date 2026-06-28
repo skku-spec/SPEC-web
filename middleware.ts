@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-import { updateSession } from "@/lib/supabase/middleware";
+import { updateSession, type SessionClaims } from "@/lib/supabase/middleware";
 import type { Database } from "@/lib/supabase/types";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
@@ -68,8 +68,15 @@ function redirectWithCookies(request: NextRequest, response: NextResponse, pathn
 async function getUserRole(
   request: NextRequest,
   response: NextResponse,
-  userId: string,
+  claims: NonNullable<SessionClaims>,
 ): Promise<{ role: UserRole; isAdmin: boolean }> {
+  // If role/admin are present as custom JWT claims (set up via a Supabase
+  // access-token hook), use them directly and skip the profiles round-trip.
+  const claimRole = (claims.user_role ?? claims.role) as UserRole | undefined;
+  if (claimRole && typeof claims.is_admin === "boolean") {
+    return { role: claimRole, isAdmin: claims.is_admin };
+  }
+
   const supabase = createServerClient<Database>(
     SUPABASE_URL,
     SUPABASE_ANON_KEY,
@@ -91,7 +98,7 @@ async function getUserRole(
   const { data: profile } = await supabase
     .from("profiles")
     .select("role, is_admin")
-    .eq("id", userId)
+    .eq("id", claims.sub as string)
     .maybeSingle();
 
   return {
@@ -105,7 +112,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
-  const { response, user } = await updateSession(request);
+  const { response, claims } = await updateSession(request);
   const pathname = request.nextUrl.pathname;
 
   if (isBlockedRoute(pathname)) {
@@ -123,7 +130,7 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  if (!user) {
+  if (!claims) {
     if (needsWriter || needsAuth) {
       return redirectWithCookies(request, response, `/login?redirect=${pathname}`);
     }
@@ -131,7 +138,7 @@ export async function middleware(request: NextRequest) {
     return redirectWithCookies(request, response, "/");
   }
 
-  const { role, isAdmin } = await getUserRole(request, response, user.id);
+  const { role, isAdmin } = await getUserRole(request, response, claims);
 
   if (needsAdmin && role !== "preneur" && !isAdmin) {
     return redirectWithCookies(request, response, "/");

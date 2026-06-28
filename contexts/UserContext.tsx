@@ -37,22 +37,25 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const supabase = createClient();
 
     async function fetchUser() {
-      const {
-        data: { user: currentUser },
-      } = await supabase.auth.getUser();
+      // getClaims() verifies the JWT locally when signing keys are enabled,
+      // avoiding a network round-trip on every page mount. Context consumers
+      // only read user.id / user.email, so claims cover what they need.
+      const { data } = await supabase.auth.getClaims();
+      const claims = data?.claims ?? null;
 
-      setUser(currentUser);
-
-      if (!currentUser) {
+      if (!claims?.sub) {
+        setUser(null);
         setProfile(null);
         setIsLoading(false);
         return;
       }
 
+      setUser({ id: claims.sub, email: claims.email } as unknown as User);
+
       const { data: currentProfile } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", currentUser.id)
+        .eq("id", claims.sub)
         .maybeSingle();
 
       setProfile(currentProfile ?? null);
