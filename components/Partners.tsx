@@ -1,4 +1,4 @@
-import { getActivePartners } from "@/lib/actions/partners";
+import { getCachedActivePartners } from "@/lib/partners-public";
 import PartnersContent from "@/components/partners/PartnersContent";
 
 const HARDCODED_PARTNERS = [
@@ -8,8 +8,7 @@ const HARDCODED_PARTNERS = [
 ];
 
 export default async function Partners() {
-  const result = await getActivePartners();
-  const dbPartners = result.data ?? [];
+  const dbPartners = await getCachedActivePartners();
 
   const partners =
     dbPartners.length > 0

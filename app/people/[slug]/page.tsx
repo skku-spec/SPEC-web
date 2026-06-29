@@ -4,7 +4,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { CURRENT_BATCH } from "@/lib/constants";
 import { getProfilesForDirectory, getPublicAuthorHref, resolveDirectoryProfileLink } from "@/lib/public-profile";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicServerClient } from "@/lib/supabase/public-server";
 import type { Database } from "@/lib/supabase/types";
 
 type MemberRow = Database["public"]["Tables"]["members"]["Row"];
@@ -27,6 +27,8 @@ interface Person {
 }
 
 const DEFAULT_PHOTO = "";
+
+export const revalidate = 300;
 
 type MemberWithProfileLink = Pick<
   MemberRow,
@@ -87,7 +89,7 @@ function mapMemberToPerson(
 async function getPersonPageData(
   slug: string,
 ): Promise<{ person: Person; otherPartners: Person[]; personHref: string } | null> {
-  const supabase = await createClient();
+  const supabase = createPublicServerClient();
 
   const { data: member } = await supabase
     .from("members")
@@ -126,6 +128,16 @@ async function getPersonPageData(
       mapMemberToPerson(relatedMember, resolveDirectoryProfileLink(relatedMember.public_profile_id, relatedMember.slug, profileLookup))
     ),
   };
+}
+
+export async function generateStaticParams() {
+  const supabase = createPublicServerClient();
+  const { data } = await supabase
+    .from("members")
+    .select("slug")
+    .or(`preneur_batch.eq.${CURRENT_BATCH},learner_batch.eq.${CURRENT_BATCH}`);
+
+  return (data ?? []).map((member) => ({ slug: member.slug }));
 }
 
 interface PageProps {

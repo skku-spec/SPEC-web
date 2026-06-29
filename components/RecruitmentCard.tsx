@@ -1,25 +1,10 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
-import { createClient } from "@/lib/supabase/server";
-
-async function fetchCardData() {
-  try {
-    const supabase = await createClient();
-    const { data } = await supabase
-      .from("recruitment_settings")
-      .select("*")
-      .neq("status", "closed")
-      .limit(1)
-      .maybeSingle();
-    return data;
-  } catch {
-    return null;
-  }
-}
+import { getCachedActiveRecruitment } from "@/lib/recruitment-public";
 
 export default async function RecruitmentCard() {
-  const data = await fetchCardData();
+  const data = await getCachedActiveRecruitment();
 
   if (!data || data.status === "closed") {
     return null;

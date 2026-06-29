@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import { createPublicServerClient } from "@/lib/supabase/public-server";
 import type { BlogPost } from "@/lib/api";
 import type { Database, ProfileRole } from "@/lib/supabase/types";
 
@@ -125,7 +126,7 @@ export async function getProfilesForDirectory(profileIds: string[], candidateSlu
     };
   }
 
-  const supabase = await createClient();
+  const supabase = createPublicServerClient();
   const [byIdResult, bySlugResult] = await Promise.all([
     profileIds.length > 0
       ? supabase

@@ -1,8 +1,9 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { logAuditEvent } from "@/lib/helpers/audit-log";
+import { ACTIVE_RECRUITMENT_CACHE_TAG } from "@/lib/recruitment-public";
 import { createClient } from "@/lib/supabase/server";
 import {
   type RecruitmentSettings,
@@ -42,6 +43,13 @@ type UpsertRecruitmentInput = {
 
 function getDefaultShowBanner(status: RecruitmentStatus): boolean {
   return status !== "closed";
+}
+
+function revalidateRecruitmentSurfaces() {
+  revalidateTag(ACTIVE_RECRUITMENT_CACHE_TAG, "max");
+  revalidatePath("/apply");
+  revalidatePath("/admin/recruitment");
+  revalidatePath("/", "layout");
 }
 
 export async function getActiveRecruitment(): Promise<RecruitmentActionResult<RecruitmentSettings | null>> {
@@ -205,9 +213,7 @@ export async function upsertRecruitmentSettings(
       details: { batch: input.batch, status: input.status },
     });
 
-    revalidatePath("/apply");
-    revalidatePath("/admin/recruitment");
-    revalidatePath("/");
+    revalidateRecruitmentSurfaces();
 
     return { success: true, data };
   } catch {
@@ -269,9 +275,7 @@ export async function updateRecruitmentStatus(
       details: { batch: trimmedBatch, status },
     });
 
-    revalidatePath("/apply");
-    revalidatePath("/admin/recruitment");
-    revalidatePath("/");
+    revalidateRecruitmentSurfaces();
 
     return { success: true, data };
   } catch {

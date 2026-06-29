@@ -3,13 +3,15 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 
-import { createClient } from "@/lib/supabase/server";
+import { createPublicServerClient } from "@/lib/supabase/public-server";
 import type { Database } from "@/lib/supabase/types";
 
 type ProjectRow = Database["public"]["Tables"]["projects"]["Row"];
 type MemberRow = Database["public"]["Tables"]["members"]["Row"];
 type MemberProjectRow = Database["public"]["Tables"]["member_projects"]["Row"];
 type ProjectNewsRow = Database["public"]["Tables"]["project_news"]["Row"];
+
+export const revalidate = 300;
 
 interface Founder {
   name: string;
@@ -63,7 +65,7 @@ interface RelatedCompany {
 const getCompanyPageData = cache(async function getCompanyPageData(
   slug: string,
 ): Promise<{ company: CompanyDetail; related: RelatedCompany[] } | null> {
-  const supabase = await createClient();
+  const supabase = createPublicServerClient();
 
   const { data: project } = await supabase
     .from("projects")
@@ -172,6 +174,13 @@ const getCompanyPageData = cache(async function getCompanyPageData(
 
   return { company, related };
 });
+
+export async function generateStaticParams() {
+  const supabase = createPublicServerClient();
+  const { data } = await supabase.from("projects").select("slug");
+
+  return (data ?? []).map((project) => ({ slug: project.slug }));
+}
 
 interface PageProps {
   params: Promise<{ slug: string }>;
