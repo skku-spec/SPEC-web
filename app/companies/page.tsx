@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicServerClient } from "@/lib/supabase/public-server";
 import type { Database } from "@/lib/supabase/types";
 
 import CompaniesPageClient, {
@@ -13,6 +13,8 @@ export const metadata: Metadata = {
   title: "프로젝트 | SPEC",
 };
 
+export const revalidate = 300;
+
 function sortBatch(a: string, b: string) {
   const aNumber = Number.parseInt(a, 10);
   const bNumber = Number.parseInt(b, 10);
@@ -23,7 +25,7 @@ function sortBatch(a: string, b: string) {
 }
 
 export default async function CompaniesPage() {
-  const supabase = await createClient();
+  const supabase = createPublicServerClient();
   const { data: projectRows } = await supabase
     .from("projects")
     .select(

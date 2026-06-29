@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
-import { createClient } from "@/lib/supabase/server";
+import { getCachedActiveRecruitment } from "@/lib/recruitment-public";
 import { validateTimelineSteps } from "@/lib/types/recruitment";
 
 type ScheduleDate = {
@@ -59,23 +59,8 @@ function getDdayLabel(timelineSteps: unknown) {
   return "마감";
 }
 
-async function fetchBannerData() {
-  try {
-    const supabase = await createClient();
-    const { data } = await supabase
-      .from("recruitment_settings")
-      .select("*")
-      .neq("status", "closed")
-      .limit(1)
-      .maybeSingle();
-    return data;
-  } catch {
-    return null;
-  }
-}
-
 export default async function RecruitmentBanner() {
-  const data = await fetchBannerData();
+  const data = await getCachedActiveRecruitment();
 
   if (!data || data.show_banner === false) {
     return null;

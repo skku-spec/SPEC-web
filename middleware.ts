@@ -105,11 +105,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
-  const { response, user } = await updateSession(request);
   const pathname = request.nextUrl.pathname;
 
   if (isBlockedRoute(pathname)) {
-    return redirectWithCookies(request, response, "/");
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   const needsAdmin = isAdminRoute(pathname);
@@ -120,8 +119,10 @@ export async function middleware(request: NextRequest) {
   const needsAuth = isPrivateProfileRoute(pathname) || isResetPasswordRoute(pathname) || isApplyRoute || needsTeamSpace;
 
   if (!needsAdmin && !needsWriter && !needsAuth) {
-    return response;
+    return NextResponse.next({ request });
   }
+
+  const { response, user } = await updateSession(request);
 
   if (!user) {
     if (needsWriter || needsAuth) {

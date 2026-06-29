@@ -4,7 +4,7 @@ import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
 import { CURRENT_BATCH } from "@/lib/constants";
 import { getPublicAuthorHref } from "@/lib/public-profile";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicServerClient } from "@/lib/supabase/public-server";
 import type { Database } from "@/lib/supabase/types";
 
 type MemberRow = Database["public"]["Tables"]["members"]["Row"];
@@ -67,6 +67,8 @@ export const metadata: Metadata = {
   title: "멤버 | SPEC — 성균관대 창업학회",
   description: "SPEC 창업학회의 Managing Lead, Preneur, Learner를 만나보세요.",
 };
+
+export const revalidate = 300;
 
 function isManagingLead(member: Pick<MemberRow, "batch_tags" | "parts">): boolean {
   const tags = member.batch_tags ?? [];
@@ -218,7 +220,7 @@ function TeamDescriptionBlock({ team }: { team: TeamDescription }) {
 }
 
 export default async function PeoplePage() {
-  const supabase = await createClient();
+  const supabase = createPublicServerClient();
   const { data: memberRows } = await supabase
     .from("members")
     .select(

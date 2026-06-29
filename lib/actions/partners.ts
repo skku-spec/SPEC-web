@@ -1,8 +1,9 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 import { requireAdmin } from "@/lib/auth";
+import { ACTIVE_PARTNERS_CACHE_TAG } from "@/lib/partners-public";
 import { createClient } from "@/lib/supabase/server";
 
 /* ------------------------------------------------------------------ */
@@ -35,6 +36,7 @@ const PARTNERS_TABLE = "partners";
 const REVALIDATE_PATHS = ["/admin/partners", "/"] as const;
 
 function revalidateAll(): void {
+  revalidateTag(ACTIVE_PARTNERS_CACHE_TAG, "max");
   for (const p of REVALIDATE_PATHS) {
     revalidatePath(p);
   }
