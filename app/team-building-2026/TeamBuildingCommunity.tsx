@@ -90,13 +90,13 @@ function Sidebar({
 }) {
   return (
     <aside className="lg:sticky lg:top-24 lg:self-start">
-      <div className="hidden w-[220px] rounded-2xl border border-[#ddd9cc] bg-white p-3 lg:block">
+      <div className="hidden w-[220px] rounded-lg border border-[#ddd9cc] bg-white p-3 lg:block">
         <p className="px-3 pb-3 pt-2 text-xs font-bold uppercase tracking-wide text-[#6b6b5e]">Teams</p>
         <div className="space-y-1">
           <button
             type="button"
             onClick={() => onChange(null)}
-            className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors ${
+            className={`flex w-full items-center gap-3 rounded-md px-3 py-3 text-left transition-colors ${
               selectedTeamId === null ? "bg-[#16140f] text-white" : "text-[#4a4a40] hover:bg-[#f0efe6]"
             }`}
           >
@@ -114,7 +114,7 @@ function Sidebar({
                 key={team.id}
                 type="button"
                 onClick={() => onChange(team.id)}
-                className={`w-full rounded-xl px-3 py-3 text-left transition-colors ${
+                className={`w-full rounded-md px-3 py-3 text-left transition-colors ${
                   active ? "bg-[#16140f] text-white" : "text-[#4a4a40] hover:bg-[#f0efe6]"
                 }`}
               >
@@ -209,28 +209,28 @@ function DashboardView({ teams, totalPosts }: { teams: TeamSummary[]; totalPosts
   return (
     <div className="space-y-5">
       <section className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-2xl border border-[#ddd9cc] bg-white p-5">
+        <div className="rounded-lg border border-[#ddd9cc] bg-white p-5">
           <p className="text-xs font-bold text-[#6b6b5e]">Teams</p>
           <p className="mt-2 text-3xl font-black">{teams.length}</p>
         </div>
-        <div className="rounded-2xl border border-[#ddd9cc] bg-white p-5">
+        <div className="rounded-lg border border-[#ddd9cc] bg-white p-5">
           <p className="text-xs font-bold text-[#6b6b5e]">Teams posting</p>
           <p className="mt-2 text-3xl font-black">{activeTeams}</p>
         </div>
-        <div className="rounded-2xl border border-[#ddd9cc] bg-white p-5">
+        <div className="rounded-lg border border-[#ddd9cc] bg-white p-5">
           <p className="text-xs font-bold text-[#6b6b5e]">Average progress</p>
           <p className="mt-2 text-3xl font-black">{average}%</p>
         </div>
       </section>
 
       {teams.length === 0 ? (
-        <div className="rounded-2xl border border-[#ddd9cc] bg-white p-10 text-center">
+        <div className="rounded-lg border border-[#ddd9cc] bg-white p-5 text-center sm:p-6">
           <Users className="mx-auto mb-3 h-7 w-7 text-[#FF6C0F]" strokeWidth={2} />
           <p className="font-bold">No teams found.</p>
           <p className="mt-2 text-sm text-[#6b6b5e]">Teams created in Team Space will appear here.</p>
         </div>
       ) : (
-        <section className="rounded-2xl border border-[#ddd9cc] bg-white p-5">
+        <section className="rounded-lg border border-[#ddd9cc] bg-white p-5">
           <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h2 className="text-xl font-black text-[#1A1A1A]">Team KPI Progress</h2>
@@ -240,7 +240,7 @@ function DashboardView({ teams, totalPosts }: { teams: TeamSummary[]; totalPosts
           </div>
           <div className="space-y-4">
             {teams.map((team) => (
-              <article key={team.id} className="grid gap-3 rounded-xl border border-[#ece8dc] bg-[#fbfaf4] p-4 sm:grid-cols-[170px_1fr_88px] sm:items-center">
+              <article key={team.id} className="grid gap-3 rounded-lg border border-[#ece8dc] bg-[#fbfaf4] p-4 sm:grid-cols-[170px_1fr_88px] sm:items-center">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-black text-[#1A1A1A]">{team.name}</p>
                   <p className="mt-1 truncate text-xs text-[#6b6b5e]">
@@ -261,7 +261,7 @@ function DashboardView({ teams, totalPosts }: { teams: TeamSummary[]; totalPosts
       )}
 
       {totalPosts === 0 && teams.length > 0 ? (
-        <p className="rounded-2xl border border-[#ddd9cc] bg-white px-5 py-4 text-sm text-[#6b6b5e]">
+        <p className="rounded-lg border border-[#ddd9cc] bg-white px-5 py-4 text-sm text-[#6b6b5e]">
           Team Space teams are connected. KPI posts will appear after teams create KPIs.
         </p>
       ) : null}
@@ -286,7 +286,7 @@ function TeamHomeView({
   return (
     <section className="space-y-5">
       <div className="grid gap-3 lg:grid-cols-3">
-        <div className="rounded-2xl border border-[#ddd9cc] bg-white p-5">
+        <div className="rounded-lg border border-[#ddd9cc] bg-white p-5">
           <div className="mb-3 flex items-center gap-2 text-xs font-semibold text-[#6b6b5e]">
             <Target className="h-4 w-4 text-[#FF6C0F]" strokeWidth={2} />
             Representative KPI
@@ -302,9 +302,9 @@ function TeamHomeView({
           )}
         </div>
 
-        <div className="rounded-2xl border border-[#ddd9cc] bg-white p-5">
+        <div className="rounded-lg border border-[#ddd9cc] bg-white p-5">
           <p className="mb-3 text-xs font-semibold text-[#6b6b5e]">Goal Achievement</p>
-          <div className="flex items-center gap-5">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
             <div className="grid h-24 w-24 place-items-center rounded-full" style={{ background: `conic-gradient(#FF6C0F ${Math.min(team.averageAchievement, 100)}%, #f0efe6 0)` }}>
               <div className="grid h-16 w-16 place-items-center rounded-full bg-white text-xl font-black">{team.averageAchievement}%</div>
             </div>
@@ -316,7 +316,7 @@ function TeamHomeView({
           </div>
         </div>
 
-        <div className={`rounded-2xl border p-5 ${team.atRiskKpis > 0 ? "border-[#f2b8b5] bg-[#fff5f5]" : "border-[#ddd9cc] bg-white"}`}>
+        <div className={`rounded-lg border p-5 ${team.atRiskKpis > 0 ? "border-[#f2b8b5] bg-[#fff5f5]" : "border-[#ddd9cc] bg-white"}`}>
           <p className="mb-3 text-xs font-semibold text-[#6b6b5e]">Needs Review</p>
           <p className="text-3xl font-black">{team.atRiskKpis}</p>
           <p className="mt-2 text-sm text-[#6b6b5e]">{team.atRiskKpis > 0 ? "확인 필요한 KPI가 있습니다." : "현재 확인 필요 항목이 없습니다."}</p>
@@ -327,7 +327,7 @@ function TeamHomeView({
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
-        <section className="rounded-2xl border border-[#ddd9cc] bg-white p-5">
+        <section className="rounded-lg border border-[#ddd9cc] bg-white p-5">
           <div className="mb-4 flex items-center gap-2">
             <BarChart3 className="h-4 w-4 text-[#FF6C0F]" strokeWidth={2} />
             <h2 className="text-sm font-black">KPI Progress</h2>
@@ -337,8 +337,8 @@ function TeamHomeView({
           ) : (
             <div className="space-y-3">
               {posts.slice(0, 6).map((post) => (
-                <article key={post.id} className="rounded-xl border border-[#ece8dc] bg-[#fbfaf4] p-4">
-                  <div className="flex items-start justify-between gap-3">
+                <article key={post.id} className="rounded-lg border border-[#ece8dc] bg-[#fbfaf4] p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-black text-[#1A1A1A]">{post.title}</p>
                       <p className="mt-1 truncate text-xs text-[#6b6b5e]">{post.date}</p>
@@ -357,7 +357,7 @@ function TeamHomeView({
         </section>
 
         <section className="space-y-5">
-          <div className="rounded-2xl border border-[#ddd9cc] bg-white p-5">
+          <div className="rounded-lg border border-[#ddd9cc] bg-white p-5">
             <div className="mb-4 flex items-center gap-2">
               <Activity className="h-4 w-4 text-[#FF6C0F]" strokeWidth={2} />
               <h2 className="text-sm font-black">Execution Status</h2>
@@ -382,7 +382,7 @@ function TeamHomeView({
             </div>
           </div>
 
-          <div className="rounded-2xl border border-[#ddd9cc] bg-white p-5">
+          <div className="rounded-lg border border-[#ddd9cc] bg-white p-5">
             <div className="mb-4 flex items-center gap-2">
               <Users className="h-4 w-4 text-[#FF6C0F]" strokeWidth={2} />
               <h2 className="text-sm font-black">Team Meta</h2>
@@ -465,7 +465,7 @@ function ReviewComposer({
   }
 
   return (
-    <form onSubmit={submit} className="mb-5 rounded-2xl border border-[#ddd9cc] bg-white p-5">
+    <form onSubmit={submit} className="mb-5 rounded-lg border border-[#ddd9cc] bg-white p-5">
       <div className="mb-4">
         <h2 className="text-lg font-black text-[#1A1A1A]">KPI 리뷰 작성</h2>
         <p className="mt-1 text-sm text-[#6b6b5e]">KPI 설정 배경, 달성 과정, 배운 점을 팀 피드에 공유합니다.</p>
@@ -500,7 +500,7 @@ function ReviewComposer({
 function FeedView({ posts, teamName }: { posts: FeedPost[]; teamName: string }) {
   if (posts.length === 0) {
     return (
-      <div className="rounded-2xl border border-[#ddd9cc] bg-white p-10 text-center">
+      <div className="rounded-lg border border-[#ddd9cc] bg-white p-5 text-center sm:p-6">
         <ListFilter className="mx-auto mb-3 h-7 w-7 text-[#FF6C0F]" strokeWidth={2} />
         <p className="font-bold">No feed posts yet.</p>
         <p className="mt-2 text-sm text-[#6b6b5e]">{teamName}에서 KPI 리뷰 글을 작성하면 이곳에 표시됩니다.</p>
@@ -559,7 +559,7 @@ export default function TeamBuildingCommunity({
           <PageHeader selectedTeam={selectedTeam} totalPosts={visibleFeedPosts.length} activeTab={activeTab} onTabChange={setActiveTab} />
 
           {setupError ? (
-            <div className="mb-5 rounded-2xl border border-[#f2b8b5] bg-[#fff5f5] px-5 py-4 text-sm text-[#b42318]">
+            <div className="mb-5 rounded-lg border border-[#f2b8b5] bg-[#fff5f5] px-5 py-4 text-sm text-[#b42318]">
               <div className="flex gap-3">
                 <CircleAlert className="mt-0.5 h-5 w-5 shrink-0" strokeWidth={2} />
                 <div>

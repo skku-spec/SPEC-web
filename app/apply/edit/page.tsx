@@ -155,13 +155,8 @@ export default function EditApplicationPage() {
   if (submitted) {
     return (
       <div className="mx-auto max-w-[800px] px-6 py-24 text-center animate-in fade-in zoom-in duration-700">
-        <div className="rounded-[10px] border border-[#ddd9cc] bg-white p-12 md:p-20 shadow-xl">
-          <div className="mb-8 flex justify-center">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#fcfcf8] border-2 border-[#FF6C0F] text-4xl shadow-inner">
-              ✅
-            </div>
-          </div>
-          <h1 className="mb-6 text-4xl font-black text-[#16140f] [font-family:system-ui,-apple-system,sans-serif] tracking-tight">
+        <div className="rounded-[10px] border border-[#ddd9cc] bg-white p-5 shadow-xl sm:p-8 md:p-12 lg:p-20">
+          <h1 className="mb-6 text-3xl font-black tracking-tight text-[#16140f] [font-family:system-ui,-apple-system,sans-serif] sm:text-4xl">
             지원서 수정 완료!
           </h1>
           <p className="text-lg text-[#6b6b5e] font-['Pretendard',sans-serif]">
@@ -170,7 +165,7 @@ export default function EditApplicationPage() {
           <div className="mt-12">
             <button
               onClick={() => router.push("/apply")}
-              className="inline-flex h-16 items-center rounded-full bg-[#16140f] px-12 font-['Pretendard',sans-serif] text-xl font-semibold text-white transition-colors hover:bg-[#2a2820] active:scale-[0.98] shadow-lg"
+              className="inline-flex min-h-12 w-full items-center justify-center rounded-md bg-[#16140f] px-4 font-['Pretendard',sans-serif] text-base font-semibold text-white transition-colors hover:bg-[#2a2820] sm:h-16 sm:w-auto sm:px-12 sm:text-xl"
             >
               지원 페이지로 돌아가기 →
             </button>
@@ -212,7 +207,7 @@ export default function EditApplicationPage() {
         {/* ── Step 0: 기본 정보 ──────────────────────────────── */}
         {step === 0 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="rounded-[10px] border border-[#ddd9cc] bg-white p-8 space-y-7 shadow-sm">
+            <div className="space-y-7 rounded-[10px] border border-[#ddd9cc] bg-white p-5 shadow-sm sm:p-8">
               <div className="border-b border-[#f0efe6] pb-4">
                 <p className="text-xs font-medium text-[#FF6C0F] mb-1">Step 1 of 4</p>
                 <h2 className="text-2xl font-bold text-[#16140f] [font-family:system-ui,-apple-system,sans-serif]">기본 정보 수정</h2>
@@ -258,9 +253,9 @@ export default function EditApplicationPage() {
               <div className="rounded-md bg-red-50 p-4 text-sm text-red-600 border border-red-100 animate-shake">{error}</div>
             )}
 
-            <div className="flex gap-4">
-              <button type="button" onClick={() => router.push("/apply")} className="h-14 flex-1 rounded-full border border-[#ddd9cc] font-semibold text-[#6b6b5e] hover:bg-gray-50 transition-colors">취소</button>
-              <button type="button" onClick={goToNextStep} className="h-14 flex-[2] rounded-full bg-[#16140f] font-semibold text-white hover:opacity-90 transition-opacity">다음 단계로 →</button>
+            <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+              <button type="button" onClick={() => router.push("/apply")} className="h-12 flex-1 rounded-md border border-[#ddd9cc] font-semibold text-[#6b6b5e] transition-colors hover:bg-gray-50 sm:h-14">취소</button>
+              <button type="button" onClick={goToNextStep} className="h-12 flex-[2] rounded-md bg-[#16140f] font-semibold text-white transition-opacity hover:opacity-90 sm:h-14">다음 단계로 →</button>
             </div>
           </div>
         )}
@@ -268,7 +263,7 @@ export default function EditApplicationPage() {
         {/* ── Step 1: Q1-Q3 ──────────────────────────────── */}
         {step === 1 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="rounded-[10px] border border-[#ddd9cc] bg-white p-8 space-y-10 shadow-sm">
+            <div className="space-y-10 rounded-[10px] border border-[#ddd9cc] bg-white p-5 shadow-sm sm:p-8">
               <div className="border-b border-[#f0efe6] pb-4">
                 <p className="text-xs font-medium text-[#FF6C0F] mb-1">Step 2 of 4</p>
                 <h2 className="text-2xl font-bold text-[#16140f] [font-family:system-ui,-apple-system,sans-serif]">지원 질문 (1/2)</h2>
@@ -294,9 +289,9 @@ export default function EditApplicationPage() {
               <div className="rounded-md bg-red-50 p-4 text-sm text-red-600 border border-red-100 animate-shake">{error}</div>
             )}
 
-            <div className="flex gap-4">
-              <button type="button" onClick={goToPrevStep} className="h-14 flex-1 rounded-full border border-[#ddd9cc] font-semibold text-[#6b6b5e] hover:bg-gray-50 transition-colors" disabled={isPending}>이전으로</button>
-              <button type="button" onClick={goToNextStep} className="h-14 flex-[2] rounded-full bg-[#16140f] font-semibold text-white hover:opacity-90 transition-opacity">다음 단계로 →</button>
+            <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+              <button type="button" onClick={goToPrevStep} className="h-12 flex-1 rounded-md border border-[#ddd9cc] font-semibold text-[#6b6b5e] transition-colors hover:bg-gray-50 sm:h-14" disabled={isPending}>이전으로</button>
+              <button type="button" onClick={goToNextStep} className="h-12 flex-[2] rounded-md bg-[#16140f] font-semibold text-white transition-opacity hover:opacity-90 sm:h-14">다음 단계로 →</button>
             </div>
           </div>
         )}
@@ -304,7 +299,7 @@ export default function EditApplicationPage() {
         {/* ── Step 2: Q4-Q6 ──────────────────────────────── */}
         {step === 2 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="rounded-[10px] border border-[#ddd9cc] bg-white p-8 space-y-10 shadow-sm">
+            <div className="space-y-10 rounded-[10px] border border-[#ddd9cc] bg-white p-5 shadow-sm sm:p-8">
               <div className="border-b border-[#f0efe6] pb-4">
                 <p className="text-xs font-medium text-[#FF6C0F] mb-1">Step 3 of 4</p>
                 <h2 className="text-2xl font-bold text-[#16140f] [font-family:system-ui,-apple-system,sans-serif]">지원 질문 (2/2)</h2>
@@ -330,9 +325,9 @@ export default function EditApplicationPage() {
               <div className="rounded-md bg-red-50 p-4 text-sm text-red-600 border border-red-100 animate-shake">{error}</div>
             )}
 
-            <div className="flex gap-4">
-              <button type="button" onClick={goToPrevStep} className="h-14 flex-1 rounded-full border border-[#ddd9cc] font-semibold text-[#6b6b5e] hover:bg-gray-50 transition-colors" disabled={isPending}>이전으로</button>
-              <button type="button" onClick={goToNextStep} className="h-14 flex-[2] rounded-full bg-[#16140f] font-semibold text-white hover:opacity-90 transition-opacity">다음 단계로 →</button>
+            <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+              <button type="button" onClick={goToPrevStep} className="h-12 flex-1 rounded-md border border-[#ddd9cc] font-semibold text-[#6b6b5e] transition-colors hover:bg-gray-50 sm:h-14" disabled={isPending}>이전으로</button>
+              <button type="button" onClick={goToNextStep} className="h-12 flex-[2] rounded-md bg-[#16140f] font-semibold text-white transition-opacity hover:opacity-90 sm:h-14">다음 단계로 →</button>
             </div>
           </div>
         )}
@@ -356,7 +351,7 @@ export default function EditApplicationPage() {
         {/* ── Step 3: 최종 확인 ──────────────────────────────── */}
         {step === 3 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="rounded-[10px] border border-[#ddd9cc] bg-white p-8 space-y-7 shadow-sm">
+            <div className="space-y-7 rounded-[10px] border border-[#ddd9cc] bg-white p-5 shadow-sm sm:p-8">
               <div className="border-b border-[#f0efe6] pb-4">
                 <p className="text-xs font-medium text-[#FF6C0F] mb-1">Step 4 of 4</p>
                 <h2 className="text-2xl font-bold text-[#16140f] [font-family:system-ui,-apple-system,sans-serif]">수정 사항 최종 확인</h2>
@@ -368,9 +363,9 @@ export default function EditApplicationPage() {
               <div className="rounded-md bg-red-50 p-4 text-sm text-red-600 border border-red-100 animate-shake">{error}</div>
             )}
 
-            <div className="flex gap-4">
-              <button type="button" onClick={goToPrevStep} className="h-14 flex-1 rounded-full border border-[#ddd9cc] font-semibold text-[#6b6b5e] hover:bg-gray-50 transition-colors" disabled={isPending}>이전으로</button>
-              <button type="submit" disabled={isPending} className="h-14 flex-[2] rounded-full bg-[#FF6C0F] font-semibold text-white hover:opacity-90 disabled:opacity-30 transition-all shadow-md active:scale-95">
+            <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+              <button type="button" onClick={goToPrevStep} className="h-12 flex-1 rounded-md border border-[#ddd9cc] font-semibold text-[#6b6b5e] transition-colors hover:bg-gray-50 sm:h-14" disabled={isPending}>이전으로</button>
+              <button type="submit" disabled={isPending} className="h-12 flex-[2] rounded-md bg-[#FF6C0F] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-30 sm:h-14">
                 {isPending ? "수정 처리 중..." : "수정 완료하기 →"}
               </button>
             </div>

@@ -116,7 +116,7 @@ export default function FeedCard({ post }: { post: FeedPost }) {
   const visibleParagraphs = useMemo(() => (expanded || !isLong ? post.paragraphs : post.paragraphs.slice(0, 1)), [expanded, isLong, post.paragraphs]);
 
   return (
-    <article className="rounded-2xl border border-[#ddd9cc] bg-white p-5 shadow-[0_1px_0_rgba(22,20,15,0.04)] sm:p-6">
+    <article className="rounded-lg border border-[#ddd9cc] bg-white p-5 shadow-[0_1px_0_rgba(22,20,15,0.04)] sm:p-6">
       <header className="flex items-start gap-3">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#e8e6dc] text-sm font-black text-[#16140f]">
           {post.author.avatarUrl ? (
@@ -242,11 +242,11 @@ export default function FeedCard({ post }: { post: FeedPost }) {
         ) : null}
       </div>
 
-      <div className="mt-4 flex items-center justify-between border-t border-[#ece8db] pt-4">
+      <div className="mt-4 flex flex-col gap-3 border-t border-[#ece8db] pt-4 sm:flex-row sm:items-center sm:justify-between">
         <button type="button" className="text-sm font-semibold text-[#6b6b5e] transition-colors hover:text-[#FF6C0F]">
           {post.translateLabel}
         </button>
-        <div className="flex items-center gap-1 text-[#6b6b5e]">
+        <div className="flex flex-wrap items-center gap-1 text-[#6b6b5e]">
           <button type="button" className="inline-flex h-9 items-center gap-1 rounded-md px-2 text-sm transition-colors hover:bg-[#f0efe6] hover:text-[#16140f]" aria-label="React">
             <SmilePlus className="h-4 w-4" strokeWidth={2} />
             {post.reactionCount}

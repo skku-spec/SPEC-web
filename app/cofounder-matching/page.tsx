@@ -152,7 +152,7 @@ function ProfileCard({
   profile: (typeof founderProfiles)[number];
 }) {
   return (
-    <div className="flex min-w-[260px] max-w-[340px] flex-col rounded-2xl bg-white p-5 sm:p-6 shadow-sm">
+    <div className="flex min-w-[240px] max-w-[320px] flex-col rounded-lg bg-white p-5 sm:p-6">
       <p className="mb-4 font-['Pretendard',sans-serif] text-sm font-normal leading-relaxed text-[#16140f]/80">
         {profile.quote}
       </p>
@@ -187,9 +187,6 @@ export default function CofounderMatchingPage() {
      <div className="overflow-hidden pb-24">
       <section className="relative px-4 pb-16 pt-14 text-center sm:pt-20 lg:pt-24 md:pt-20">
         <div className="mx-auto max-w-[800px]">
-          <div className="mb-6">
-            <div className="text-6xl">🤝</div>
-          </div>
           <h1 className="font-[system-ui] font-black tracking-tight uppercase text-[#16140f] text-[clamp(2.5rem,5vw,3.75rem)]" style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}>
             <span className="font-['Pretendard',sans-serif] text-lg font-medium tracking-wider text-[#FF6C0F] sm:text-xl">
               SPEC
@@ -200,16 +197,16 @@ export default function CofounderMatchingPage() {
           <p className="mt-5 font-['Pretendard',sans-serif] text-lg font-normal text-[#16140f]/70 sm:text-xl">
             아이디어는 있지만 팀이 없나요? SPEC 팀 매칭으로 함께할 동료를 찾으세요
           </p>
-           <div className="mt-8 flex items-center justify-center gap-4">
+           <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center sm:gap-4">
              <Link
                href="/apply"
-               className="rounded-full bg-[#FF6C0F] px-8 py-3 font-['Pretendard',sans-serif] text-sm font-medium text-white transition-opacity hover:opacity-90"
+               className="rounded-md bg-[#FF6C0F] px-4 py-3 font-['Pretendard',sans-serif] text-sm font-medium text-white transition-opacity hover:opacity-90 sm:px-8"
              >
                프로필 등록
              </Link>
              <Link
                href="/about"
-               className="rounded-full border border-[#16140f]/20 px-8 py-3 font-['Pretendard',sans-serif] text-sm font-medium text-[#16140f] transition-colors hover:bg-[#16140f]/5"
+               className="rounded-md border border-[#16140f]/20 px-4 py-3 font-['Pretendard',sans-serif] text-sm font-medium text-[#16140f] transition-colors hover:bg-[#16140f]/5 sm:px-8"
              >
                더 알아보기
              </Link>
@@ -277,7 +274,7 @@ export default function CofounderMatchingPage() {
           <p className="mt-4 font-['Pretendard',sans-serif] text-base font-normal text-[#16140f]/70">
             지역별 활성 프로필
           </p>
-          <div className="mx-auto mt-10 grid max-w-[700px] grid-cols-2 gap-x-12 gap-y-4 text-left sm:grid-cols-2">
+          <div className="mx-auto mt-10 grid max-w-[700px] grid-cols-1 gap-x-12 gap-y-4 text-left sm:grid-cols-2">
             {cityStats.map((stat) => (
               <div
                 key={stat.city}
@@ -319,7 +316,7 @@ export default function CofounderMatchingPage() {
             {testimonials.map((t) => (
               <div
                 key={t.names}
-                className="rounded-2xl border border-[#e8e8e0] bg-white p-8"
+                className="rounded-lg border border-[#e8e8e0] bg-white p-5 sm:p-8"
               >
                 <p className="mb-6 font-['Pretendard',sans-serif] text-base font-normal leading-relaxed text-[#16140f]/80">
                   &ldquo;{t.quote}&rdquo;
@@ -360,7 +357,7 @@ export default function CofounderMatchingPage() {
        <section className="bg-[#FF6C0F] px-4 py-12 text-center">
          <Link
            href="/apply"
-           className="inline-block rounded-full bg-white px-10 py-3.5 font-['Pretendard',sans-serif] text-sm font-semibold text-[#FF6C0F] transition-opacity hover:opacity-90"
+           className="inline-block rounded-md bg-white px-6 py-3.5 font-['Pretendard',sans-serif] text-sm font-semibold text-[#FF6C0F] transition-opacity hover:opacity-90 sm:px-10"
          >
            지금 시작하기
          </Link>
@@ -373,7 +370,7 @@ export default function CofounderMatchingPage() {
            </h2>
           <div className="space-y-8">
             {howItWorksSteps.map((step) => (
-              <div key={step.num} className="flex items-start gap-6">
+              <div key={step.num} className="flex items-start gap-4 sm:gap-6">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FF6C0F] font-['Pretendard',sans-serif] text-lg font-bold text-white">
                   {step.num}
                 </div>
@@ -401,7 +398,7 @@ export default function CofounderMatchingPage() {
                   onClick={() =>
                     setOpenFaq(openFaq === index ? null : index)
                   }
-                  className="flex w-full items-center justify-between px-6 py-5 text-left"
+                  className="flex w-full items-center justify-between gap-4 px-4 py-5 text-left sm:px-6"
                 >
                   <span className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
                     {faq.q}
@@ -438,7 +435,7 @@ export default function CofounderMatchingPage() {
        <section className="bg-[#FF6C0F] px-4 py-12 text-center">
          <Link
            href="/apply"
-           className="inline-block rounded-full bg-white px-10 py-3.5 font-['Pretendard',sans-serif] text-sm font-semibold text-[#FF6C0F] transition-opacity hover:opacity-90"
+           className="inline-block rounded-md bg-white px-6 py-3.5 font-['Pretendard',sans-serif] text-sm font-semibold text-[#FF6C0F] transition-opacity hover:opacity-90 sm:px-10"
          >
            지금 시작하기
          </Link>

@@ -140,13 +140,7 @@ export default function ApplicationFormClient(_props: ApplicationFormClientProps
     return (
       <div className="mx-auto max-w-[800px] px-6 py-24 text-center animate-in fade-in zoom-in duration-700">
         <div className="rounded-[10px] border border-[#ddd9cc] bg-white p-5 sm:p-8 md:p-12 lg:p-20 shadow-xl">
-          <div className="mb-8 flex justify-center">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#fcfcf8] border-2 border-[#FF6C0F] text-4xl shadow-inner">
-              ✨
-            </div>
-          </div>
-          
-          <h1 className="mb-6 text-4xl font-black text-[#16140f] [font-family:system-ui,-apple-system,sans-serif] tracking-tight">
+          <h1 className="mb-6 text-3xl font-black tracking-tight text-[#16140f] [font-family:system-ui,-apple-system,sans-serif] sm:text-4xl">
             지원이 완료되었습니다!
           </h1>
           
@@ -190,7 +184,7 @@ export default function ApplicationFormClient(_props: ApplicationFormClientProps
           <div className="mt-12">
             <button
               onClick={() => router.push("/")}
-              className="inline-flex h-16 items-center rounded-full bg-[#16140f] px-12 font-['Pretendard',sans-serif] text-xl font-semibold text-white transition-colors hover:bg-[#2a2820] active:scale-[0.98] shadow-lg"
+              className="inline-flex min-h-12 w-full items-center justify-center rounded-md bg-[#16140f] px-4 font-['Pretendard',sans-serif] text-base font-semibold text-white transition-colors hover:bg-[#2a2820] sm:h-16 sm:w-auto sm:px-12 sm:text-xl"
             >
               홈으로 이동하기 →
             </button>
@@ -351,18 +345,18 @@ export default function ApplicationFormClient(_props: ApplicationFormClientProps
               </div>
             )}
 
-            <div className="flex gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
               <button
                 type="button"
                 onClick={() => router.push("/apply")}
-                className="h-14 flex-1 rounded-full border border-[#ddd9cc] font-semibold text-[#6b6b5e] hover:bg-gray-50 transition-colors"
+                className="h-12 flex-1 rounded-md border border-[#ddd9cc] font-semibold text-[#6b6b5e] transition-colors hover:bg-gray-50 sm:h-14"
               >
                 이전으로
               </button>
               <button
                 type="button"
                 onClick={goToNextStep}
-                className="h-14 flex-[2] rounded-full bg-[#16140f] font-semibold text-white hover:opacity-90 transition-opacity"
+                className="h-12 flex-[2] rounded-md bg-[#16140f] font-semibold text-white transition-opacity hover:opacity-90 sm:h-14"
               >
                 다음 단계로 →
               </button>
@@ -440,11 +434,11 @@ export default function ApplicationFormClient(_props: ApplicationFormClientProps
               </div>
             )}
 
-            <div className="flex gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
               <button
                 type="button"
                 onClick={goToPrevStep}
-                className="h-14 flex-1 rounded-full border border-[#ddd9cc] font-semibold text-[#6b6b5e] hover:bg-gray-50 transition-colors"
+                className="h-12 flex-1 rounded-md border border-[#ddd9cc] font-semibold text-[#6b6b5e] transition-colors hover:bg-gray-50 sm:h-14"
                 disabled={isPending}
               >
                 이전으로
@@ -452,7 +446,7 @@ export default function ApplicationFormClient(_props: ApplicationFormClientProps
               <button
                 type="button"
                 onClick={goToNextStep}
-                className="h-14 flex-[2] rounded-full bg-[#16140f] font-semibold text-white hover:opacity-90 transition-opacity"
+                className="h-12 flex-[2] rounded-md bg-[#16140f] font-semibold text-white transition-opacity hover:opacity-90 sm:h-14"
               >
                 다음 단계로 →
               </button>
@@ -529,11 +523,11 @@ export default function ApplicationFormClient(_props: ApplicationFormClientProps
               </div>
             )}
 
-            <div className="flex gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
               <button
                 type="button"
                 onClick={goToPrevStep}
-                className="h-14 flex-1 rounded-full border border-[#ddd9cc] font-semibold text-[#6b6b5e] hover:bg-gray-50 transition-colors"
+                className="h-12 flex-1 rounded-md border border-[#ddd9cc] font-semibold text-[#6b6b5e] transition-colors hover:bg-gray-50 sm:h-14"
                 disabled={isPending}
               >
                 이전으로
@@ -541,7 +535,7 @@ export default function ApplicationFormClient(_props: ApplicationFormClientProps
               <button
                 type="button"
                 onClick={goToNextStep}
-                className="h-14 flex-[2] rounded-full bg-[#16140f] font-semibold text-white hover:opacity-90 transition-opacity"
+                className="h-12 flex-[2] rounded-md bg-[#16140f] font-semibold text-white transition-opacity hover:opacity-90 sm:h-14"
               >
                 다음 단계로 →
               </button>
@@ -577,7 +571,7 @@ export default function ApplicationFormClient(_props: ApplicationFormClientProps
                 <p className="mt-2 text-sm text-[#6b6b5e] font-normal">지원 완료를 위해 동의가 필요합니다.</p>
               </div>
 
-              <div className="rounded-lg bg-[#fcfcf8] p-6 text-sm text-[#6b6b5e] leading-relaxed border border-[#f0efe6]">
+              <div className="rounded-lg border border-[#f0efe6] bg-[#fcfcf8] p-4 text-sm leading-relaxed text-[#6b6b5e] sm:p-6">
                 <h3 className="font-bold text-[#16140f] mb-3">개인정보 수집 및 이용 안내</h3>
                 <ul className="space-y-2 list-disc pl-4">
                   <li>수집 항목: 성명, 학번, 이메일, 연락처, 전공, 학년, 재학 상태, 자기소개 등 지원 시 기재한 내용</li>
@@ -610,11 +604,11 @@ export default function ApplicationFormClient(_props: ApplicationFormClientProps
               </div>
             )}
 
-            <div className="flex gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
               <button
                 type="button"
                 onClick={goToPrevStep}
-                className="h-14 flex-1 rounded-full border border-[#ddd9cc] font-semibold text-[#6b6b5e] hover:bg-gray-50 transition-colors"
+                className="h-12 flex-1 rounded-md border border-[#ddd9cc] font-semibold text-[#6b6b5e] transition-colors hover:bg-gray-50 sm:h-14"
                 disabled={isPending}
               >
                 이전으로
@@ -622,7 +616,7 @@ export default function ApplicationFormClient(_props: ApplicationFormClientProps
               <button
                 type="submit"
                 disabled={isPending || !acceptedConsent}
-                className="h-14 flex-[2] rounded-full bg-[#FF6C0F] font-semibold text-white hover:opacity-90 disabled:opacity-30 transition-all shadow-md active:scale-95"
+                className="h-12 flex-[2] rounded-md bg-[#FF6C0F] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-30 sm:h-14"
               >
                 {isPending ? "제출 처리 중..." : "최종 제출하기 →"}
               </button>
