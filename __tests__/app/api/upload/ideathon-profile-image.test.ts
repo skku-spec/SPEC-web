@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mockedDeps = vi.hoisted(() => ({
   createClient: vi.fn(),
   createAdminClient: vi.fn(),
+  hasSupabaseAdminEnv: vi.fn(),
   validateMagicBytes: vi.fn(),
 }));
 
@@ -12,6 +13,7 @@ vi.mock("@/lib/supabase/server", () => ({
 
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: mockedDeps.createAdminClient,
+  hasSupabaseAdminEnv: mockedDeps.hasSupabaseAdminEnv,
 }));
 
 vi.mock("@/lib/upload-validation", () => ({
@@ -90,8 +92,9 @@ function makeRequest(file?: File) {
 beforeEach(() => {
   vi.clearAllMocks();
   mockedDeps.validateMagicBytes.mockReturnValue(true);
+  mockedDeps.hasSupabaseAdminEnv.mockReturnValue(true);
   process.env.NEXT_PUBLIC_SUPABASE_URL = "https://supabase.example.com";
-  process.env.SUPABASE_SERVICE_ROLE_KEY = "service-role";
+  process.env.SUPABASE_SECRET_KEY = "secret-key";
 });
 
 describe("POST /api/upload/ideathon-profile-image", () => {

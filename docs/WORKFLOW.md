@@ -123,7 +123,13 @@ vercel --prod
 필수(최소):
 
 - `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `SUPABASE_SECRET_KEY` (관리자/업로드/운영 스크립트용)
+
+호환:
+
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`는 기존 로컬 설정을 위한 fallback으로만 지원합니다.
+- `SUPABASE_SERVICE_ROLE_KEY`는 기존 서버 키 설정을 위한 fallback으로만 지원합니다.
 
 원칙:
 
