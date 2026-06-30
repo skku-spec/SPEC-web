@@ -259,7 +259,7 @@ export async function getTrackerData() {
 
     const { data: sessions, error: sessionsError } = await supabase
       .from("attendance_sessions")
-      .select("*")
+      .select("id, title, date, starts_at, check_in_opens_at, check_in_closes_at, self_check_in_enabled, created_at")
       .order("date", { ascending: true });
     if (sessionsError) return { success: false as const, error: `세션 목록을 불러오지 못했습니다: ${sessionsError.message}` };
 
@@ -368,11 +368,15 @@ export async function markAttendance(
   try {
     await requireAdmin();
     const supabase = await createClient();
+    const nowIso = new Date().toISOString();
     const payload = {
       user_id: userId,
       session_id: sessionId,
       status,
       notes: status === "present" ? null : (notes?.trim() || null),
+      source: "admin",
+      admin_overridden_at: nowIso,
+      check_in_method: null,
     };
 
     let { error } = await supabase
@@ -381,12 +385,12 @@ export async function markAttendance(
         onConflict: "user_id,session_id"
       });
 
-    const isNotesSchemaError =
+    const isLegacyAttendanceSchemaError =
       !!error &&
-      /notes/i.test(error.message) &&
+      /(notes|source|admin_overridden_at|check_in_method)/i.test(error.message) &&
       /(column|schema cache|could not find)/i.test(error.message);
 
-    if (isNotesSchemaError) {
+    if (isLegacyAttendanceSchemaError) {
       const retry = await supabase
         .from("attendance_logs")
         .upsert({
@@ -721,15 +725,39 @@ export async function markAllPresent(sessionId: string) {
 
     if (!learners) return { success: false as const, error: "런너 목록을 불러오지 못했습니다." };
 
+    const nowIso = new Date().toISOString();
     const logs = learners.map(r => ({
       user_id: r.id,
       session_id: sessionId,
       status: "present",
+      source: "admin",
+      admin_overridden_at: nowIso,
+      check_in_method: null,
     }));
 
-    const { error } = await supabase
+    let { error } = await supabase
       .from("attendance_logs")
       .upsert(logs, { onConflict: "user_id,session_id" });
+
+    const isLegacyAttendanceSchemaError =
+      !!error &&
+      /(source|admin_overridden_at|check_in_method)/i.test(error.message) &&
+      /(column|schema cache|could not find)/i.test(error.message);
+
+    if (isLegacyAttendanceSchemaError) {
+      const retry = await supabase
+        .from("attendance_logs")
+        .upsert(
+          learners.map(r => ({
+            user_id: r.id,
+            session_id: sessionId,
+            status: "present",
+          })),
+          { onConflict: "user_id,session_id" },
+        );
+
+      error = retry.error;
+    }
 
     if (error) return { success: false as const, error: `전원 출석 처리에 실패했습니다: ${error.message}` };
     revalidatePath("/admin/attendance");

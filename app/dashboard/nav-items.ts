@@ -1,4 +1,5 @@
 import {
+  CalendarCheck,
   LayoutDashboard,
   BookOpen,
   type LucideIcon,
@@ -12,6 +13,7 @@ export type DashboardNavItem = {
 
 export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
   { label: "대시보드", href: "/dashboard", icon: LayoutDashboard },
+  { label: "출석 체크", href: "/dashboard/attendance", icon: CalendarCheck },
   { label: "과제 제출", href: "/dashboard/homework", icon: BookOpen },
 ];
 
