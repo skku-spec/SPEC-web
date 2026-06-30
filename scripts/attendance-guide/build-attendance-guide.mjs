@@ -157,12 +157,12 @@ async function buildHtml(content, capture) {
         ? `<figure><img src="${screenshotData[screenshotSlot]}" alt="${escapeHtml(section.title)} 화면 캡처" /><figcaption>${escapeHtml(section.title)} 화면 예시</figcaption></figure>`
         : "";
       const checklist = section.operatorChecklist.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+      const screenshotLine = screenshot ? `\n          ${screenshot}` : "";
       return `
         <section class="page">
           <p class="eyebrow">SPEC Attendance</p>
           <h2>${escapeHtml(section.title)}</h2>
-          <ul>${checklist}</ul>
-          ${screenshot}
+          <ul>${checklist}</ul>${screenshotLine}
         </section>`;
     })
     .join("");
