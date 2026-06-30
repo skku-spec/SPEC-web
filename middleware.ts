@@ -23,7 +23,10 @@ function isBlogEditRoute(pathname: string) {
 }
 
 export function isPrivateProfileRoute(pathname: string) {
-  return pathname === "/profile" || pathname === "/profile/edit";
+  return pathname === "/profile" ||
+         pathname === "/profile/edit" ||
+         pathname === "/dashboard" ||
+         pathname.startsWith("/dashboard/");
 }
 
 function isResetPasswordRoute(pathname: string) {
@@ -115,7 +118,11 @@ export async function middleware(request: NextRequest) {
 
   if (!user) {
     if (needsWriter || needsAuth) {
-      return redirectWithCookies(request, response, `/login?redirect=${pathname}`);
+      const redirectTarget = pathname === "/dashboard" || pathname.startsWith("/dashboard/")
+        ? `${pathname}${request.nextUrl.search}`
+        : pathname;
+      const redirectParam = redirectTarget === pathname ? pathname : encodeURIComponent(redirectTarget);
+      return redirectWithCookies(request, response, `/login?redirect=${redirectParam}`);
     }
 
     return redirectWithCookies(request, response, "/");

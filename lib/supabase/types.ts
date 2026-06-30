@@ -751,19 +751,79 @@ export type Database = {
           id: string;
           title: string;
           date: string;
+          starts_at: string | null;
+          check_in_opens_at: string | null;
+          check_in_closes_at: string | null;
+          self_check_in_enabled: boolean;
           created_at: string;
         };
         Insert: {
           id?: string;
           title: string;
           date?: string;
+          starts_at?: string | null;
+          check_in_opens_at?: string | null;
+          check_in_closes_at?: string | null;
+          self_check_in_enabled?: boolean;
           created_at?: string;
         };
         Update: {
           id?: string;
           title?: string;
           date?: string;
+          starts_at?: string | null;
+          check_in_opens_at?: string | null;
+          check_in_closes_at?: string | null;
+          self_check_in_enabled?: boolean;
           created_at?: string;
+        };
+        Relationships: [];
+      };
+      attendance_session_check_ins: {
+        Row: {
+          session_id: string;
+          code_hash: string;
+          created_at: string;
+          expires_at: string | null;
+        };
+        Insert: {
+          session_id: string;
+          code_hash: string;
+          created_at?: string;
+          expires_at?: string | null;
+        };
+        Update: {
+          session_id?: string;
+          code_hash?: string;
+          created_at?: string;
+          expires_at?: string | null;
+        };
+        Relationships: [];
+      };
+      attendance_check_in_attempts: {
+        Row: {
+          id: string;
+          session_id: string;
+          user_id: string;
+          attempted_at: string;
+          method: string;
+          outcome: string;
+        };
+        Insert: {
+          id?: string;
+          session_id: string;
+          user_id: string;
+          attempted_at?: string;
+          method: string;
+          outcome: string;
+        };
+        Update: {
+          id?: string;
+          session_id?: string;
+          user_id?: string;
+          attempted_at?: string;
+          method?: string;
+          outcome?: string;
         };
         Relationships: [];
       };
@@ -774,6 +834,10 @@ export type Database = {
           user_id: string;
           status: string;
           notes: string | null;
+          source: string;
+          checked_in_at: string | null;
+          admin_overridden_at: string | null;
+          check_in_method: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -783,6 +847,10 @@ export type Database = {
           user_id: string;
           status?: string;
           notes?: string | null;
+          source?: string;
+          checked_in_at?: string | null;
+          admin_overridden_at?: string | null;
+          check_in_method?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -792,6 +860,10 @@ export type Database = {
           user_id?: string;
           status?: string;
           notes?: string | null;
+          source?: string;
+          checked_in_at?: string | null;
+          admin_overridden_at?: string | null;
+          check_in_method?: string | null;
           created_at?: string;
           updated_at?: string;
         };

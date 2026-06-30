@@ -86,12 +86,12 @@ export default function AdminMoreSheet({ open, onClose }: AdminMoreSheetProps) {
     onClose();
   }, [onClose]);
 
+  if (!open) return null;
+
   return (
     <>
       <div
-        className={`fixed inset-0 z-[45] bg-black/40 transition-opacity duration-300 ease-in-out ${
-          open ? "opacity-100" : "pointer-events-none opacity-0"
-        }`}
+        className="fixed inset-0 z-[45] bg-black/40 transition-opacity duration-300 ease-in-out lg:hidden"
         onClick={handleBackdropClick}
         aria-hidden="true"
       />
@@ -101,9 +101,7 @@ export default function AdminMoreSheet({ open, onClose }: AdminMoreSheetProps) {
         role="dialog"
         aria-modal="true"
         aria-label="관리자 메뉴"
-        className={`fixed bottom-0 left-0 right-0 z-[45] max-h-[70vh] overflow-y-auto rounded-t-2xl bg-white transition-transform duration-300 ease-in-out ${
-          open ? "translate-y-0" : "translate-y-full"
-        }`}
+        className="fixed bottom-0 left-0 right-0 z-[45] max-h-[70vh] overflow-y-auto rounded-t-lg bg-white transition-transform duration-300 ease-in-out lg:hidden"
       >
         <div className="mx-auto mt-3 h-1 w-10 rounded-full bg-[#ddd9cc]" />
 
