@@ -3,6 +3,16 @@
 import { useState, useTransition, useEffect } from "react";
 import { markAttendance, deleteAttendance, createSession, deleteSession, markAllPresent } from "@/lib/actions/tracker";
 import { MessageSquareText } from "lucide-react";
+import {
+  closeSessionCheckIn,
+  generateAttendanceCheckInCode,
+  updateSessionCheckInSettings,
+} from "@/lib/actions/attendance-check-in";
+import {
+  AttendanceSessionCheckInPanel,
+  type CheckInSettings,
+  type GeneratedCheckIn,
+} from "@/app/admin/attendance/AttendanceSessionCheckInPanel";
 
 type Profile = {
   id: string;
@@ -15,6 +25,10 @@ type Session = {
   id: string;
   title: string;
   date: string;
+  starts_at?: string | null;
+  check_in_opens_at?: string | null;
+  check_in_closes_at?: string | null;
+  self_check_in_enabled?: boolean;
 }
 
 type AttendanceLog = {
@@ -48,11 +62,19 @@ type Props = {
   hideHomework?: boolean;
 }
 
-const STATUS_OPTS: { key: Status; label: string; color: string; text: string; hover: string; active: string }[] = [
-  { key: "present", label: "출", color: "bg-[#2f9e44]", text: "text-[#2f9e44]", hover: "hover:bg-[#2f9e44]/10", active: "bg-[#2f9e44]/5" },
-  { key: "late", label: "지", color: "bg-[#FF6C0F]", text: "text-[#FF6C0F]", hover: "hover:bg-[#FF6C0F]/10", active: "bg-[#FF6C0F]/5" },
-  { key: "absent", label: "결", color: "bg-[#b42318]", text: "text-[#b42318]", hover: "hover:bg-[#b42318]/10", active: "bg-[#b42318]/5" },
-  { key: "excused", label: "공", color: "bg-[#2563EB]", text: "text-[#2563EB]", hover: "hover:bg-[#2563EB]/10", active: "bg-[#2563EB]/5" },
+const STATUS_OPTS: {
+  key: Status;
+  label: string;
+  color: string;
+  text: string;
+  border: string;
+  hover: string;
+  active: string;
+}[] = [
+  { key: "present", label: "출", color: "bg-[#2f9e44]", text: "text-[#2f9e44]", border: "border-[#2f9e44]", hover: "hover:bg-[#2f9e44]/10", active: "bg-[#2f9e44]/5" },
+  { key: "late", label: "지", color: "bg-[#FF6C0F]", text: "text-[#FF6C0F]", border: "border-[#FF6C0F]", hover: "hover:bg-[#FF6C0F]/10", active: "bg-[#FF6C0F]/5" },
+  { key: "absent", label: "결", color: "bg-[#b42318]", text: "text-[#b42318]", border: "border-[#b42318]", hover: "hover:bg-[#b42318]/10", active: "bg-[#b42318]/5" },
+  { key: "excused", label: "공", color: "bg-[#2563EB]", text: "text-[#2563EB]", border: "border-[#2563EB]", hover: "hover:bg-[#2563EB]/10", active: "bg-[#2563EB]/5" },
 ];
 
 const STATUS_LABELS: Record<Status, string> = {
@@ -61,6 +83,33 @@ const STATUS_LABELS: Record<Status, string> = {
   absent: "결석",
   excused: "공결",
 };
+
+function isoToLocalInput(value?: string | null): string {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const offsetMs = date.getTimezoneOffset() * 60 * 1000;
+  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
+}
+
+function localInputToIso(value: string): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+function makeSessionSettings(session: Session): CheckInSettings {
+  return {
+    startsAt: isoToLocalInput(session.starts_at),
+    opensAt: isoToLocalInput(session.check_in_opens_at),
+    closesAt: isoToLocalInput(session.check_in_closes_at),
+    enabled: Boolean(session.self_check_in_enabled),
+  };
+}
+
+function makeInitialSettings(sessions: Session[]): Record<string, CheckInSettings> {
+  return Object.fromEntries(sessions.map((session) => [session.id, makeSessionSettings(session)]));
+}
 
 export function AttendanceClient({
   learners,
@@ -76,6 +125,10 @@ export function AttendanceClient({
   const [logs, setLogs] = useState(initialLogs);
   const [submissions] = useState(initialSubmissions);
   const [newSessionTitle, setNewSessionTitle] = useState("");
+  const [generatedCheckIns, setGeneratedCheckIns] = useState<Record<string, GeneratedCheckIn>>({});
+  const [checkInSettings, setCheckInSettings] = useState<Record<string, CheckInSettings>>(
+    () => makeInitialSettings(initialSessions),
+  );
   const [reasonModal, setReasonModal] = useState<{
     open: boolean;
     userId: string;
@@ -96,6 +149,105 @@ export function AttendanceClient({
 
   const getHomeworkStatus = (userId: string, homeworkId: string) => {
     return submissions.some(s => s.user_id === userId && s.homework_id === homeworkId && s.status === "completed");
+  };
+
+  const updateCheckInSetting = (sessionId: string, key: keyof CheckInSettings, value: string | boolean) => {
+    setCheckInSettings(prev => ({
+      ...prev,
+      [sessionId]: {
+        ...(prev[sessionId] ?? makeSessionSettings(sessions.find(session => session.id === sessionId) ?? {
+          id: sessionId,
+          title: "",
+          date: "",
+        })),
+        [key]: value,
+      },
+    }));
+  };
+
+  const replaceAttendanceLog = (nextLog: AttendanceLog) => {
+    setLogs(prev => {
+      const filtered = prev.filter(
+        log => !(log.user_id === nextLog.user_id && log.session_id === nextLog.session_id),
+      );
+      return [...filtered, nextLog];
+    });
+  };
+
+  const handleSaveCheckInSettings = (session: Session) => {
+    const settings = checkInSettings[session.id] ?? makeSessionSettings(session);
+    startTransition(async () => {
+      const result = await updateSessionCheckInSettings({
+        sessionId: session.id,
+        startsAt: localInputToIso(settings.startsAt),
+        checkInOpensAt: localInputToIso(settings.opensAt),
+        checkInClosesAt: localInputToIso(settings.closesAt),
+        selfCheckInEnabled: settings.enabled,
+      });
+
+      if (!result.success) {
+        alert(result.error ?? "출석 체크 설정 저장 중 오류가 발생했습니다.");
+        return;
+      }
+
+      setSessions(prev => prev.map(item => item.id === session.id ? { ...item, ...result.data.session } : item));
+    });
+  };
+
+  const handleGenerateCheckInCode = (session: Session) => {
+    startTransition(async () => {
+      const result = await generateAttendanceCheckInCode(session.id);
+      if (!result.success) {
+        alert(result.error ?? "출석 코드 생성 중 오류가 발생했습니다.");
+        return;
+      }
+
+      setGeneratedCheckIns(prev => ({
+        ...prev,
+        [session.id]: {
+          sessionId: session.id,
+          code: result.data.code,
+          checkInUrl: result.data.checkInUrl,
+        },
+      }));
+      setSessions(prev => prev.map(item => item.id === session.id ? { ...item, ...result.data.session } : item));
+      setCheckInSettings(prev => ({
+        ...prev,
+        [session.id]: {
+          ...(prev[session.id] ?? makeSessionSettings(session)),
+          enabled: true,
+        },
+      }));
+    });
+  };
+
+  const handleCloseCheckIn = (session: Session) => {
+    startTransition(async () => {
+      const result = await closeSessionCheckIn(session.id);
+      if (!result.success) {
+        alert(result.error ?? "출석 체크 닫기 중 오류가 발생했습니다.");
+        return;
+      }
+
+      setSessions(prev => prev.map(item => item.id === session.id ? { ...item, self_check_in_enabled: false } : item));
+      setCheckInSettings(prev => ({
+        ...prev,
+        [session.id]: {
+          ...(prev[session.id] ?? makeSessionSettings(session)),
+          enabled: false,
+        },
+      }));
+      setGeneratedCheckIns(prev => {
+        const next = { ...prev };
+        delete next[session.id];
+        return next;
+      });
+    });
+  };
+
+  const handleCopy = (value: string) => {
+    void navigator.clipboard.writeText(value);
+    alert("복사되었습니다.");
   };
 
   const calculateStats = (userId: string) => {
@@ -134,10 +286,7 @@ export function AttendanceClient({
           alert(result.error ?? "출석 상태 변경 중 오류가 발생했습니다.");
           return;
         }
-        setLogs(prev => {
-          const filtered = prev.filter(l => !(l.user_id === userId && l.session_id === sessionId));
-          return [...filtered, { id: crypto.randomUUID(), user_id: userId, session_id: sessionId, status, notes: null }];
-        });
+        replaceAttendanceLog(result.data.log);
       });
       return;
     }
@@ -159,10 +308,7 @@ export function AttendanceClient({
         alert(result.error ?? "출석 상태 변경 중 오류가 발생했습니다.");
         return;
       }
-      setLogs(prev => {
-        const filtered = prev.filter(l => !(l.user_id === userId && l.session_id === sessionId));
-        return [...filtered, { id: crypto.randomUUID(), user_id: userId, session_id: sessionId, status, notes }];
-      });
+      replaceAttendanceLog(result.data.log);
       setReasonModal(null);
       setReasonText("");
     });
@@ -192,14 +338,7 @@ export function AttendanceClient({
       }
       setLogs(prev => {
         const filtered = prev.filter(l => l.session_id !== sessionId);
-        const newLogs = learners.map(r => ({
-          id: crypto.randomUUID(),
-          user_id: r.id,
-          session_id: sessionId,
-          status: "present",
-          notes: null as string | null
-        }));
-        return [...filtered, ...newLogs];
+        return [...filtered, ...result.data.logs];
       });
     });
   };
@@ -219,6 +358,14 @@ export function AttendanceClient({
           title: result.data.session.title,
           date: result.data.session.date
         }]);
+        setCheckInSettings(prev => ({
+          ...prev,
+          [result.data.session.id]: makeSessionSettings({
+            id: result.data.session.id,
+            title: result.data.session.title,
+            date: result.data.session.date,
+          }),
+        }));
       }
       setNewSessionTitle("");
     });
@@ -258,6 +405,20 @@ export function AttendanceClient({
         </div>
       )}
 
+      {isAdminOrPreneur && (
+        <AttendanceSessionCheckInPanel
+          sessions={sessions}
+          checkInSettings={checkInSettings}
+          generatedCheckIns={generatedCheckIns}
+          isPending={isPending}
+          onCloseCheckIn={handleCloseCheckIn}
+          onCopy={handleCopy}
+          onGenerateCode={handleGenerateCheckInCode}
+          onSaveSettings={handleSaveCheckInSettings}
+          onUpdateSetting={updateCheckInSetting}
+        />
+      )}
+
       {isAdminOrPreneur && sessions.length > 0 && (
         <div className="flex flex-wrap gap-2 md:hidden">
           {sessions.map(s => (
@@ -282,30 +443,42 @@ export function AttendanceClient({
         </div>
       )}
 
-      <div className="hidden overflow-x-auto rounded-lg border border-[#ddd9cc] bg-white md:block">
-        <table className="w-full border-collapse text-left">
+      <div
+        className="hidden max-w-full overflow-x-auto rounded-lg border border-[#ddd9cc] bg-white md:block"
+        data-testid="admin-attendance-desktop-grid"
+      >
+        <table className="min-w-max table-fixed border-collapse text-left">
+          <colgroup>
+            <col className="w-[240px]" />
+            {sessions.map(session => (
+              <col key={session.id} className="w-[132px]" />
+            ))}
+            {!hideHomework && homeworks.map(homework => (
+              <col key={homework.id} className="w-[112px]" />
+            ))}
+          </colgroup>
           <thead className="bg-[#f0efe6] text-left">
             <tr>
-              <th className="sticky left-0 z-30 bg-[#f0efe6] px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold min-w-[200px]">
+              <th className="sticky left-0 z-30 w-[240px] min-w-[240px] max-w-[240px] bg-[#f0efe6] px-4 py-3 font-['Pretendard',sans-serif] text-sm font-semibold">
                 러너
               </th>
 
               {sessions.map(s => (
-                <th key={s.id} className="px-3 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-center min-w-[110px]">
-                  <div>{s.title}</div>
+                <th key={s.id} className="w-[132px] min-w-[132px] max-w-[132px] px-3 py-3 text-center font-['Pretendard',sans-serif] text-sm font-semibold">
+                  <div className="truncate" title={s.title}>{s.title}</div>
                   {isAdminOrPreneur && (
-                    <div className="mt-1 flex items-center justify-center gap-2">
+                    <div className="mt-1 flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
                       <button
                         onClick={() => handleMarkAllPresent(s.id)}
                         disabled={isPending}
-                        className="font-['Pretendard',sans-serif] text-xs font-semibold text-[#FF6C0F] hover:underline disabled:opacity-50"
+                        className="whitespace-nowrap font-['Pretendard',sans-serif] text-xs font-semibold text-[#FF6C0F] hover:underline disabled:opacity-50"
                       >
                         전원 출석
                       </button>
                       <button
                         onClick={() => handleDeleteSession(s.id)}
                         disabled={isPending}
-                        className="font-['Pretendard',sans-serif] text-xs font-semibold text-[#b42318] hover:underline disabled:opacity-50"
+                        className="whitespace-nowrap font-['Pretendard',sans-serif] text-xs font-semibold text-[#b42318] hover:underline disabled:opacity-50"
                       >
                         삭제
                       </button>
@@ -315,7 +488,7 @@ export function AttendanceClient({
               ))}
 
               {!hideHomework && homeworks.map((h, i) => (
-                <th key={h.id} className="px-3 py-3 font-['Pretendard',sans-serif] text-sm font-semibold text-center min-w-[100px]">
+                <th key={h.id} className="w-[112px] min-w-[112px] max-w-[112px] px-3 py-3 text-center font-['Pretendard',sans-serif] text-sm font-semibold">
                   {i + 1}주차 과제
                 </th>
               ))}
@@ -326,14 +499,14 @@ export function AttendanceClient({
               const stats = calculateStats(learner.id);
               return (
                 <tr key={learner.id} className="border-t border-[#ece8db] transition-colors hover:bg-[#fcfcf8] group text-center">
-                  <td className="sticky left-0 z-20 bg-white group-hover:bg-[#fcfcf8] px-4 py-3 text-left">
-                    <div className="flex items-center gap-3">
-                      <div className="grid h-9 w-9 place-items-center rounded-full bg-[#e8e6dc] font-['Pretendard',sans-serif] text-sm font-semibold text-[#4a4a40]">
+                  <td className="sticky left-0 z-20 w-[240px] min-w-[240px] max-w-[240px] bg-white px-4 py-3 text-left group-hover:bg-[#fcfcf8]">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#e8e6dc] font-['Pretendard',sans-serif] text-sm font-semibold text-[#4a4a40]">
                         {learner.name.charAt(0)}
                       </div>
-                      <div>
-                        <p className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{learner.name}</p>
-                        <div className="flex gap-2 font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">
+                      <div className="min-w-0">
+                        <p className="truncate font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]" title={learner.name}>{learner.name}</p>
+                        <div className="flex flex-wrap gap-x-2 gap-y-0.5 font-['Pretendard',sans-serif] text-xs tabular-nums text-[#6b6b5e]">
                           <span className="text-[#2f9e44]">출 {stats.present}</span>
                           <span className="text-[#FF6C0F]">지 {stats.late}</span>
                           <span className="text-[#b42318]">결 {stats.absent}</span>
@@ -348,18 +521,21 @@ export function AttendanceClient({
                     const currentStatus = getAttendanceStatus(learner.id, session.id);
                     const cellLog = logs.find(l => l.user_id === learner.id && l.session_id === session.id);
                     return (
-                      <td key={session.id} className="px-2 py-3">
+                      <td key={session.id} className="w-[132px] min-w-[132px] max-w-[132px] px-2 py-3">
                         <div className="flex items-center justify-center gap-1">
                           {STATUS_OPTS.map(opt => {
                             const isActive = currentStatus === opt.key;
                             return (
                               <button
                                 key={opt.key}
+                                type="button"
                                 onClick={() => handleUpdateStatus(learner.id, session.id, opt.key)}
                                 disabled={!isAdminOrPreneur || isPending}
-                                className={`flex h-7 w-7 items-center justify-center rounded-md font-['Pretendard',sans-serif] text-xs font-semibold transition-all border ${
+                                aria-label={`${learner.name} ${session.title} ${STATUS_LABELS[opt.key]} 처리`}
+                                aria-pressed={isActive}
+                                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md border font-['Pretendard',sans-serif] text-xs font-semibold transition-colors ${
                                   isActive
-                                    ? `${opt.active} ${opt.text} ${opt.color.replace('bg-', 'border-')}`
+                                    ? `${opt.active} ${opt.text} ${opt.border}`
                                     : `bg-white text-[#ddd9cc] border-[#ece8db] ${opt.hover}`
                                 }`}
                               >
@@ -394,7 +570,7 @@ export function AttendanceClient({
                   {!hideHomework && homeworks.map(homework => {
                     const isCompleted = getHomeworkStatus(learner.id, homework.id);
                     return (
-                      <td key={homework.id} className="px-2 py-3">
+                      <td key={homework.id} className="w-[112px] min-w-[112px] max-w-[112px] px-2 py-3">
                         <div
                           className={`mx-auto flex h-7 w-7 items-center justify-center rounded-md font-['Pretendard',sans-serif] text-xs font-semibold ${
                             isCompleted ? "bg-[#2563EB] text-white" : "bg-[#f0efe6] text-[#ddd9cc]"
@@ -423,7 +599,7 @@ export function AttendanceClient({
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">{learner.name}</p>
-                  <div className="flex gap-2 font-['Pretendard',sans-serif] text-xs text-[#6b6b5e]">
+                  <div className="flex flex-wrap gap-x-2 gap-y-0.5 font-['Pretendard',sans-serif] text-xs tabular-nums text-[#6b6b5e]">
                     <span className="text-[#2f9e44]">출 {stats.present}</span>
                     <span className="text-[#FF6C0F]">지 {stats.late}</span>
                     <span className="text-[#b42318]">결 {stats.absent}</span>
@@ -446,11 +622,14 @@ export function AttendanceClient({
                           return (
                             <button
                               key={opt.key}
+                              type="button"
                               onClick={() => handleUpdateStatus(learner.id, session.id, opt.key)}
                               disabled={!isAdminOrPreneur || isPending}
-                              className={`flex h-10 w-10 items-center justify-center rounded-md font-['Pretendard',sans-serif] text-sm font-semibold transition-all border ${
+                              aria-label={`${learner.name} ${session.title} ${STATUS_LABELS[opt.key]} 처리`}
+                              aria-pressed={isActive}
+                              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md border font-['Pretendard',sans-serif] text-sm font-semibold transition-colors ${
                                 isActive
-                                  ? `${opt.active} ${opt.text} ${opt.color.replace('bg-', 'border-')}`
+                                  ? `${opt.active} ${opt.text} ${opt.border}`
                                   : `bg-white text-[#ddd9cc] border-[#ece8db] ${opt.hover}`
                               }`}
                             >

@@ -3,8 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { normalizeRole, requireAdmin, requireAuth, requireRole } from "@/lib/auth";
+import type { Database } from "@/lib/supabase/types";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
+type AttendanceLogRow = Database["public"]["Tables"]["attendance_logs"]["Row"];
+type TrackerAttendanceLog = Pick<AttendanceLogRow, "id" | "session_id" | "user_id" | "status" | "notes">;
 type PadletResource = {
   type: string;
   id: string;
@@ -259,7 +262,7 @@ export async function getTrackerData() {
 
     const { data: sessions, error: sessionsError } = await supabase
       .from("attendance_sessions")
-      .select("*")
+      .select("id, title, date, starts_at, check_in_opens_at, check_in_closes_at, self_check_in_enabled, created_at")
       .order("date", { ascending: true });
     if (sessionsError) return { success: false as const, error: `세션 목록을 불러오지 못했습니다: ${sessionsError.message}` };
 
@@ -368,25 +371,31 @@ export async function markAttendance(
   try {
     await requireAdmin();
     const supabase = await createClient();
+    const nowIso = new Date().toISOString();
     const payload = {
       user_id: userId,
       session_id: sessionId,
       status,
       notes: status === "present" ? null : (notes?.trim() || null),
+      source: "admin",
+      admin_overridden_at: nowIso,
+      check_in_method: null,
     };
 
-    let { error } = await supabase
+    let { data: savedLog, error } = await supabase
       .from("attendance_logs")
       .upsert(payload, {
         onConflict: "user_id,session_id"
-      });
+      })
+      .select("id,user_id,session_id,status,notes")
+      .single();
 
-    const isNotesSchemaError =
+    const isLegacyAttendanceSchemaError =
       !!error &&
-      /notes/i.test(error.message) &&
+      /(notes|source|admin_overridden_at|check_in_method)/i.test(error.message) &&
       /(column|schema cache|could not find)/i.test(error.message);
 
-    if (isNotesSchemaError) {
+    if (isLegacyAttendanceSchemaError) {
       const retry = await supabase
         .from("attendance_logs")
         .upsert({
@@ -395,15 +404,19 @@ export async function markAttendance(
           status,
         }, {
           onConflict: "user_id,session_id"
-        });
+        })
+        .select("id,user_id,session_id,status")
+        .single();
 
       error = retry.error;
+      savedLog = retry.data ? { ...retry.data, notes: null } : null;
     }
 
     if (error) return { success: false as const, error: `출석 처리에 실패했습니다: ${error.message}` };
+    if (!savedLog) return { success: false as const, error: "저장된 출석 기록을 확인하지 못했습니다." };
     revalidatePath("/admin/attendance");
     revalidatePath("/dashboard/attendance");
-    return { success: true as const };
+    return { success: true as const, data: { log: savedLog as TrackerAttendanceLog } };
   } catch (err) {
     return { success: false as const, error: err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다." };
   }
@@ -720,22 +733,52 @@ export async function markAllPresent(sessionId: string) {
       .eq("role", "learner");
 
     if (!learners) return { success: false as const, error: "런너 목록을 불러오지 못했습니다." };
+    if (learners.length === 0) return { success: true as const, data: { logs: [] as TrackerAttendanceLog[] } };
 
+    const nowIso = new Date().toISOString();
     const logs = learners.map(r => ({
       user_id: r.id,
       session_id: sessionId,
       status: "present",
+      notes: null,
+      source: "admin",
+      admin_overridden_at: nowIso,
+      check_in_method: null,
     }));
 
-    const { error } = await supabase
+    let { data: savedLogs, error } = await supabase
       .from("attendance_logs")
-      .upsert(logs, { onConflict: "user_id,session_id" });
+      .upsert(logs, { onConflict: "user_id,session_id" })
+      .select("id,user_id,session_id,status,notes");
+
+    const isLegacyAttendanceSchemaError =
+      !!error &&
+      /(notes|source|admin_overridden_at|check_in_method)/i.test(error.message) &&
+      /(column|schema cache|could not find)/i.test(error.message);
+
+    if (isLegacyAttendanceSchemaError) {
+      const retry = await supabase
+        .from("attendance_logs")
+        .upsert(
+          learners.map(r => ({
+            user_id: r.id,
+            session_id: sessionId,
+            status: "present",
+          })),
+          { onConflict: "user_id,session_id" },
+        )
+        .select("id,user_id,session_id,status");
+
+      error = retry.error;
+      savedLogs = retry.data?.map(log => ({ ...log, notes: null })) ?? null;
+    }
 
     if (error) return { success: false as const, error: `전원 출석 처리에 실패했습니다: ${error.message}` };
+    if (!savedLogs) return { success: false as const, error: "저장된 출석 기록을 확인하지 못했습니다." };
     revalidatePath("/admin/attendance");
     revalidatePath("/admin");
     revalidatePath("/dashboard/attendance");
-    return { success: true as const };
+    return { success: true as const, data: { logs: savedLogs as TrackerAttendanceLog[] } };
   } catch (err) {
     return { success: false as const, error: err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다." };
   }

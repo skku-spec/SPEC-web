@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { BLOG_WRITER_ROLES } from "@/lib/auth-shared";
 import { validateMagicBytes } from "@/lib/upload-validation";
@@ -10,7 +10,7 @@ const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 const ALLOWED_IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif"];
 
 function hasServiceRoleAccess() {
-  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+  return hasSupabaseAdminEnv();
 }
 
 function resolveFileExtension(file: File) {
@@ -175,7 +175,7 @@ export async function POST(request: Request) {
           {
             success: false,
             error:
-              "썸네일 저장소 설정이 완료되지 않았어요. Supabase에 blog-images 버킷을 생성하거나 SUPABASE_SERVICE_ROLE_KEY를 배포 환경에 추가해 주세요.",
+              "썸네일 저장소 설정이 완료되지 않았어요. Supabase에 blog-images 버킷을 생성하거나 SUPABASE_SECRET_KEY를 배포 환경에 추가해 주세요.",
           },
           { status: 500 },
         );
