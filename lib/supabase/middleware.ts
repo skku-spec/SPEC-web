@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { User } from "@supabase/supabase-js";
 
+import { getSupabasePublicEnv, hasSupabasePublicEnv } from "@/lib/supabase/env";
 import type { Database } from "@/lib/supabase/types";
 
 type SessionResult = {
@@ -10,20 +11,18 @@ type SessionResult = {
 };
 
 export async function updateSession(request: NextRequest): Promise<SessionResult> {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey) {
+  if (!hasSupabasePublicEnv()) {
     return { response: NextResponse.next({ request }), user: null };
   }
 
+  const { supabaseUrl, supabasePublishableKey } = getSupabasePublicEnv();
   let response = NextResponse.next({
     request,
   });
 
   const supabase = createServerClient<Database>(
     supabaseUrl,
-    supabaseAnonKey,
+    supabasePublishableKey,
     {
       cookies: {
         getAll() {

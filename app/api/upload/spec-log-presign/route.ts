@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 const SPEC_LOG_IMAGE_BUCKET = "spec-log-images";
@@ -8,7 +8,7 @@ const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 const ALLOWED_IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif"]);
 
 function hasServiceRoleAccess() {
-  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+  return hasSupabaseAdminEnv();
 }
 
 async function ensureSpecLogImageBucket() {
@@ -80,7 +80,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          error: "이미지 저장소 설정이 완료되지 않았어요. SUPABASE_SERVICE_ROLE_KEY를 환경 변수에 추가해 주세요.",
+          error: "이미지 저장소 설정이 완료되지 않았어요. SUPABASE_SECRET_KEY를 환경 변수에 추가해 주세요.",
         },
         { status: 500 },
       );

@@ -162,7 +162,7 @@ function makeQueryChain<T>(result: DbResult<T>): QueryChain {
     }),
     upsert: vi.fn((payload: unknown) => {
       lastPayload = payload;
-      return Promise.resolve({ error: result.error });
+      return chain;
     }),
     maybeSingle: vi.fn(() => Promise.resolve(result)),
     single: vi.fn(() => Promise.resolve(result)),
@@ -461,7 +461,14 @@ describe("attendance QR/code check-in actions", () => {
   });
 
   it("records admin override metadata and never lets self check-in overwrite an admin-authored log", async () => {
-    const adminUpsertChain = makeQueryChain<null>({ data: null, error: null });
+    const adminUpsertChain = makeQueryChain<AttendanceLogRow>({
+      data: makeLog({
+        source: "admin",
+        admin_overridden_at: "2026-03-06T09:55:00.000Z",
+        check_in_method: null,
+      }),
+      error: null,
+    });
     const { client: adminClient } = makeQueuedClient({
       attendance_sessions: [],
       attendance_session_check_ins: [],
