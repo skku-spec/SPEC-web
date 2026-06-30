@@ -3,6 +3,16 @@
 import { useState, useTransition, useEffect } from "react";
 import { markAttendance, deleteAttendance, createSession, deleteSession, markAllPresent } from "@/lib/actions/tracker";
 import { MessageSquareText } from "lucide-react";
+import {
+  closeSessionCheckIn,
+  generateAttendanceCheckInCode,
+  updateSessionCheckInSettings,
+} from "@/lib/actions/attendance-check-in";
+import {
+  AttendanceSessionCheckInPanel,
+  type CheckInSettings,
+  type GeneratedCheckIn,
+} from "@/app/admin/attendance/AttendanceSessionCheckInPanel";
 
 type Profile = {
   id: string;
@@ -15,6 +25,10 @@ type Session = {
   id: string;
   title: string;
   date: string;
+  starts_at?: string | null;
+  check_in_opens_at?: string | null;
+  check_in_closes_at?: string | null;
+  self_check_in_enabled?: boolean;
 }
 
 type AttendanceLog = {
@@ -62,6 +76,33 @@ const STATUS_LABELS: Record<Status, string> = {
   excused: "공결",
 };
 
+function isoToLocalInput(value?: string | null): string {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const offsetMs = date.getTimezoneOffset() * 60 * 1000;
+  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
+}
+
+function localInputToIso(value: string): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+function makeSessionSettings(session: Session): CheckInSettings {
+  return {
+    startsAt: isoToLocalInput(session.starts_at),
+    opensAt: isoToLocalInput(session.check_in_opens_at),
+    closesAt: isoToLocalInput(session.check_in_closes_at),
+    enabled: Boolean(session.self_check_in_enabled),
+  };
+}
+
+function makeInitialSettings(sessions: Session[]): Record<string, CheckInSettings> {
+  return Object.fromEntries(sessions.map((session) => [session.id, makeSessionSettings(session)]));
+}
+
 export function AttendanceClient({
   learners,
   sessions: initialSessions,
@@ -76,6 +117,10 @@ export function AttendanceClient({
   const [logs, setLogs] = useState(initialLogs);
   const [submissions] = useState(initialSubmissions);
   const [newSessionTitle, setNewSessionTitle] = useState("");
+  const [generatedCheckIns, setGeneratedCheckIns] = useState<Record<string, GeneratedCheckIn>>({});
+  const [checkInSettings, setCheckInSettings] = useState<Record<string, CheckInSettings>>(
+    () => makeInitialSettings(initialSessions),
+  );
   const [reasonModal, setReasonModal] = useState<{
     open: boolean;
     userId: string;
@@ -96,6 +141,96 @@ export function AttendanceClient({
 
   const getHomeworkStatus = (userId: string, homeworkId: string) => {
     return submissions.some(s => s.user_id === userId && s.homework_id === homeworkId && s.status === "completed");
+  };
+
+  const updateCheckInSetting = (sessionId: string, key: keyof CheckInSettings, value: string | boolean) => {
+    setCheckInSettings(prev => ({
+      ...prev,
+      [sessionId]: {
+        ...(prev[sessionId] ?? makeSessionSettings(sessions.find(session => session.id === sessionId) ?? {
+          id: sessionId,
+          title: "",
+          date: "",
+        })),
+        [key]: value,
+      },
+    }));
+  };
+
+  const handleSaveCheckInSettings = (session: Session) => {
+    const settings = checkInSettings[session.id] ?? makeSessionSettings(session);
+    startTransition(async () => {
+      const result = await updateSessionCheckInSettings({
+        sessionId: session.id,
+        startsAt: localInputToIso(settings.startsAt),
+        checkInOpensAt: localInputToIso(settings.opensAt),
+        checkInClosesAt: localInputToIso(settings.closesAt),
+        selfCheckInEnabled: settings.enabled,
+      });
+
+      if (!result.success) {
+        alert(result.error ?? "출석 체크 설정 저장 중 오류가 발생했습니다.");
+        return;
+      }
+
+      setSessions(prev => prev.map(item => item.id === session.id ? { ...item, ...result.data.session } : item));
+    });
+  };
+
+  const handleGenerateCheckInCode = (session: Session) => {
+    startTransition(async () => {
+      const result = await generateAttendanceCheckInCode(session.id);
+      if (!result.success) {
+        alert(result.error ?? "출석 코드 생성 중 오류가 발생했습니다.");
+        return;
+      }
+
+      setGeneratedCheckIns(prev => ({
+        ...prev,
+        [session.id]: {
+          sessionId: session.id,
+          code: result.data.code,
+          checkInUrl: result.data.checkInUrl,
+        },
+      }));
+      setSessions(prev => prev.map(item => item.id === session.id ? { ...item, ...result.data.session } : item));
+      setCheckInSettings(prev => ({
+        ...prev,
+        [session.id]: {
+          ...(prev[session.id] ?? makeSessionSettings(session)),
+          enabled: true,
+        },
+      }));
+    });
+  };
+
+  const handleCloseCheckIn = (session: Session) => {
+    startTransition(async () => {
+      const result = await closeSessionCheckIn(session.id);
+      if (!result.success) {
+        alert(result.error ?? "출석 체크 닫기 중 오류가 발생했습니다.");
+        return;
+      }
+
+      setSessions(prev => prev.map(item => item.id === session.id ? { ...item, self_check_in_enabled: false } : item));
+      setCheckInSettings(prev => ({
+        ...prev,
+        [session.id]: {
+          ...(prev[session.id] ?? makeSessionSettings(session)),
+          enabled: false,
+        },
+      }));
+      setGeneratedCheckIns(prev => {
+        const next = { ...prev };
+        delete next[session.id];
+        return next;
+      });
+    });
+  };
+
+  const handleCopy = (value: string) => {
+    void navigator.clipboard.writeText(value);
+    alert("복사되었습니다.");
   };
 
   const calculateStats = (userId: string) => {
@@ -219,6 +354,14 @@ export function AttendanceClient({
           title: result.data.session.title,
           date: result.data.session.date
         }]);
+        setCheckInSettings(prev => ({
+          ...prev,
+          [result.data.session.id]: makeSessionSettings({
+            id: result.data.session.id,
+            title: result.data.session.title,
+            date: result.data.session.date,
+          }),
+        }));
       }
       setNewSessionTitle("");
     });
@@ -256,6 +399,20 @@ export function AttendanceClient({
             세션 추가
           </button>
         </div>
+      )}
+
+      {isAdminOrPreneur && (
+        <AttendanceSessionCheckInPanel
+          sessions={sessions}
+          checkInSettings={checkInSettings}
+          generatedCheckIns={generatedCheckIns}
+          isPending={isPending}
+          onCloseCheckIn={handleCloseCheckIn}
+          onCopy={handleCopy}
+          onGenerateCode={handleGenerateCheckInCode}
+          onSaveSettings={handleSaveCheckInSettings}
+          onUpdateSetting={updateCheckInSetting}
+        />
       )}
 
       {isAdminOrPreneur && sessions.length > 0 && (

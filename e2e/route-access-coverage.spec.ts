@@ -35,3 +35,11 @@ test("/apply/submitted redirects unauthenticated users to login", async ({ page 
   await expect(page).toHaveURL(/\/login(?:\?|$)/);
   await expect(page.getByRole("heading", { name: "Log in to access the SPEC Application" })).toBeVisible();
 });
+
+test("/dashboard/attendance/check-in redirects unauthenticated users with QR return target", async ({ page }) => {
+  await page.goto("/dashboard/attendance/check-in?session=session-1&code=482193");
+  await expect(page).toHaveURL(
+    /\/login\?redirect=%2Fdashboard%2Fattendance%2Fcheck-in%3Fsession%3Dsession-1%26code%3D482193$/,
+  );
+  await expect(page.getByRole("heading", { name: "Log in to access the SPEC Application" })).toBeVisible();
+});
