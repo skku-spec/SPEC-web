@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 const HOMEWORK_FILE_BUCKET = "homework-files";
@@ -36,7 +36,7 @@ const ALLOWED_FILE_MIME_TYPES = [
 ];
 
 function hasServiceRoleAccess() {
-  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+  return hasSupabaseAdminEnv();
 }
 
 function getFileExtension(fileName: string) {
@@ -188,7 +188,7 @@ export async function POST(request: Request) {
           {
             success: false,
             error:
-              "첨부파일 저장소 설정이 완료되지 않았어요. Supabase에 homework-files 버킷을 생성하거나 SUPABASE_SERVICE_ROLE_KEY를 배포 환경에 추가해 주세요.",
+              "첨부파일 저장소 설정이 완료되지 않았어요. Supabase에 homework-files 버킷을 생성하거나 SUPABASE_SECRET_KEY를 배포 환경에 추가해 주세요.",
           },
           { status: 500 },
         );

@@ -118,6 +118,7 @@ export interface CompanyDetail {
 
 import { createClient } from "@/lib/supabase/server";
 import { CURRENT_BATCH } from "@/lib/constants";
+import { getSupabasePublicEnv } from "@/lib/supabase/env";
 import type { Database, MemberType, ProfileRole } from "@/lib/supabase/types";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
@@ -181,16 +182,9 @@ type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
 type TagRow = Database["public"]["Tables"]["tags"]["Row"];
 
 function createReadonlySupabaseClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const { supabaseUrl, supabasePublishableKey } = getSupabasePublicEnv();
 
-  if (!url || !anonKey) {
-    throw new Error(
-      "Missing Supabase environment variables. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY."
-    );
-  }
-
-  return createSupabaseClient<Database>(url, anonKey, {
+  return createSupabaseClient<Database>(supabaseUrl, supabasePublishableKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
@@ -1171,5 +1165,4 @@ export async function getProjectBySlug(slug: string): Promise<ProjectRow | undef
 
   return row ?? undefined;
 }
-
 

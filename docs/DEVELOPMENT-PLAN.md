@@ -331,7 +331,7 @@ Supabase 프로젝트 생성, 클라이언트 유틸리티, 미들웨어 스켈�
 | # | 작업 | 소요 | 선행 | 생성/수정 파일 |
 |---|------|------|------|--------------|
 | 0.1 | Supabase 프로젝트 생성 (dashboard.supabase.com) | 15m | - | (외부) |
-| 0.2 | `.env.local` 생성 (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`) | 10m | 0.1 | `.env.local`, `.env.example` |
+| 0.2 | `.env.local` 생성 (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`) | 10m | 0.1 | `.env.local`, `.env.example` |
 | 0.3 | `@supabase/supabase-js` + `@supabase/ssr` 설치 | 5m | - | `package.json` |
 | 0.4 | `lib/supabase/server.ts` — 서버 클라이언트 팩토리 (쿠키 핸들링) | 30m | 0.2, 0.3 | `lib/supabase/server.ts` |
 | 0.5 | `lib/supabase/client.ts` — 브라우저 클라이언트 팩토리 (싱글톤) | 15m | 0.2, 0.3 | `lib/supabase/client.ts` |

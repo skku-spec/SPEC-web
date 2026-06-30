@@ -1,10 +1,19 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { createElement, type ImgHTMLAttributes } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AttendanceCheckInClient } from "@/components/dashboard/AttendanceCheckInClient";
 import { AttendanceQr } from "@/components/dashboard/AttendanceQr";
 import type { LearnerCheckInState } from "@/lib/actions/attendance-check-in";
+
+const trackerActions = vi.hoisted(() => ({
+  markAttendance: vi.fn(),
+  deleteAttendance: vi.fn(),
+  createSession: vi.fn(),
+  deleteSession: vi.fn(),
+  markAllPresent: vi.fn(),
+}));
 
 type MockImageProps = ImgHTMLAttributes<HTMLImageElement> & {
   readonly unoptimized?: boolean;
@@ -19,7 +28,21 @@ vi.mock("next/image", () => ({
 
 vi.mock("@/lib/actions/attendance-check-in", () => ({
   selfCheckInAttendance: vi.fn(),
+  closeSessionCheckIn: vi.fn(),
+  generateAttendanceCheckInCode: vi.fn(),
+  updateSessionCheckInSettings: vi.fn(),
 }));
+
+vi.mock("@/lib/actions/tracker", () => trackerActions);
+
+vi.mock("lucide-react", async () => {
+  const actual = await vi.importActual<typeof import("lucide-react")>("lucide-react");
+  return actual;
+});
+
+beforeEach(() => {
+  Object.values(trackerActions).forEach((mock) => mock.mockReset());
+});
 
 const longCheckInUrl =
   "http://localhost:3000/dashboard/attendance/check-in?session=session-with-a-very-long-id-for-layout&code=482193";
@@ -109,5 +132,60 @@ describe("attendance QR responsive layout contracts", () => {
     for (const name of ["저장", "재발급", "닫기", "링크 복사", "보드 열기"]) {
       expect(screen.getByRole(name === "보드 열기" ? "link" : "button", { name })).toHaveClass("whitespace-nowrap");
     }
+  });
+
+  it("keeps the desktop attendance grid columns fixed while status cells change", async () => {
+    const { AttendanceClient } = await import("@/app/admin/attendance/AttendanceClient");
+    trackerActions.markAttendance.mockResolvedValueOnce({
+      success: true,
+      data: {
+        log: {
+          id: "server-log-1",
+          user_id: "learner-2",
+          session_id: "session-1",
+          status: "present",
+          notes: null,
+        },
+      },
+    });
+
+    render(
+      <AttendanceClient
+        learners={[
+          { id: "learner-1", name: "김스펙", role: "learner" },
+          { id: "learner-2", name: "박스펙", role: "learner" },
+        ]}
+        sessions={[
+          { id: "session-1", title: "8주차", date: "2026-06-30" },
+          { id: "session-2", title: "9주차", date: "2026-06-30" },
+        ]}
+        logs={[
+          {
+            id: "server-log-existing",
+            user_id: "learner-1",
+            session_id: "session-1",
+            status: "present",
+            notes: null,
+          },
+        ]}
+        isAdminOrPreneur
+        hideHomework
+      />,
+    );
+
+    const desktopGrid = screen.getByTestId("admin-attendance-desktop-grid");
+    const table = within(desktopGrid).getByRole("table");
+    expect(table).toHaveClass("table-fixed", "min-w-max");
+    expect(table.querySelector("colgroup")).not.toBeNull();
+    expect(table.querySelector("col:first-child")).toHaveClass("w-[240px]");
+
+    const presentButtons = within(desktopGrid).getAllByRole("button", { name: /출석 처리/ });
+    expect(presentButtons[0]).toHaveAttribute("aria-pressed", "true");
+
+    await userEvent.click(presentButtons[2]);
+
+    expect(within(desktopGrid).getAllByRole("button", { name: /출석 처리/ })).toHaveLength(4);
+    expect(presentButtons[0]).toHaveAttribute("aria-pressed", "true");
+    expect(presentButtons[2]).toHaveAttribute("aria-pressed", "true");
   });
 });
