@@ -72,6 +72,7 @@ export type TeamBuildingData = {
 };
 
 type ActionResult = { success: true } | { success: false; error: string };
+type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 type KpiMeasurementType = "numeric" | "reduce" | "checklist";
 type ChecklistItem = { id: string; text: string; done: boolean };
 type ReviewContentBlock =
@@ -398,13 +399,13 @@ async function loadTeamSpaceData({ adminScope }: { adminScope: boolean }): Promi
 
   const visibleTeamIds = (teams ?? []).map((team) => team.id);
   if (visibleTeamIds.length === 0) {
-    const eligibleProfiles = isManager ? await getEligibleProfiles() : [];
+    const eligibleProfiles = isManager ? await getEligibleProfiles(supabase) : [];
     return {
       currentUser: profile,
       isManager,
       teams: [],
       eligibleProfiles,
-      kpiTemplates: await getKpiTemplates(),
+      kpiTemplates: await getKpiTemplates(supabase),
     };
   }
 
@@ -490,12 +491,16 @@ async function loadTeamSpaceData({ adminScope }: { adminScope: boolean }): Promi
     officeHoursByTeam.set(officeHour.team_id, rows);
   }
 
-  const eligibleProfiles = isManager ? await getEligibleProfiles() : [];
+  const [eligibleProfiles, kpiTemplates] = await Promise.all([
+    isManager ? getEligibleProfiles(supabase) : Promise.resolve([]),
+    getKpiTemplates(supabase),
+  ]);
+
   return {
     currentUser: profile,
     isManager,
     eligibleProfiles,
-    kpiTemplates: await getKpiTemplates(),
+    kpiTemplates,
     teams: (teams ?? []).map((team) => ({
       ...team,
       lead_preneur: team.lead_preneur_id ? profileMap.get(team.lead_preneur_id) ?? null : null,
@@ -652,8 +657,7 @@ export async function getTeamBuilding2026Data(): Promise<TeamBuildingData> {
   };
 }
 
-async function getEligibleProfiles(): Promise<TeamSpaceProfile[]> {
-  const supabase = await createClient();
+async function getEligibleProfiles(supabase: SupabaseServerClient): Promise<TeamSpaceProfile[]> {
   const { data, error } = await supabase
     .from("profiles")
     .select("id, name, first_name, last_name, role, photo, is_admin")
@@ -667,8 +671,7 @@ async function getEligibleProfiles(): Promise<TeamSpaceProfile[]> {
   return (data ?? []).map(toTeamSpaceProfile);
 }
 
-async function getKpiTemplates(): Promise<TeamKpiTemplateRow[]> {
-  const supabase = await createClient();
+async function getKpiTemplates(supabase: SupabaseServerClient): Promise<TeamKpiTemplateRow[]> {
   const { data, error } = await supabase
     .from("team_kpi_templates")
     .select("*")
@@ -871,6 +874,101 @@ export async function createTeamKpi(formData: FormData): Promise<ActionResult> {
   return { success: true };
 }
 
+export async function updateTeamKpi(kpiId: string, formData: FormData): Promise<ActionResult> {
+  const { supabase, profile, isAdminFlag } = await getAuthContext();
+  const { data: kpi, error: kpiError } = await supabase
+    .from("team_kpis")
+    .select("*")
+    .eq("id", kpiId)
+    .single();
+
+  if (kpiError || !kpi) {
+    return { success: false, error: kpiError?.message ?? "KPI를 찾을 수 없습니다." };
+  }
+
+  if (!(await canAccessTeam(kpi.team_id, profile.id, isAdminFlag))) {
+    return { success: false, error: "KPI를 수정할 권한이 없습니다." };
+  }
+
+  const title = readText(formData, "title");
+  const measurementType = readText(formData, "measurement_type") as KpiMeasurementType;
+  const periodStart = readText(formData, "period_start");
+  const periodEnd = readText(formData, "period_end");
+
+  if (!title || !periodStart || !periodEnd || !KPI_MEASUREMENT_TYPES.has(measurementType)) {
+    return { success: false, error: "필수 KPI 정보를 모두 입력해 주세요." };
+  }
+
+  let startValue: number | null = null;
+  let targetValue = 0;
+  let currentValue = 0;
+  let isMeasured = false;
+  let checklistItems: ChecklistItem[] = [];
+  let unit = readText(formData, "unit");
+
+  if (measurementType === "checklist") {
+    checklistItems = readChecklistItems(formData);
+    if (checklistItems.length === 0) {
+      return { success: false, error: "체크리스트 항목을 1개 이상 입력해 주세요." };
+    }
+    targetValue = checklistItems.length;
+    currentValue = checklistItems.filter((item) => item.done).length;
+    isMeasured = true;
+    unit = "개";
+  } else {
+    targetValue = readOptionalNumber(formData, "target_value") ?? Number.NaN;
+    const optionalCurrentValue = readOptionalNumber(formData, "current_value");
+
+    if (!Number.isFinite(targetValue) || targetValue <= 0) {
+      return { success: false, error: "목표값은 0보다 큰 숫자여야 합니다." };
+    }
+
+    if (optionalCurrentValue !== null && (!Number.isFinite(optionalCurrentValue) || optionalCurrentValue < 0)) {
+      return { success: false, error: "현재값은 0 이상의 숫자여야 합니다." };
+    }
+
+    currentValue = optionalCurrentValue ?? 0;
+    isMeasured = optionalCurrentValue !== null;
+
+    if (measurementType === "reduce") {
+      startValue = readOptionalNumber(formData, "start_value");
+      if (startValue === null || !Number.isFinite(startValue)) {
+        return { success: false, error: "감소 목표형은 시작값이 필요합니다." };
+      }
+      if (startValue <= targetValue) {
+        return { success: false, error: "감소 목표형은 시작값이 목표값보다 커야 합니다." };
+      }
+    }
+  }
+
+  const rate = achievementRate({ measurement_type: measurementType, start_value: startValue, current_value: currentValue, target_value: targetValue, is_measured: isMeasured, checklist_items: checklistItems });
+  const { error } = await supabase
+    .from("team_kpis")
+    .update({
+      title,
+      description: readText(formData, "description"),
+      owner_id: readOptionalId(formData, "owner_id"),
+      period_start: periodStart,
+      period_end: periodEnd,
+      measurement_type: measurementType,
+      start_value: startValue,
+      target_value: targetValue,
+      current_value: currentValue,
+      unit,
+      is_measured: isMeasured,
+      checklist_items: checklistItems,
+      status: statusFromRate(isMeasured, rate),
+    })
+    .eq("id", kpiId);
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  revalidateTeamSpace(kpi.team_id);
+  return { success: true };
+}
+
 export async function updateStartupTeamDescription(teamId: string, formData: FormData): Promise<ActionResult> {
   const { profile, isAdminFlag } = await getAuthContext();
 
@@ -999,10 +1097,7 @@ export async function updateTeamKpiProgress(kpiId: string, formData: FormData): 
 }
 
 export async function deleteTeamKpi(kpiId: string): Promise<ActionResult> {
-  const { supabase, profile, isManager, isAdminFlag } = await getAuthContext();
-  if (!isManager) {
-    return { success: false, error: "KPI를 삭제할 권한이 없습니다." };
-  }
+  const { supabase, profile, isAdminFlag } = await getAuthContext();
 
   const { data: kpi } = await supabase.from("team_kpis").select("team_id").eq("id", kpiId).maybeSingle();
   if (!kpi || !(await canAccessTeam(kpi.team_id, profile.id, isAdminFlag))) {
@@ -1027,7 +1122,7 @@ export async function createOfficeHour(formData: FormData): Promise<ActionResult
   }
 
   if (!(await canAccessTeam(teamId, profile.id, isAdminFlag))) {
-    return { success: false, error: "이 팀의 오피스아워를 기록할 권한이 없습니다." };
+    return { success: false, error: "이 팀의 커피챗을 기록할 권한이 없습니다." };
   }
 
   const adminSupabase = createAdminClient();
