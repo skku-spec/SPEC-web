@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { DASHBOARD_NAV_ITEMS, isActivePath, type DashboardNavItem } from "./nav-items";
@@ -20,6 +20,7 @@ type DesktopDashboardNavProps = {
 
 export function DesktopDashboardNav({ items }: DesktopDashboardNavProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [pendingHref, setPendingHref] = useState<string | null>(null);
 
   const [prevPathname, setPrevPathname] = useState(pathname);
@@ -42,6 +43,8 @@ export function DesktopDashboardNav({ items }: DesktopDashboardNavProps) {
             key={item.href}
             href={item.href}
             prefetch={false}
+            onMouseEnter={() => router.prefetch(item.href)}
+            onFocus={() => router.prefetch(item.href)}
             onClick={(event) => {
               if (isModifiedEvent(event)) {
                 return;
@@ -68,6 +71,7 @@ export function DesktopDashboardNav({ items }: DesktopDashboardNavProps) {
 export function MobileDashboardNav() {
   const items = DASHBOARD_NAV_ITEMS;
   const pathname = usePathname();
+  const router = useRouter();
   const [pendingHref, setPendingHref] = useState<string | null>(null);
 
   const [prevMobilePath, setPrevMobilePath] = useState(pathname);
@@ -90,6 +94,8 @@ export function MobileDashboardNav() {
             <Link
               href={item.href}
               prefetch={false}
+              onTouchStart={() => router.prefetch(item.href)}
+              onFocus={() => router.prefetch(item.href)}
               onClick={(event) => {
                 if (isModifiedEvent(event)) {
                   return;

@@ -346,6 +346,113 @@ export async function getTrackerData() {
   }
 }
 
+export async function getLearnerDashboardData() {
+  try {
+    const { profile } = await requireRole("learner");
+    if (!profile) throw new Error("사용자 정보를 찾을 수 없습니다.");
+    const supabase = await createClient();
+    const learnerId = profile.id;
+
+    const currentLearner = {
+      id: profile.id,
+      name: profile.name,
+      first_name: profile.first_name,
+      last_name: profile.last_name,
+      role: profile.role,
+      username: profile.username,
+    };
+
+    const [
+      { data: sessions, error: sessionsError },
+      { data: homeworks, error: hwError },
+      { data: logs },
+      { data: submissions },
+      { data: sectionSubmissions },
+    ] = await Promise.all([
+      supabase
+        .from("attendance_sessions")
+        .select("id, title, date")
+        .order("date", { ascending: true }),
+      supabase
+        .from("homeworks")
+        .select("id, title, due_date, individual_content, team_content")
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("attendance_logs")
+        .select("id, session_id, user_id, status")
+        .eq("user_id", learnerId),
+      supabase
+        .from("homework_submissions")
+        .select("homework_id, user_id, status, submitted_at")
+        .eq("user_id", learnerId),
+      supabase
+        .from("homework_section_submissions")
+        .select("homework_id, user_id, section_id, is_completed")
+        .eq("user_id", learnerId),
+    ]);
+
+    if (sessionsError) return { success: false as const, error: `세션 목록을 불러오지 못했습니다: ${sessionsError.message}` };
+    if (hwError) return { success: false as const, error: `과제 목록을 불러오지 못했습니다: ${hwError.message}` };
+
+    return {
+      success: true as const,
+      data: {
+        currentLearner,
+        sessions: sessions ?? [],
+        homeworks: homeworks ?? [],
+        logs: logs ?? [],
+        submissions: submissions ?? [],
+        sectionSubmissions: sectionSubmissions ?? [],
+      },
+    };
+  } catch (err) {
+    return { success: false as const, error: err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다." };
+  }
+}
+
+export async function getLearnerHomeworkData() {
+  try {
+    const { profile } = await requireRole("learner");
+    if (!profile) throw new Error("사용자 정보를 찾을 수 없습니다.");
+    const supabase = await createClient();
+
+    const currentLearner = {
+      id: profile.id,
+      name: profile.name,
+      first_name: profile.first_name,
+      last_name: profile.last_name,
+      username: profile.username,
+    };
+
+    const [
+      { data: homeworks, error: hwError },
+      { data: submissions },
+    ] = await Promise.all([
+      supabase
+        .from("homeworks")
+        .select("id, title, is_individual, is_team, padlet_board_id, submission_link, individual_content, team_content")
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("homework_submissions")
+        .select("homework_id, user_id, status")
+        .eq("user_id", profile.id),
+    ]);
+
+    if (hwError) return { success: false as const, error: `과제 목록을 불러오지 못했습니다: ${hwError.message}` };
+
+    return {
+      success: true as const,
+      data: {
+        currentLearner,
+        homeworks: homeworks ?? [],
+        submissions: submissions ?? [],
+      },
+    };
+  } catch (err) {
+    return { success: false as const, error: err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다." };
+  }
+}
+
 /**
  * Mark attendance for a user.
  */
