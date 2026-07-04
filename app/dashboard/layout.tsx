@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
-
 import { redirect } from "next/navigation";
 
 import { requireRole } from "@/lib/auth";

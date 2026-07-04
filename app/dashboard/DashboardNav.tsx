@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
+import { useMemo, useState } from "react";
 
 import { DASHBOARD_NAV_ITEMS, isActivePath, type DashboardNavItem } from "./nav-items";
 
@@ -20,7 +20,6 @@ type DesktopDashboardNavProps = {
 
 export function DesktopDashboardNav({ items }: DesktopDashboardNavProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const [pendingHref, setPendingHref] = useState<string | null>(null);
 
   const [prevPathname, setPrevPathname] = useState(pathname);
@@ -28,10 +27,6 @@ export function DesktopDashboardNav({ items }: DesktopDashboardNavProps) {
     setPrevPathname(pathname);
     setPendingHref(null);
   }
-
-  useEffect(() => {
-    items.forEach((item) => router.prefetch(item.href));
-  }, [items, router]);
 
   const activePath = useMemo(() => pendingHref ?? pathname, [pathname, pendingHref]);
 
@@ -46,6 +41,7 @@ export function DesktopDashboardNav({ items }: DesktopDashboardNavProps) {
           <Link
             key={item.href}
             href={item.href}
+            prefetch={false}
             onClick={(event) => {
               if (isModifiedEvent(event)) {
                 return;
@@ -72,7 +68,6 @@ export function DesktopDashboardNav({ items }: DesktopDashboardNavProps) {
 export function MobileDashboardNav() {
   const items = DASHBOARD_NAV_ITEMS;
   const pathname = usePathname();
-  const router = useRouter();
   const [pendingHref, setPendingHref] = useState<string | null>(null);
 
   const [prevMobilePath, setPrevMobilePath] = useState(pathname);
@@ -80,10 +75,6 @@ export function MobileDashboardNav() {
     setPrevMobilePath(pathname);
     setPendingHref(null);
   }
-
-  useEffect(() => {
-    items.forEach((item) => router.prefetch(item.href));
-  }, [items, router]);
 
   const activePath = useMemo(() => pendingHref ?? pathname, [pathname, pendingHref]);
 
@@ -98,6 +89,7 @@ export function MobileDashboardNav() {
           <div key={item.href} className="flex shrink-0 items-center">
             <Link
               href={item.href}
+              prefetch={false}
               onClick={(event) => {
                 if (isModifiedEvent(event)) {
                   return;

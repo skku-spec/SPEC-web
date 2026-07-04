@@ -145,7 +145,7 @@ export default function Navbar() {
                   <Link href="/companies" className={`dropdown-item block px-4 py-2 ${dropdownText} rounded text-sm font-['Pretendard',sans-serif]`}>
                     프로젝트 목록
                   </Link>
-                  <Link href="/team-building-2026" onMouseEnter={prefetchTeamBuilding} onFocus={prefetchTeamBuilding} className={`dropdown-item block px-4 py-2 ${dropdownText} rounded text-sm font-['Pretendard',sans-serif]`}>
+                  <Link href="/team-building-2026" prefetch={false} onMouseEnter={prefetchTeamBuilding} onFocus={prefetchTeamBuilding} className={`dropdown-item block px-4 py-2 ${dropdownText} rounded text-sm font-['Pretendard',sans-serif]`}>
                     2026 Team Building
                   </Link>
                   <div className={`mx-4 my-2 h-px ${isHome ? "bg-white/10" : "bg-[#16140f]/10"}`} />
@@ -210,6 +210,7 @@ export default function Navbar() {
           <div className="absolute right-8 lg:right-10 flex items-center gap-3">
             <Link
               href="/team-space/my"
+              prefetch={false}
               onMouseEnter={prefetchTeamSpace}
               onFocus={prefetchTeamSpace}
               className={`inline-flex h-9 items-center justify-center rounded-md border px-4 font-['Pretendard',sans-serif] text-sm font-semibold transition-colors ${
@@ -263,7 +264,7 @@ export default function Navbar() {
                       </Link>
                     )}
 
-                    <Link href="/team-space/my" className="dropdown-item block px-4 py-2 text-[#16140f] hover:bg-gray-100 rounded text-sm font-['Pretendard',sans-serif]">
+                    <Link href="/team-space/my" prefetch={false} className="dropdown-item block px-4 py-2 text-[#16140f] hover:bg-gray-100 rounded text-sm font-['Pretendard',sans-serif]">
                       Team Space
                     </Link>
 
@@ -371,7 +372,7 @@ export default function Navbar() {
                 <Link href="/companies" onClick={() => setMenuOpen(false)} className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}>
                   프로젝트 목록
                 </Link>
-                <Link href="/team-building-2026" onClick={() => setMenuOpen(false)} className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}>
+                <Link href="/team-building-2026" prefetch={false} onClick={() => setMenuOpen(false)} className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}>
                   2026 Team Building
                 </Link>
                 <Link href="/spec-log" onClick={() => setMenuOpen(false)} className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-[#FF6C0F] hover:bg-white/5" : "text-[#FF6C0F] hover:bg-[#16140f]/5"}`}>
@@ -410,6 +411,7 @@ export default function Navbar() {
               <div className="mb-6">
                 <Link
                   href="/team-space/my"
+                  prefetch={false}
                   onClick={() => setMenuOpen(false)}
                   className={`flex w-full items-center justify-center rounded-md border py-3 font-['Pretendard',sans-serif] text-sm font-semibold transition-colors ${
                     isHome
@@ -438,6 +440,7 @@ export default function Navbar() {
                     )}
                     <Link
                       href="/team-space/my"
+                      prefetch={false}
                       onClick={() => setMenuOpen(false)}
                       className={`block rounded-lg px-3 py-2.5 text-[15px] font-['Pretendard',sans-serif] font-medium transition-colors ${isHome ? "text-white/80 hover:text-white hover:bg-white/5" : "text-[#16140f]/80 hover:text-[#16140f] hover:bg-[#16140f]/5"}`}
                     >
