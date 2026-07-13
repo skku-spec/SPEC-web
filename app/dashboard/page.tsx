@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTrackerData } from "@/lib/actions/tracker";
+import { getLearnerDashboardData } from "@/lib/actions/tracker";
 import { LearnerDashboardClient } from "@/components/dashboard/LearnerDashboardClient";
 
 export const dynamic = "force-dynamic";
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 export default async function LearnerDashboardPage() {
-  const result = await getTrackerData();
+  const result = await getLearnerDashboardData();
   
   if (!result.success) {
     return (

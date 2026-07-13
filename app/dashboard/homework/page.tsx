@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTrackerData } from "@/lib/actions/tracker";
+import { getLearnerHomeworkData } from "@/lib/actions/tracker";
 import { LearnerHomeworkClient } from "@/components/dashboard/LearnerHomeworkClient";
 
 export const dynamic = "force-dynamic";
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 export default async function LearnerHomeworkPage() {
-  const result = await getTrackerData();
+  const result = await getLearnerHomeworkData();
   
   if (!result.success) {
     return (

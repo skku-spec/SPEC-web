@@ -121,14 +121,14 @@ export default function ProfileEditForm({
 
   return (
     <div className="space-y-8">
-      <section className="rounded-2xl border border-[#ddd9cc] bg-[#fcfcf8] p-6 md:p-8">
+      <section className="rounded-lg border border-[#ddd9cc] bg-[#fcfcf8] p-5 md:p-6">
         <SectionTitle>기본 정보</SectionTitle>
 
         <form onSubmit={(e) => { e.preventDefault(); handleProfileSubmit(); }} className="mt-5 space-y-5">
           {profileError ? <ErrorMessage message={profileError} /> : null}
           {profileSuccess ? <SuccessMessage message={profileSuccess} /> : null}
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1">
               <label htmlFor="first_name" className="block text-sm font-medium text-[#6b6b5e]">
                 First Name
@@ -200,7 +200,7 @@ export default function ProfileEditForm({
         </form>
       </section>
 
-      <section className="rounded-2xl border border-[#ddd9cc] bg-[#fcfcf8] p-6 md:p-8">
+      <section className="rounded-lg border border-[#ddd9cc] bg-[#fcfcf8] p-5 md:p-6">
         <SectionTitle>이메일 변경</SectionTitle>
 
         <form onSubmit={(e) => { e.preventDefault(); handleEmailSubmit(); }} className="mt-5 space-y-5">
@@ -232,7 +232,7 @@ export default function ProfileEditForm({
         </form>
       </section>
 
-      <section className="rounded-2xl border border-[#ddd9cc] bg-[#fcfcf8] p-6 md:p-8">
+      <section className="rounded-lg border border-[#ddd9cc] bg-[#fcfcf8] p-5 md:p-6">
         <SectionTitle>비밀번호 변경</SectionTitle>
 
         <form onSubmit={(e) => { e.preventDefault(); handlePasswordSubmit(); }} className="mt-5 space-y-5">

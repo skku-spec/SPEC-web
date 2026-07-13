@@ -86,6 +86,7 @@ function reviewToPost(post: Awaited<ReturnType<typeof getTeamBuilding2026Data>>[
   return {
     id: post.id,
     kind: "review",
+    reportType: post.report_type,
     teamId: post.team?.id ?? post.team_id,
     status: "in_progress",
     isMeasured: linkedAverage.length > 0,
@@ -155,7 +156,22 @@ export default async function TeamBuilding2026Page() {
     return {
       id: team.id,
       name: team.name,
+      description: team.description,
+      tagline: team.tagline,
+      heroImageUrl: team.hero_image_url,
+      stage: team.stage,
+      problem: team.problem,
+      solution: team.solution,
+      targetCustomer: team.target_customer,
+      coreValue: team.core_value,
       batch: team.batch,
+      leadPreneurName: team.lead_preneur?.display_name ?? null,
+      members: team.members.map((member) => ({
+        id: member.id,
+        name: member.display_name,
+        photo: member.photo,
+        role: member.role,
+      })),
       totalKpis: teamPosts.length,
       activeKpis: teamPosts.filter((post) => post.status !== "achieved").length,
       atRiskKpis: teamPosts.filter((post) => post.status === "blocked" || post.status === "missed").length,
@@ -165,5 +181,5 @@ export default async function TeamBuilding2026Page() {
     };
   });
 
-  return <TeamBuildingCommunity teams={teams} posts={posts} kpiOptions={kpiOptions} writableTeamIds={data.writableTeamIds} setupError={data.setupError} />;
+  return <TeamBuildingCommunity teams={teams} posts={posts} kpiOptions={kpiOptions} setupError={data.setupError} />;
 }

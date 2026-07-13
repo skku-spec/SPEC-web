@@ -435,7 +435,7 @@ export default function PostEditorForm({ mode, post, initialTags = [] }: PostEdi
   return (
     <div className="min-h-screen bg-[#f5f5ee]">
       {/* ── Breadcrumb + Save Status ───────────────────────────── */}
-      <div className="mx-auto flex max-w-[1200px] items-center justify-between px-4 pb-2 pt-6 md:px-6">
+      <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-2 px-4 pb-2 pt-6 md:px-6">
         <Link
           href="/blog"
           className="inline-flex items-center gap-1.5 font-['Pretendard',sans-serif] text-[14px] text-[#6b6b5e] transition-colors hover:text-[#16140f]"
@@ -452,7 +452,7 @@ export default function PostEditorForm({ mode, post, initialTags = [] }: PostEdi
       </div>
 
       {/* ── Two-Column Body ─────────────────────────────────────── */}
-      <div className="mx-auto flex max-w-[1200px] gap-8 px-4 pb-8 pt-4 md:px-6">
+      <div className="mx-auto flex max-w-[1200px] flex-col gap-8 px-4 pb-8 pt-4 md:px-6 lg:flex-row">
         {/* ── Left Column: Editor & Settings (~70%) ───────────── */}
         <div className="min-w-0 flex-1">
           {/* Title + Editor Card */}
@@ -468,7 +468,7 @@ export default function PostEditorForm({ mode, post, initialTags = [] }: PostEdi
             <div className="mb-4 h-px bg-[#ddd9cc]" />
 
             {/* Editor guide hint */}
-            <p className="mb-4 font-['Pretendard',sans-serif] text-[12px] text-[#b5b2a6]">
+            <p className="mb-4 break-words font-['Pretendard',sans-serif] text-[12px] text-[#b5b2a6]">
               <kbd className="rounded border border-[#ddd9cc] bg-[#f5f5ee] px-1.5 py-0.5 font-mono text-[11px]">/</kbd> 를 입력하면 제목, 리스트, 이미지 등을 삽입할 수 있어요. 텍스트를 드래그하면 서식 도구가 나타납니다.
             </p>
 
@@ -509,7 +509,7 @@ export default function PostEditorForm({ mode, post, initialTags = [] }: PostEdi
               <legend className="mb-1.5 block font-['Pretendard',sans-serif] text-[13px] font-semibold text-[#16140f]">
                 포스트 유형
               </legend>
-              <div className="flex gap-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
                 <label className="inline-flex cursor-pointer items-center gap-2 font-['Pretendard',sans-serif] text-[14px] text-[#16140f]">
                   <input
                     type="radio"
@@ -579,7 +579,7 @@ export default function PostEditorForm({ mode, post, initialTags = [] }: PostEdi
               </span>
 
               {imageUrl ? (
-                <div className="group relative max-w-[320px] overflow-hidden rounded-[8px]">
+                <div className="group relative w-full max-w-[320px] overflow-hidden rounded-[8px]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={imageUrl}
@@ -615,7 +615,7 @@ export default function PostEditorForm({ mode, post, initialTags = [] }: PostEdi
                   onDrop={handleDrop}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
-                  className={`flex max-w-[320px] cursor-pointer flex-col items-center justify-center rounded-[8px] border-2 border-dashed px-6 py-8 transition-colors ${
+                  className={`flex w-full max-w-[320px] cursor-pointer flex-col items-center justify-center rounded-[8px] border-2 border-dashed px-4 py-8 text-center transition-colors sm:px-6 ${
                     isDraggingOver
                       ? "border-[#FF6C0F] bg-[#FF6C0F]/5"
                       : "border-[#ddd9cc] hover:border-[#FF6C0F]/50 hover:bg-[#f5f5ee]/50"
@@ -659,12 +659,12 @@ export default function PostEditorForm({ mode, post, initialTags = [] }: PostEdi
               </p>
             )}
 
-            <div className="flex w-full items-center justify-between gap-4 sm:w-auto">
+            <div className="flex w-full flex-col gap-4 sm:w-auto sm:flex-row sm:items-center sm:justify-between">
               <span className="font-['Pretendard',sans-serif] text-[13px] text-[#6b6b5e]">
                 {wordCount.toLocaleString()} 단어 · ~{estimateReadingTime(wordCount)}분 읽기
               </span>
 
-              <div className="flex items-center gap-3">
+              <div className="grid w-full grid-cols-2 gap-3 sm:flex sm:w-auto sm:items-center">
                 <button
                   type="button"
                   onClick={() => void submitForm(false)}

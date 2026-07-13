@@ -115,7 +115,7 @@ export default async function ApplyPage() {
             </ApplyButton>
             <a
               href="/apply/status"
-              className="inline-flex items-center rounded-full border border-[#d9d9cc] px-14 py-5 font-['Pretendard',sans-serif] text-[15px] font-semibold text-[#4a4a40] transition-colors hover:bg-white hover:text-[#16140f]"
+              className="inline-flex min-h-12 items-center justify-center rounded-md border border-[#ddd9cc] px-6 py-3 font-['Pretendard',sans-serif] text-[15px] font-semibold text-[#4a4a40] transition-colors hover:bg-white hover:text-[#16140f] sm:px-10 md:px-14 md:py-5"
             >
               지원 현황 확인
             </a>

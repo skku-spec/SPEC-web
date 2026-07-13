@@ -119,7 +119,7 @@ export default function CompaniesPageClient({
       </div>
 
       {/* Sort row - above the two-column layout like YC */}
-      <div className="mx-auto mb-4 flex max-w-[1100px] items-center justify-end gap-2">
+      <div className="mx-auto mb-4 flex max-w-[1100px] flex-wrap items-center justify-between gap-2 sm:justify-end">
         <span className="font-['Pretendard',sans-serif] text-[13px] font-normal text-black/50">
           정렬:
         </span>
@@ -135,7 +135,34 @@ export default function CompaniesPageClient({
         />
       </div>
 
-      <div className="mx-auto flex max-w-[1100px] gap-5">
+      <div className="mx-auto flex max-w-[1100px] flex-col gap-5 lg:flex-row">
+        <div className="space-y-3 lg:hidden">
+          <details className="rounded-lg border border-[#ddd9cc] bg-white p-4">
+            <summary className="cursor-pointer font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f]">
+              필터
+            </summary>
+            <div className="mt-3 grid gap-4 sm:grid-cols-2">
+              <div>
+                <p className="mb-2 font-['Pretendard',sans-serif] text-xs font-semibold text-[#6b6b5e]">기수</p>
+                <div className="max-h-[220px] overflow-y-auto">
+                  <FilterCheckbox label="전체" checked={selectedBatches.length === 0} onChange={() => setSelectedBatches([])} count={COMPANIES.length} small />
+                  {BATCH_OPTIONS.map((batch) => (
+                    <FilterCheckbox key={batch.value} label={batch.label} checked={selectedBatches.includes(batch.value)} onChange={() => setSelectedBatches(toggleArrayItem(selectedBatches, batch.value))} count={batchCounts[batch.value] || 0} small />
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="mb-2 font-['Pretendard',sans-serif] text-xs font-semibold text-[#6b6b5e]">분야</p>
+                <div className="max-h-[220px] overflow-y-auto">
+                  <FilterCheckbox label="전체" checked={selectedIndustries.length === 0} onChange={() => setSelectedIndustries([])} count={COMPANIES.length} small />
+                  {INDUSTRY_OPTIONS.map((ind) => (
+                    <FilterCheckbox key={ind} label={ind} checked={selectedIndustries.includes(ind)} onChange={() => setSelectedIndustries(toggleArrayItem(selectedIndustries, ind))} count={industryCounts[ind] || 0} small />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </details>
+        </div>
         {/* ── Sidebar ── */}
         <aside className="sticky top-[100px] hidden w-[300px] shrink-0 self-start lg:block">
           <div
@@ -171,7 +198,7 @@ export default function CompaniesPageClient({
                   setSearchQuery(e.target.value);
                   setVisibleCount(ITEMS_PER_PAGE);
                 }}
-                className="h-[42px] w-full rounded-lg border border-[#d9d9cc] bg-white px-2.5 py-2.5 font-['Pretendard',sans-serif] text-base font-normal text-black outline-none placeholder:text-black/40 focus:border-[#999] focus:ring-0"
+                className="h-[42px] w-full min-w-0 rounded-lg border border-[#d9d9cc] bg-white px-2.5 py-2.5 font-['Pretendard',sans-serif] text-base font-normal text-black outline-none placeholder:text-black/40 focus:border-[#999] focus:ring-0"
               />
             </div>
             <p className="mt-2 px-1 font-['Pretendard',sans-serif] text-[13px] font-normal text-black/50">
@@ -291,7 +318,7 @@ function FilterCheckbox({
         onChange={onChange}
         className="h-4 w-4 shrink-0 cursor-pointer rounded border-black/20 text-[#FF6C0F] accent-[#FF6C0F] focus:ring-[#FF6C0F]/30 focus:ring-offset-0"
       />
-      <span className={`font-['Pretendard',sans-serif] font-normal text-black/80 ${small ? "text-[13px]" : "text-[14px]"}`}>
+      <span className={`min-w-0 break-words font-['Pretendard',sans-serif] font-normal text-black/80 ${small ? "text-[13px]" : "text-[14px]"}`}>
         {label}
       </span>
       {count !== undefined && (

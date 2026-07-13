@@ -17,7 +17,7 @@ const sizeMap: Record<ApplyButtonSize, string> = {
   sm: "px-5 py-2 text-sm",
   md: "h-12 px-6 text-base md:h-14 md:px-8 md:text-lg",
   lg: "h-14 px-8 text-lg",
-  xl: "px-14 py-5 text-xl",
+  xl: "min-h-12 px-6 py-3 text-base sm:px-10 sm:py-4 sm:text-lg md:px-14 md:py-5 md:text-xl",
 };
 
 export default function ApplyButton({

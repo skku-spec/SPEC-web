@@ -8,6 +8,11 @@ import type { Database } from "@/lib/supabase/types";
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 type AttendanceLogRow = Database["public"]["Tables"]["attendance_logs"]["Row"];
 type TrackerAttendanceLog = Pick<AttendanceLogRow, "id" | "session_id" | "user_id" | "status" | "notes">;
+type TrackerHomework = Pick<
+  Database["public"]["Tables"]["homeworks"]["Row"],
+  "id" | "title" | "padlet_board_id" | "is_team" | "due_date" | "section_type_config"
+>;
+type TrackerLearner = { id: string; name: string | null; username: string | null };
 type PadletResource = {
   type: string;
   id: string;
@@ -26,183 +31,197 @@ type HomeworkTeamAssignment = {
   task_index: number;
 };
 
+function shouldSyncPadletHomework(
+  hw: TrackerHomework,
+  lastSyncMap: Map<string, string>,
+) {
+  if (!hw.padlet_board_id) return false;
+  const lastSync = lastSyncMap.get(hw.id);
+  if (!lastSync) return true;
+
+  const lastSyncMs = new Date(lastSync).getTime();
+  if (!Number.isFinite(lastSyncMs) || lastSyncMs > Date.now()) return true;
+  if (lastSyncMs > Date.now() - 5 * 60 * 1000) return false;
+
+  if (!hw.due_date) return true;
+  return new Date(hw.due_date).getTime() > Date.now() - 30 * 24 * 60 * 60 * 1000;
+}
+
 async function syncPadletBoardForHomework(
   supabase: SupabaseServerClient,
-  hw: {
-    id: string;
-    title: string;
-    padlet_board_id: string | null;
-    is_team: boolean;
-    section_type_config: unknown;
-  },
-  learners: { id: string; name: string; username: string }[]
+  hw: TrackerHomework,
+  learners: TrackerLearner[],
 ) {
   if (!hw.padlet_board_id) return;
   const apiKey = process.env.PADLET_API_KEY;
   if (!apiKey) return;
 
-  try {
-    const res = await fetch(
-      `https://api.padlet.dev/v1/boards/${hw.padlet_board_id}?include=posts,sections`,
-      {
-        headers: {
-          "X-Api-Key": apiKey,
-          "Accept": "application/vnd.api+json",
-        },
-        cache: "no-store",
+  const res = await fetch(
+    `https://api.padlet.dev/v1/boards/${hw.padlet_board_id}?include=posts,sections`,
+    {
+      headers: {
+        "X-Api-Key": apiKey,
+        "Accept": "application/vnd.api+json",
+      },
+      cache: "no-store",
+    },
+  );
+
+  if (!res.ok) {
+    console.error(`Padlet API error for homework ${hw.id}: ${res.status}`);
+    return;
+  }
+
+  const json = (await res.json()) as { included?: PadletResource[] };
+  const included = json.included || [];
+  const resourceMap = new Map(included.map((resource) => [`${resource.type}:${resource.id}`, resource]));
+
+  const sections: PadletSection[] = included
+    .filter((resource) => resource.type === "section")
+    .map((resource) => ({
+      id: resource.id,
+      title: (resource.attributes?.title as string) || "(섹션 없음)",
+    }));
+
+  const posts: PadletPost[] = included
+    .filter((resource) => resource.type === "post")
+    .map((resource) => {
+      let authorName: string | undefined;
+      let authorEmail: string | undefined;
+      let authorUsername: string | undefined;
+
+      const attrAuthor = resource.attributes?.author as Record<string, unknown> | undefined;
+      if (attrAuthor) {
+        authorName = (attrAuthor.fullName as string) || (attrAuthor.name as string) || (attrAuthor.shortName as string);
+        authorEmail = attrAuthor.email as string | undefined;
+        authorUsername = attrAuthor.username as string | undefined;
+      } else {
+        const authorRel = resource.relationships?.author as { data?: { type: string; id: string } | null } | undefined;
+        if (authorRel?.data) {
+          const authorResource = resourceMap.get(`${authorRel.data.type}:${authorRel.data.id}`);
+          const attrs = authorResource?.attributes || {};
+          authorName = (attrs.fullName as string) || (attrs.name as string) || (attrs.display_name as string);
+          authorEmail = attrs.email as string | undefined;
+          authorUsername = attrs.username as string | undefined;
+        }
       }
-    );
-    if (!res.ok) {
-      console.error(`Padlet API error for homework ${hw.id}: ${res.status}`);
-      return;
-    }
 
-    const json = (await res.json()) as { included?: PadletResource[] };
-    const included = json.included || [];
-
-    const resourceMap = new Map<string, PadletResource>();
-    for (const r of included) {
-      resourceMap.set(`${r.type}:${r.id}`, r);
-    }
-
-    const sections: PadletSection[] = included
-      .filter((r) => r.type === "section")
-      .map((r) => ({
-        id: r.id,
-        title: (r.attributes?.title as string) || "(섹션 없음)",
-      }));
-
-    const posts: PadletPost[] = included
-      .filter((r) => r.type === "post")
-      .map((r) => {
-        let authorName: string | undefined;
-        let authorEmail: string | undefined;
-        let authorUsername: string | undefined;
-
-        const attrAuthor = r.attributes?.author as Record<string, unknown> | undefined;
-        if (attrAuthor) {
-          authorName = (attrAuthor.fullName as string) || (attrAuthor.name as string) || (attrAuthor.shortName as string);
-          authorEmail = attrAuthor.email as string | undefined;
-          authorUsername = attrAuthor.username as string | undefined;
-        } else {
-          const authorRel = r.relationships?.author as { data?: { type: string; id: string } | null } | undefined;
-          if (authorRel?.data) {
-            const authorResource = resourceMap.get(`${authorRel.data.type}:${authorRel.data.id}`);
-            if (authorResource) {
-              const attrs = authorResource.attributes || {};
-              authorName = (attrs.fullName as string) || (attrs.name as string) || (attrs.display_name as string);
-              authorEmail = attrs.email as string | undefined;
-              authorUsername = attrs.username as string | undefined;
-            }
-          }
-        }
-
-        const sectionRel = r.relationships?.section as { data?: { type: string; id: string } | null } | undefined;
-        const sectionId = sectionRel?.data?.id;
-
-        return {
-          id: r.id,
-          author: authorName || authorEmail || authorUsername
-            ? { name: authorName, email: authorEmail, username: authorUsername }
-            : undefined,
-          section_id: sectionId,
-        };
-      });
-
-    const { data: hwTeams } = await supabase
-      .from("homework_team_assignments")
-      .select("team_name,user_id,task_index")
-      .eq("homework_id", hw.id);
-
-    const teamsList = (hwTeams || []) as HomeworkTeamAssignment[];
-
-    const learnerTeamMap = new Map<string, { teamName: string; memberNames: string[]; memberUsernames: string[] }>();
-    if (hw.is_team && teamsList.length > 0) {
-      const learnerLookup = new Map(learners.map(r => [r.id, r]));
-      teamsList.forEach((vt) => {
-        const teamMembers = teamsList.filter((m) => m.team_name === vt.team_name && m.task_index === vt.task_index);
-        const memberNames = teamMembers.map((m) => learnerLookup.get(m.user_id)?.name || 'Unknown');
-        const memberUsernames = teamMembers.map((m) => learnerLookup.get(m.user_id)?.username || '');
-        learnerTeamMap.set(`${vt.user_id}:${vt.task_index}`, { teamName: vt.team_name, memberNames, memberUsernames });
-      });
-    }
-
-    const getSectionConfig = (sectionId: string) => {
-      const config = (hw.section_type_config as Record<string, { type: string; task_index?: number } | undefined>) || {};
-      if (config[sectionId]) return config[sectionId];
-      if (hw.is_team) return { type: "team", task_index: 0 };
-      return { type: "individual" };
-    };
-
-    const anyPostedInSection = (targetNames: string[], targetUsernames: string[], sectionId: string | undefined) =>
-      posts.some((p) => {
-        const sMatch = sectionId ? p.section_id === sectionId : !p.section_id;
-        if (!sMatch) return false;
-
-        const authorName = (p.author?.name || '').toLowerCase();
-        const authorUsername = (p.author?.username || '').toLowerCase().replace(/^@/, '');
-
-        const matchesName = targetNames.some(n => {
-          const nl = n.toLowerCase();
-          return nl && (authorName.includes(nl) || nl.includes(authorName));
-        });
-
-        const matchesUsername = targetUsernames.some(u => {
-          const ul = u.toLowerCase().replace(/^@/, '');
-          return ul && (authorUsername === ul);
-        });
-
-        return matchesName || matchesUsername;
-      });
-
-    // Fetch overrides for this homework to prevent overwriting them
-    const { data: overrides } = await supabase
-      .from("homework_section_submissions")
-      .select("user_id, section_id")
-      .eq("homework_id", hw.id)
-      .eq("is_override", true);
-
-    const overrideSet = new Set(overrides?.map(o => `${o.user_id}:${o.section_id}`) || []);
-
-    const records: { homework_id: string; user_id: string; section_id: string; is_completed: boolean; is_override: boolean; updated_at: string }[] = [];
-    const now = new Date().toISOString();
-
-    learners.forEach(learner => {
-      sections.forEach((s) => {
-        if (overrideSet.has(`${learner.id}:${s.id}`)) return; // Skip overridden records
-
-        const sConfig = getSectionConfig(s.id);
-        let isCompleted = false;
-        if (sConfig.type === "team") {
-          const teamInfo = learnerTeamMap.get(`${learner.id}:${sConfig.task_index}`);
-          if (teamInfo) {
-            isCompleted = anyPostedInSection(teamInfo.memberNames, teamInfo.memberUsernames, s.id);
-          } else {
-            isCompleted = anyPostedInSection([learner.name], [learner.username], s.id);
-          }
-        } else {
-          isCompleted = anyPostedInSection([learner.name], [learner.username], s.id);
-        }
-
-        records.push({
-          homework_id: hw.id,
-          user_id: learner.id,
-          section_id: s.id,
-          is_completed: isCompleted,
-          is_override: false,
-          updated_at: now
-        });
-      });
+      const sectionRel = resource.relationships?.section as { data?: { type: string; id: string } | null } | undefined;
+      return {
+        id: resource.id,
+        author: authorName || authorEmail || authorUsername
+          ? { name: authorName, email: authorEmail, username: authorUsername }
+          : undefined,
+        section_id: sectionRel?.data?.id,
+      };
     });
 
-    if (records.length > 0) {
-      await supabase
-        .from("homework_section_submissions")
-        .upsert(records, { onConflict: "user_id,homework_id,section_id" });
+  const { data: hwTeams } = await supabase
+    .from("homework_team_assignments")
+    .select("team_name,user_id,task_index")
+    .eq("homework_id", hw.id);
+
+  const teamsList = (hwTeams || []) as HomeworkTeamAssignment[];
+  const learnerLookup = new Map(learners.map((learner) => [learner.id, learner]));
+  const learnerTeamMap = new Map<string, { teamName: string; memberNames: string[]; memberUsernames: string[] }>();
+
+  if (hw.is_team && teamsList.length > 0) {
+    for (const assignment of teamsList) {
+      const teamMembers = teamsList.filter((member) => member.team_name === assignment.team_name && member.task_index === assignment.task_index);
+      learnerTeamMap.set(`${assignment.user_id}:${assignment.task_index}`, {
+        teamName: assignment.team_name,
+        memberNames: teamMembers.map((member) => learnerLookup.get(member.user_id)?.name || ""),
+        memberUsernames: teamMembers.map((member) => learnerLookup.get(member.user_id)?.username || ""),
+      });
     }
-  } catch (err) {
-    console.error(`Error in syncPadletBoardForHomework for homework ${hw.id}:`, err);
   }
+
+  const getSectionConfig = (sectionId: string) => {
+    const config = (hw.section_type_config as Record<string, { type: string; task_index?: number } | undefined>) || {};
+    if (config[sectionId]) return config[sectionId];
+    if (hw.is_team) return { type: "team", task_index: 0 };
+    return { type: "individual" };
+  };
+
+  const anyPostedInSection = (targetNames: string[], targetUsernames: string[], sectionId: string | undefined) =>
+    posts.some((post) => {
+      const sectionMatches = sectionId ? post.section_id === sectionId : !post.section_id;
+      if (!sectionMatches) return false;
+
+      const authorName = (post.author?.name || "").toLowerCase();
+      const authorUsername = (post.author?.username || "").toLowerCase().replace(/^@/, "");
+      const matchesName = targetNames.some((name) => {
+        const normalizedName = name.toLowerCase();
+        return normalizedName && (authorName.includes(normalizedName) || normalizedName.includes(authorName));
+      });
+      const matchesUsername = targetUsernames.some((username) => {
+        const normalizedUsername = username.toLowerCase().replace(/^@/, "");
+        return normalizedUsername && authorUsername === normalizedUsername;
+      });
+
+      return matchesName || matchesUsername;
+    });
+
+  const { data: overrides } = await supabase
+    .from("homework_section_submissions")
+    .select("user_id, section_id")
+    .eq("homework_id", hw.id)
+    .eq("is_override", true);
+
+  const overrideSet = new Set(overrides?.map((override) => `${override.user_id}:${override.section_id}`) || []);
+  const records = learners.flatMap((learner) =>
+    sections.flatMap((section) => {
+      if (overrideSet.has(`${learner.id}:${section.id}`)) return [];
+      const sectionConfig = getSectionConfig(section.id);
+      const teamInfo = sectionConfig.type === "team" ? learnerTeamMap.get(`${learner.id}:${sectionConfig.task_index ?? 0}`) : null;
+      const isCompleted = teamInfo
+        ? anyPostedInSection(teamInfo.memberNames, teamInfo.memberUsernames, section.id)
+        : anyPostedInSection([learner.name || ""], [learner.username || ""], section.id);
+
+      return [{
+        homework_id: hw.id,
+        user_id: learner.id,
+        section_id: section.id,
+        is_completed: isCompleted,
+        is_override: false,
+        updated_at: new Date().toISOString(),
+      }];
+    }),
+  );
+
+  if (records.length === 0) return;
+  const { error } = await supabase
+    .from("homework_section_submissions")
+    .upsert(records, { onConflict: "user_id,homework_id,section_id" });
+
+  if (error) {
+    console.error(`Padlet sync upsert error for homework ${hw.id}:`, error.message);
+  }
+}
+
+async function syncActivePadletBoardsInBackground(
+  supabase: SupabaseServerClient,
+  homeworks: TrackerHomework[],
+  learners: TrackerLearner[],
+  sectionSubmissions: Array<{ homework_id: string; updated_at?: string | null }> | null | undefined,
+) {
+  const lastSyncMap = new Map<string, string>();
+  for (const submission of sectionSubmissions ?? []) {
+    if (submission.updated_at && !lastSyncMap.has(submission.homework_id)) {
+      lastSyncMap.set(submission.homework_id, submission.updated_at);
+    }
+  }
+
+  const activeHomeworks = homeworks.filter((homework) => shouldSyncPadletHomework(homework, lastSyncMap));
+  if (activeHomeworks.length === 0 || learners.length === 0) return;
+
+  await Promise.all(
+    activeHomeworks.map((homework) =>
+      syncPadletBoardForHomework(supabase, homework, learners).catch((error) => {
+        console.error(`Padlet sync error for homework ${homework.id}:`, error);
+      }),
+    ),
+  );
 }
 
 /**
@@ -257,89 +276,57 @@ export async function getTrackerData() {
       }
     }
 
-    const { data: learners, error: learnersError } = await learnersQuery;
-    if (learnersError) return { success: false as const, error: `런너 목록을 불러오지 못했습니다: ${learnersError.message}` };
-
-    const { data: sessions, error: sessionsError } = await supabase
-      .from("attendance_sessions")
-      .select("id, title, date, starts_at, check_in_opens_at, check_in_closes_at, self_check_in_enabled, created_at")
-      .order("date", { ascending: true });
-    if (sessionsError) return { success: false as const, error: `세션 목록을 불러오지 못했습니다: ${sessionsError.message}` };
-
-    const { data: homeworks, error: hwError } = await supabase
-      .from("homeworks")
-      .select("id, title, is_individual, is_team, padlet_board_id, submission_link, individual_content, team_content, due_date, created_at, section_type_config")
-      .order("created_at", { ascending: true });
-    if (hwError) return { success: false as const, error: `과제 목록을 불러오지 못했습니다: ${hwError.message}` };
-
-    // ── Padlet Submission Sync on Tracker Load ──────────────────────────────
-    try {
-      const { data: syncStatus } = await supabase
-        .from("homework_section_submissions")
-        .select("homework_id, updated_at");
-
-      const lastSyncMap = new Map<string, string>();
-      if (syncStatus) {
-        for (const row of syncStatus) {
-          if (row.updated_at && !lastSyncMap.has(row.homework_id)) {
-            lastSyncMap.set(row.homework_id, row.updated_at);
-          }
-        }
-      }
-
-      const activeHomeworks = (homeworks || []).filter(hw => {
-        if (!hw.padlet_board_id) return false;
-        const lastSync = lastSyncMap.get(hw.id);
-        if (!lastSync) return true; // Never synced
-
-        // If synced, only sync again if active (due date null, future, or < 30 days ago) AND last sync was > 5 minutes ago
-        if (!hw.due_date) return new Date(lastSync).getTime() < Date.now() - 5 * 60 * 1000;
-        const due = new Date(hw.due_date).getTime();
-        const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
-        if (due > thirtyDaysAgo) {
-          return new Date(lastSync).getTime() < Date.now() - 5 * 60 * 1000;
-        }
-        return false;
-      });
-
-      if (activeHomeworks.length > 0) {
-        // Fetch all active profiles with role = 'learner' for syncing matching
-        const { data: syncLearners } = await supabase
-          .from("profiles")
-          .select("id, name, username")
-          .eq("role", "learner");
-
-        if (syncLearners && syncLearners.length > 0) {
-          await Promise.all(
-            activeHomeworks.map(hw =>
-              syncPadletBoardForHomework(supabase, hw, syncLearners as { id: string; name: string; username: string }[])
-            )
-          );
-        }
-      }
-    } catch (syncErr) {
-      console.error("Automatic Padlet sync error in getTrackerData:", syncErr);
-    }
-
     let logsQuery = supabase.from("attendance_logs").select("*");
     if (!isAdminOrPreneur) {
       logsQuery = logsQuery.eq("user_id", profile!.id);
     }
-    const { data: logs } = await logsQuery;
 
     let subsQuery = supabase.from("homework_submissions").select("*");
     if (!isAdminOrPreneur) {
       subsQuery = subsQuery.eq("user_id", profile!.id);
     }
-    const { data: submissions } = await subsQuery;
 
     let sectionSubsQuery = supabase
       .from("homework_section_submissions")
-      .select("homework_id, user_id, section_id, is_completed");
+      .select("homework_id, user_id, section_id, is_completed, updated_at");
     if (!isAdminOrPreneur) {
       sectionSubsQuery = sectionSubsQuery.eq("user_id", profile!.id);
     }
-    const { data: sectionSubmissions, error: sectionSubsError } = await sectionSubsQuery;
+
+    const [
+      { data: learners, error: learnersError },
+      { data: sessions, error: sessionsError },
+      { data: homeworks, error: hwError },
+      { data: logs },
+      { data: submissions },
+      { data: sectionSubmissions, error: sectionSubsError },
+    ] = await Promise.all([
+      learnersQuery,
+      supabase
+        .from("attendance_sessions")
+        .select("id, title, date, starts_at, check_in_opens_at, check_in_closes_at, self_check_in_enabled, created_at")
+        .order("date", { ascending: true }),
+      supabase
+        .from("homeworks")
+        .select("id, title, is_individual, is_team, padlet_board_id, submission_link, individual_content, team_content, due_date, created_at, section_type_config")
+        .order("created_at", { ascending: true }),
+      logsQuery,
+      subsQuery,
+      sectionSubsQuery,
+    ]);
+
+    if (learnersError) return { success: false as const, error: `런너 목록을 불러오지 못했습니다: ${learnersError.message}` };
+    if (sessionsError) return { success: false as const, error: `세션 목록을 불러오지 못했습니다: ${sessionsError.message}` };
+    if (hwError) return { success: false as const, error: `과제 목록을 불러오지 못했습니다: ${hwError.message}` };
+
+    if (isAdminOrPreneur) {
+      void syncActivePadletBoardsInBackground(
+        supabase,
+        (homeworks ?? []) as TrackerHomework[],
+        (learners ?? []) as TrackerLearner[],
+        sectionSubmissions,
+      );
+    }
 
     return {
       success: true as const,
@@ -352,6 +339,113 @@ export async function getTrackerData() {
         submissions: submissions || [],
         sectionSubmissions: sectionSubsError ? [] : (sectionSubmissions || []),
         isAdminOrPreneur,
+      },
+    };
+  } catch (err) {
+    return { success: false as const, error: err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다." };
+  }
+}
+
+export async function getLearnerDashboardData() {
+  try {
+    const { profile } = await requireRole("learner");
+    if (!profile) throw new Error("사용자 정보를 찾을 수 없습니다.");
+    const supabase = await createClient();
+    const learnerId = profile.id;
+
+    const currentLearner = {
+      id: profile.id,
+      name: profile.name,
+      first_name: profile.first_name,
+      last_name: profile.last_name,
+      role: profile.role,
+      username: profile.username,
+    };
+
+    const [
+      { data: sessions, error: sessionsError },
+      { data: homeworks, error: hwError },
+      { data: logs },
+      { data: submissions },
+      { data: sectionSubmissions },
+    ] = await Promise.all([
+      supabase
+        .from("attendance_sessions")
+        .select("id, title, date")
+        .order("date", { ascending: true }),
+      supabase
+        .from("homeworks")
+        .select("id, title, due_date, individual_content, team_content")
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("attendance_logs")
+        .select("id, session_id, user_id, status")
+        .eq("user_id", learnerId),
+      supabase
+        .from("homework_submissions")
+        .select("homework_id, user_id, status, submitted_at")
+        .eq("user_id", learnerId),
+      supabase
+        .from("homework_section_submissions")
+        .select("homework_id, user_id, section_id, is_completed")
+        .eq("user_id", learnerId),
+    ]);
+
+    if (sessionsError) return { success: false as const, error: `세션 목록을 불러오지 못했습니다: ${sessionsError.message}` };
+    if (hwError) return { success: false as const, error: `과제 목록을 불러오지 못했습니다: ${hwError.message}` };
+
+    return {
+      success: true as const,
+      data: {
+        currentLearner,
+        sessions: sessions ?? [],
+        homeworks: homeworks ?? [],
+        logs: logs ?? [],
+        submissions: submissions ?? [],
+        sectionSubmissions: sectionSubmissions ?? [],
+      },
+    };
+  } catch (err) {
+    return { success: false as const, error: err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다." };
+  }
+}
+
+export async function getLearnerHomeworkData() {
+  try {
+    const { profile } = await requireRole("learner");
+    if (!profile) throw new Error("사용자 정보를 찾을 수 없습니다.");
+    const supabase = await createClient();
+
+    const currentLearner = {
+      id: profile.id,
+      name: profile.name,
+      first_name: profile.first_name,
+      last_name: profile.last_name,
+      username: profile.username,
+    };
+
+    const [
+      { data: homeworks, error: hwError },
+      { data: submissions },
+    ] = await Promise.all([
+      supabase
+        .from("homeworks")
+        .select("id, title, is_individual, is_team, padlet_board_id, submission_link, individual_content, team_content")
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("homework_submissions")
+        .select("homework_id, user_id, status")
+        .eq("user_id", profile.id),
+    ]);
+
+    if (hwError) return { success: false as const, error: `과제 목록을 불러오지 못했습니다: ${hwError.message}` };
+
+    return {
+      success: true as const,
+      data: {
+        currentLearner,
+        homeworks: homeworks ?? [],
+        submissions: submissions ?? [],
       },
     };
   } catch (err) {
