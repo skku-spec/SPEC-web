@@ -165,10 +165,10 @@ export default function RecruitmentClosedView({
             </div>
           )}
 
-          <div className="mt-10 flex items-center justify-center gap-4">
+          <div className="mt-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center sm:gap-4">
             <Link
               href="/"
-              className="inline-flex h-10 items-center rounded-md border border-[#ddd9cc] px-4 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f] hover:bg-[#fcfcf8]"
+              className="inline-flex h-10 items-center justify-center rounded-md border border-[#ddd9cc] px-4 font-['Pretendard',sans-serif] text-sm font-semibold text-[#16140f] hover:bg-[#fcfcf8]"
             >
               SPEC 홈으로 돌아가기
             </Link>
@@ -176,7 +176,7 @@ export default function RecruitmentClosedView({
               href="https://instagram.com/skku_spec"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-['Pretendard',sans-serif] text-sm text-[#6b6b5e] underline hover:text-[#4a4a40]"
+              className="inline-flex h-10 items-center justify-center font-['Pretendard',sans-serif] text-sm text-[#6b6b5e] underline hover:text-[#4a4a40]"
             >
               Instagram
             </a>

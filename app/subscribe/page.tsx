@@ -23,7 +23,7 @@ export default function SubscribePage() {
           </p>
 
            <div className="my-8">
-             <div className="inline-flex h-20 items-center justify-center rounded-full bg-black px-10 pb-1 font-['MaruBuri',serif] text-[1.75rem] font-normal italic tracking-[0.015rem] text-[#f5f5ee] transition-[opacity,transform] duration-300 ease-out max-md:h-[42px] max-md:px-9 max-md:text-[20px]">
+             <div className="inline-flex min-h-12 items-center justify-center rounded-md bg-black px-6 pb-1 font-['MaruBuri',serif] text-xl font-normal italic tracking-[0.015rem] text-[#f5f5ee] transition-opacity sm:h-16 sm:px-8 sm:text-[1.5rem] md:h-20 md:px-10 md:text-[1.75rem]">
                Coming Soon
              </div>
            </div>

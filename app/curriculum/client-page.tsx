@@ -36,8 +36,8 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Curricu
         />
 
         {/* ── Track Switcher ── */}
-        <div className="mb-14 flex justify-center">
-          <div className="inline-flex rounded-full border border-[#d9d9cc] bg-white p-1">
+        <div className="mb-14 flex justify-center overflow-x-auto pb-1">
+          <div className="grid w-full max-w-[520px] grid-cols-3 rounded-lg border border-[#ddd9cc] bg-white p-1">
             {([
               { key: 'preneur' as Track, label: 'Preneur Track' },
               { key: 'learner' as Track, label: 'Learner Track' },
@@ -47,7 +47,7 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Curricu
                 type="button"
                 key={tab.key}
                 onClick={() => setActiveTrack(tab.key)}
-                className={`rounded-full px-6 py-2.5 font-['Pretendard',sans-serif] text-[15px] font-semibold tracking-tight transition-all ${activeTrack === tab.key
+                className={`min-w-0 rounded-md px-2 py-2.5 font-['Pretendard',sans-serif] text-xs font-semibold tracking-tight transition-colors sm:px-4 sm:text-[15px] ${activeTrack === tab.key
                   ? 'bg-[#16140f] text-[#f5f5ee]'
                   : 'text-[#16140f]/60 hover:text-[#16140f]'
                   }`}
@@ -71,7 +71,7 @@ export default function CurriculumClient({ initialWeeks, initialAreas }: Curricu
           </p>
           <Link
             href="/apply"
-            className="inline-flex h-[60px] items-center rounded-full bg-[#16140f] px-10 pb-0.5 font-['MaruBuri',serif] text-[22px] italic tracking-[0.01em] text-[#f5f5ee] transition-opacity hover:opacity-80"
+            className="inline-flex min-h-12 items-center rounded-md bg-[#16140f] px-4 pb-0.5 font-['MaruBuri',serif] text-lg italic tracking-[0.01em] text-[#f5f5ee] transition-opacity hover:opacity-80 sm:h-[60px] sm:px-10 sm:text-[22px]"
           >
             지원하기 &rarr;
           </Link>
@@ -409,7 +409,7 @@ function LearnerTrack({ weeks }: { weeks: any[] }) {
             </table>
           </div>
 
-          <div className="mt-4 flex items-center justify-between px-1">
+          <div className="mt-4 flex flex-col gap-1 px-1 sm:flex-row sm:items-center sm:justify-between">
             <p className="font-['Pretendard',sans-serif] text-[13px] text-[#16140f]/30">
               총 {weeks.length}주 실전 커리큘럼 &middot; 3월–11월 코호트
             </p>
