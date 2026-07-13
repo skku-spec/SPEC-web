@@ -24,9 +24,28 @@ import type {
 type ReviewComposerProps = {
   team: TeamSummary;
   kpis: TeamKpiOption[];
+  reportType?: "cta" | "coffee_chat" | "free_review";
+  heading?: string;
+  description?: string;
+  submitLabel?: string;
+  defaultTitle?: string;
+  periodStart?: string;
+  periodEnd?: string;
+  roundNumber?: number;
 };
 
-export default function ReviewComposer({ team, kpis }: ReviewComposerProps) {
+export default function ReviewComposer({
+  team,
+  kpis,
+  reportType = "free_review",
+  heading = "KPI 리뷰 작성",
+  description = "KPI 설정 배경, 달성 과정, 배운 점을 팀 피드에 공유합니다.",
+  submitLabel = "리뷰 등록",
+  defaultTitle = "",
+  periodStart,
+  periodEnd,
+  roundNumber,
+}: ReviewComposerProps) {
   const router = useRouter();
   const editor = useCreateBlockNote({
     uploadFile: async (file) => uploadTeamBuildingImage(team.id, file),
@@ -68,8 +87,12 @@ export default function ReviewComposer({ team, kpis }: ReviewComposerProps) {
     const contentBlocks = [{ type: "blocknote", blocks: editor.document, markdown }];
 
     formData.set("team_id", team.id);
+    formData.set("report_type", reportType);
     formData.set("content_blocks", JSON.stringify(contentBlocks));
     if (!formData.get("content")) formData.set("content", markdown);
+    if (periodStart) formData.set("period_start", periodStart);
+    if (periodEnd) formData.set("period_end", periodEnd);
+    if (typeof roundNumber === "number") formData.set("round_number", String(roundNumber));
     setMessage(null);
 
     startTransition(async () => {
@@ -80,7 +103,7 @@ export default function ReviewComposer({ team, kpis }: ReviewComposerProps) {
       }
       form.reset();
       editor.replaceBlocks(editor.document, [{ type: "paragraph" }]);
-      setMessage("리뷰 글이 등록되었습니다.");
+      setMessage("보고서가 등록되었습니다.");
       router.refresh();
     });
   }
@@ -88,8 +111,8 @@ export default function ReviewComposer({ team, kpis }: ReviewComposerProps) {
   return (
     <form onSubmit={submit} className="mb-5 rounded-lg border border-[#ddd9cc] bg-white p-5">
       <div className="mb-4">
-        <h2 className="text-lg font-black text-[#1A1A1A]">KPI 리뷰 작성</h2>
-        <p className="mt-1 text-sm text-[#6b6b5e]">KPI 설정 배경, 달성 과정, 배운 점을 팀 피드에 공유합니다.</p>
+        <h2 className="text-lg font-black text-[#1A1A1A]">{heading}</h2>
+        <p className="mt-1 text-sm text-[#6b6b5e]">{description}</p>
       </div>
 
       {message ? <p className="mb-3 rounded-lg bg-[#f5f5ee] px-3 py-2 text-sm font-semibold text-[#4a4a40]">{message}</p> : null}
@@ -97,7 +120,7 @@ export default function ReviewComposer({ team, kpis }: ReviewComposerProps) {
       <div className="space-y-3">
         <label className="block text-xs font-bold text-[#6b6b5e]">
           제목
-          <input name="title" required className="mt-1 h-10 w-full rounded-lg border border-[#ddd9cc] px-3 text-sm outline-none focus:border-[#FF6C0F]" />
+          <input name="title" required defaultValue={defaultTitle} className="mt-1 h-10 w-full rounded-lg border border-[#ddd9cc] px-3 text-sm outline-none focus:border-[#FF6C0F]" />
         </label>
         <input type="hidden" name="content" />
         <div className="space-y-2 rounded-lg border border-[#ddd9cc] bg-[#fbfaf4] p-3">
@@ -111,7 +134,7 @@ export default function ReviewComposer({ team, kpis }: ReviewComposerProps) {
         </div>
 
         <button disabled={isPending} className="h-10 rounded-md bg-[#16140f] px-4 text-xs font-semibold text-white disabled:opacity-50">
-          리뷰 등록
+          {submitLabel}
         </button>
       </div>
     </form>

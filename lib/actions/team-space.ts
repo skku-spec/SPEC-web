@@ -31,11 +31,15 @@ export type TeamSpaceOfficeHour = OfficeHourRow & {
   creator: TeamSpaceProfile | null;
   attendees: TeamSpaceProfile[];
 };
+export type TeamSpaceReviewPost = TeamReviewPostRow & {
+  author: TeamSpaceProfile | null;
+};
 export type TeamSpaceTeam = StartupTeamRow & {
   lead_preneur: TeamSpaceProfile | null;
   members: TeamSpaceMember[];
   kpis: TeamSpaceKpi[];
   office_hours: TeamSpaceOfficeHour[];
+  review_posts: TeamSpaceReviewPost[];
 };
 export type TeamSpaceData = {
   currentUser: TeamSpaceProfile;
@@ -47,12 +51,12 @@ export type TeamSpaceData = {
 };
 
 export type TeamBuildingKpi = TeamKpiRow & {
-  team: Pick<StartupTeamRow, "id" | "name" | "batch" | "lead_preneur_id"> | null;
+  team: Pick<StartupTeamRow, "id" | "name" | "description" | "tagline" | "hero_image_url" | "stage" | "problem" | "solution" | "target_customer" | "core_value" | "batch" | "lead_preneur_id"> | null;
   owner: TeamSpaceProfile | null;
   achievement_rate: number;
 };
 export type TeamBuildingReviewPost = TeamReviewPostRow & {
-  team: Pick<StartupTeamRow, "id" | "name" | "batch" | "lead_preneur_id"> | null;
+  team: Pick<StartupTeamRow, "id" | "name" | "description" | "tagline" | "hero_image_url" | "stage" | "problem" | "solution" | "target_customer" | "core_value" | "batch" | "lead_preneur_id"> | null;
   author: TeamSpaceProfile | null;
   linked_kpis: TeamBuildingKpi[];
 };
@@ -64,9 +68,14 @@ export type TeamBuildingWeek = {
   reviewPosts: TeamBuildingReviewPost[];
 };
 
+export type TeamBuildingTeamSummary = Pick<StartupTeamRow, "id" | "name" | "description" | "tagline" | "hero_image_url" | "stage" | "problem" | "solution" | "target_customer" | "core_value" | "batch" | "lead_preneur_id"> & {
+  lead_preneur: TeamSpaceProfile | null;
+  members: TeamSpaceProfile[];
+};
+
 export type TeamBuildingData = {
   weeks: TeamBuildingWeek[];
-  teams: Array<Pick<StartupTeamRow, "id" | "name" | "batch" | "lead_preneur_id">>;
+  teams: TeamBuildingTeamSummary[];
   writableTeamIds: string[];
   setupError?: string;
 };
@@ -81,8 +90,10 @@ type ReviewContentBlock =
   | { type: "kpi"; kpiId: string }
   | { type: "image"; url: string; width?: number }
   | { type: "file"; name: string; url: string };
+type TeamReportType = "cta" | "coffee_chat" | "free_review";
 
 const KPI_MEASUREMENT_TYPES = new Set<KpiMeasurementType>(["numeric", "reduce", "checklist"]);
+const TEAM_REPORT_TYPES = new Set<TeamReportType>(["cta", "coffee_chat", "free_review"]);
 
 function readText(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -169,6 +180,33 @@ function readOptionalNumber(formData: FormData, key: string) {
   return Number.isFinite(numberValue) ? numberValue : Number.NaN;
 }
 
+function readOptionalInteger(formData: FormData, key: string) {
+  const value = readText(formData, key);
+  if (!value) return null;
+  const numberValue = Number(value);
+  return Number.isInteger(numberValue) ? numberValue : null;
+}
+
+function readReportType(formData: FormData) {
+  const value = readText(formData, "report_type") as TeamReportType;
+  return TEAM_REPORT_TYPES.has(value) ? value : "free_review";
+}
+
+function markdownTextBlock(text: string): ReviewContentBlock[] {
+  return text.trim() ? [{ type: "text", text: text.trim(), variant: "paragraph" }] : [];
+}
+
+function imageBlocksFromUrls(urls: string[]): ReviewContentBlock[] {
+  return urls.map((url) => ({ type: "image", url, width: 100 }));
+}
+
+function readReportImageUrls(formData: FormData, ...extraUrls: string[]) {
+  return unique([
+    ...readStringArrayJson(formData, "image_urls"),
+    ...extraUrls.map((url) => url.trim()).filter((url) => /^https?:\/\//i.test(url)),
+  ]);
+}
+
 function readChecklistItems(formData: FormData): ChecklistItem[] {
   const rawValue = readText(formData, "checklist_items");
   if (!rawValue) return [];
@@ -241,6 +279,8 @@ function isMissingTeamSpaceSchema(error: { code?: string; message?: string } | n
     error?.message?.includes("team_kpis") ||
     error?.message?.includes("team_kpi_templates") ||
     error?.message?.includes("team_review_posts") ||
+    error?.message?.includes("published_to_feed") ||
+    error?.message?.includes("report_type") ||
     error?.message?.includes("team_ctas") ||
     error?.message?.includes("office_hours")
   );
@@ -413,15 +453,18 @@ async function loadTeamSpaceData({ adminScope }: { adminScope: boolean }): Promi
     { data: memberships, error: membershipsError },
     { data: kpis, error: kpisError },
     { data: officeHours, error: officeHoursError },
+    { data: reviewPosts, error: reviewPostsError },
   ] = await Promise.all([
     supabase.from("startup_team_members").select("*").in("team_id", visibleTeamIds),
     supabase.from("team_kpis").select("*").in("team_id", visibleTeamIds).order("period_end", { ascending: true }),
     supabase.from("office_hours").select("*").in("team_id", visibleTeamIds).order("held_at", { ascending: false }),
+    supabase.from("team_review_posts").select("*").in("team_id", visibleTeamIds).order("created_at", { ascending: false }),
   ]);
 
   if (membershipsError) throw new Error(membershipsError.message);
   if (kpisError) throw new Error(kpisError.message);
   if (officeHoursError) throw new Error(officeHoursError.message);
+  if (reviewPostsError) throw new Error(reviewPostsError.message);
 
   const officeHourIds = (officeHours ?? []).map((officeHour) => officeHour.id);
   const { data: attendees, error: attendeesError } = officeHourIds.length
@@ -438,6 +481,7 @@ async function loadTeamSpaceData({ adminScope }: { adminScope: boolean }): Promi
     ...(memberships ?? []).map((membership) => membership.profile_id),
     ...(kpis ?? []).flatMap((kpi) => [kpi.owner_id, kpi.created_by]),
     ...(officeHours ?? []).map((officeHour) => officeHour.created_by),
+    ...(reviewPosts ?? []).map((post) => post.author_id),
     ...(attendees ?? []).map((attendee) => attendee.profile_id),
   ]);
 
@@ -491,6 +535,16 @@ async function loadTeamSpaceData({ adminScope }: { adminScope: boolean }): Promi
     officeHoursByTeam.set(officeHour.team_id, rows);
   }
 
+  const reviewPostsByTeam = new Map<string, TeamSpaceReviewPost[]>();
+  for (const post of reviewPosts ?? []) {
+    const rows = reviewPostsByTeam.get(post.team_id) ?? [];
+    rows.push({
+      ...post,
+      author: post.author_id ? profileMap.get(post.author_id) ?? null : null,
+    });
+    reviewPostsByTeam.set(post.team_id, rows);
+  }
+
   const [eligibleProfiles, kpiTemplates] = await Promise.all([
     isManager ? getEligibleProfiles(supabase) : Promise.resolve([]),
     getKpiTemplates(supabase),
@@ -507,6 +561,7 @@ async function loadTeamSpaceData({ adminScope }: { adminScope: boolean }): Promi
       members: membershipsByTeam.get(team.id) ?? [],
       kpis: kpisByTeam.get(team.id) ?? [],
       office_hours: officeHoursByTeam.get(team.id) ?? [],
+      review_posts: reviewPostsByTeam.get(team.id) ?? [],
     })),
   };
 }
@@ -566,7 +621,7 @@ export async function getTeamBuilding2026Data(): Promise<TeamBuildingData> {
   const supabase = createAdminClient();
   const { data: teams, error: teamsError } = await supabase
     .from("startup_teams")
-    .select("id, name, batch, lead_preneur_id")
+    .select("id, name, description, tagline, hero_image_url, stage, problem, solution, target_customer, core_value, batch, lead_preneur_id")
     .order("created_at", { ascending: true });
 
   if (isMissingTeamSpaceSchema(teamsError)) {
@@ -576,13 +631,25 @@ export async function getTeamBuilding2026Data(): Promise<TeamBuildingData> {
     throw new Error(teamsError.message);
   }
 
+  const teamIdsForMembers = (teams ?? []).map((team) => team.id);
+  const { data: memberships, error: membershipsError } = teamIdsForMembers.length
+    ? await supabase
+        .from("startup_team_members")
+        .select("*")
+        .in("team_id", teamIdsForMembers)
+    : { data: [] as StartupTeamMemberRow[], error: null };
+
+  if (membershipsError) {
+    throw new Error(membershipsError.message);
+  }
+
   const { data: kpis, error: kpisError } = await supabase
     .from("team_kpis")
     .select("*")
     .order("created_at", { ascending: true });
 
   if (isMissingTeamSpaceSchema(kpisError)) {
-    return { teams: teams ?? [], weeks: [], writableTeamIds, setupError: "팀스페이스 DB 마이그레이션이 아직 적용되지 않았습니다." };
+    return { teams: (teams ?? []).map((team) => ({ ...team, lead_preneur: null, members: [] })), weeks: [], writableTeamIds, setupError: "팀스페이스 DB 마이그레이션이 아직 적용되지 않았습니다." };
   }
   if (kpisError) {
     throw new Error(kpisError.message);
@@ -591,16 +658,22 @@ export async function getTeamBuilding2026Data(): Promise<TeamBuildingData> {
   const { data: reviewPosts, error: reviewPostsError } = await supabase
     .from("team_review_posts")
     .select("*")
+    .eq("published_to_feed", true)
     .order("created_at", { ascending: true });
 
   if (isMissingTeamSpaceSchema(reviewPostsError)) {
-    return { teams: teams ?? [], weeks: [], writableTeamIds, setupError: "팀 리뷰 글 DB 마이그레이션이 아직 적용되지 않았습니다." };
+    return { teams: (teams ?? []).map((team) => ({ ...team, lead_preneur: null, members: [] })), weeks: [], writableTeamIds, setupError: "팀 리뷰 글 DB 마이그레이션이 아직 적용되지 않았습니다." };
   }
   if (reviewPostsError) {
     throw new Error(reviewPostsError.message);
   }
 
-  const profileIds = unique([...(kpis ?? []).map((kpi) => kpi.owner_id), ...(reviewPosts ?? []).map((post) => post.author_id)]);
+  const profileIds = unique([
+    ...(teams ?? []).map((team) => team.lead_preneur_id),
+    ...(memberships ?? []).map((membership) => membership.profile_id),
+    ...(kpis ?? []).map((kpi) => kpi.owner_id),
+    ...(reviewPosts ?? []).map((post) => post.author_id),
+  ]);
   const { data: profiles, error: profilesError } = profileIds.length
     ? await supabase
         .from("profiles")
@@ -614,6 +687,14 @@ export async function getTeamBuilding2026Data(): Promise<TeamBuildingData> {
 
   const teamMap = new Map((teams ?? []).map((team) => [team.id, team]));
   const profileMap = new Map((profiles ?? []).map((profile) => [profile.id, toTeamSpaceProfile(profile)]));
+  const membersByTeam = new Map<string, TeamSpaceProfile[]>();
+  for (const membership of memberships ?? []) {
+    const profile = profileMap.get(membership.profile_id);
+    if (!profile) continue;
+    const rows = membersByTeam.get(membership.team_id) ?? [];
+    rows.push(profile);
+    membersByTeam.set(membership.team_id, rows);
+  }
   const kpiMap = new Map<string, TeamBuildingKpi>();
   const grouped = new Map<string, { kpis: TeamBuildingKpi[]; reviewPosts: TeamBuildingReviewPost[] }>();
 
@@ -633,7 +714,7 @@ export async function getTeamBuilding2026Data(): Promise<TeamBuildingData> {
   }
 
   for (const post of reviewPosts ?? []) {
-    const weekKey = kpiRoundStartKey(post.created_at);
+    const weekKey = kpiRoundStartKey(post.period_start ?? post.created_at);
     const group = grouped.get(weekKey) ?? { kpis: [], reviewPosts: [] };
     group.reviewPosts.push({
       ...post,
@@ -646,7 +727,11 @@ export async function getTeamBuilding2026Data(): Promise<TeamBuildingData> {
 
   const weekKeys = Array.from(grouped.keys()).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
   return {
-    teams: teams ?? [],
+    teams: (teams ?? []).map((team) => ({
+      ...team,
+      lead_preneur: team.lead_preneur_id ? profileMap.get(team.lead_preneur_id) ?? null : null,
+      members: membersByTeam.get(team.id) ?? [],
+    })),
     writableTeamIds,
     weeks: weekKeys.map((weekKey) => ({
       label: formatRoundLabel(weekKey),
@@ -848,10 +933,11 @@ export async function createTeamKpi(formData: FormData): Promise<ActionResult> {
     isMeasured,
     achievementRate({ measurement_type: measurementType, start_value: startValue, current_value: currentValue, target_value: targetValue, is_measured: isMeasured, checklist_items: checklistItems }),
   );
-  const { error } = await adminSupabase.from("team_kpis").insert({
+  const description = readText(formData, "description");
+  const { data: insertedKpi, error } = await adminSupabase.from("team_kpis").insert({
     team_id: teamId,
     title,
-    description: readText(formData, "description"),
+    description,
     owner_id: ownerId,
     period_start: periodStart,
     period_end: periodEnd,
@@ -864,12 +950,50 @@ export async function createTeamKpi(formData: FormData): Promise<ActionResult> {
     checklist_items: checklistItems,
     status,
     created_by: profile.id,
-  });
+  }).select("id").single();
 
   if (error) {
     return { success: false, error: error.message };
   }
 
+  if (readText(formData, "publish_report") === "true") {
+    const reportTitle = readText(formData, "report_title") || title;
+    const submittedContentBlocks = readReviewContentBlocks(formData);
+    const imageUrls = unique([
+      ...readReportImageUrls(formData),
+      ...submittedContentBlocks.flatMap((block) => block.type === "image" ? [block.url] : []),
+    ]);
+    const fileAttachments = [
+      ...readFileAttachmentsJson(formData, "file_attachments"),
+      ...submittedContentBlocks.flatMap((block) => block.type === "file" ? [{ name: block.name, url: block.url }] : []),
+    ];
+    const contentBlocks = submittedContentBlocks.length > 0 ? submittedContentBlocks : [
+      ...markdownTextBlock(description),
+      ...imageBlocksFromUrls(imageUrls),
+    ];
+    const { error: reportError } = await adminSupabase.from("team_review_posts").insert({
+      team_id: teamId,
+      author_id: profile.id,
+      title: reportTitle,
+      content: description,
+      content_blocks: contentBlocks,
+      kpi_ids: insertedKpi?.id ? [insertedKpi.id] : [],
+      image_urls: imageUrls,
+      file_attachments: fileAttachments,
+      report_type: "cta",
+      round_number: readOptionalInteger(formData, "round_number"),
+      period_start: periodStart,
+      period_end: periodEnd,
+      published_to_feed: true,
+      source_id: insertedKpi?.id ?? null,
+    });
+
+    if (reportError) {
+      return { success: false, error: reportError.message };
+    }
+  }
+
+  revalidatePath("/team-building-2026");
   revalidateTeamSpace(teamId);
   return { success: true };
 }
@@ -995,6 +1119,43 @@ export async function updateStartupTeamDescription(teamId: string, formData: For
   return { success: true };
 }
 
+export async function updateStartupTeamHomeProfile(teamId: string, formData: FormData): Promise<ActionResult> {
+  const { profile, isAdminFlag } = await getAuthContext();
+
+  if (!(await canAccessTeam(teamId, profile.id, isAdminFlag))) {
+    return { success: false, error: "팀 소개를 수정할 권한이 없습니다." };
+  }
+
+  const fields = {
+    description: readText(formData, "description"),
+    tagline: readText(formData, "tagline"),
+    hero_image_url: readText(formData, "hero_image_url"),
+    stage: readText(formData, "stage"),
+    problem: readText(formData, "problem"),
+    solution: readText(formData, "solution"),
+    target_customer: readText(formData, "target_customer"),
+    core_value: readText(formData, "core_value"),
+  };
+
+  if (Object.values(fields).some((value) => value.length > 2000)) {
+    return { success: false, error: "각 입력값은 2000자 이하로 입력해 주세요." };
+  }
+
+  const adminSupabase = createAdminClient();
+  const { error } = await adminSupabase
+    .from("startup_teams")
+    .update(fields)
+    .eq("id", teamId);
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath("/team-building-2026");
+  revalidateTeamSpace(teamId);
+  return { success: true };
+}
+
 export async function createTeamReviewPost(formData: FormData): Promise<ActionResult> {
   const { profile, isAdminFlag } = await getAuthContext();
   const teamId = readText(formData, "team_id");
@@ -1014,6 +1175,7 @@ export async function createTeamReviewPost(formData: FormData): Promise<ActionRe
   const imageUrls = unique([...readStringArrayJson(formData, "image_urls"), ...contentBlocks.flatMap((block) => block.type === "image" ? [block.url] : [])]);
   const fileAttachments = [...readFileAttachmentsJson(formData, "file_attachments"), ...contentBlocks.flatMap((block) => block.type === "file" ? [{ name: block.name, url: block.url }] : [])];
   const linkedKpiIds = unique([...kpiIds, ...contentBlocks.flatMap((block) => block.type === "kpi" ? [block.kpiId] : [])]);
+  const reportType = readReportType(formData);
 
   const adminSupabase = createAdminClient();
   const { error } = await adminSupabase.from("team_review_posts").insert({
@@ -1025,6 +1187,12 @@ export async function createTeamReviewPost(formData: FormData): Promise<ActionRe
     kpi_ids: linkedKpiIds,
     image_urls: imageUrls,
     file_attachments: fileAttachments,
+    report_type: reportType,
+    round_number: readOptionalInteger(formData, "round_number"),
+    period_start: readText(formData, "period_start") || null,
+    period_end: readText(formData, "period_end") || null,
+    published_to_feed: readText(formData, "published_to_feed") !== "false",
+    source_id: readOptionalId(formData, "source_id"),
   });
 
   if (error) {
@@ -1033,6 +1201,127 @@ export async function createTeamReviewPost(formData: FormData): Promise<ActionRe
 
   revalidatePath("/team-building-2026");
   revalidateTeamSpace(teamId);
+  return { success: true };
+}
+
+export async function createCtaReport(formData: FormData): Promise<ActionResult> {
+  const { profile, isAdminFlag } = await getAuthContext();
+  const teamId = readText(formData, "team_id");
+  const title = readText(formData, "report_title");
+  const content = readText(formData, "content");
+  const periodStart = readText(formData, "period_start");
+  const periodEnd = readText(formData, "period_end");
+
+  if (!teamId || !title || !periodStart || !periodEnd) {
+    return { success: false, error: "CTA 보고서 필수 정보를 입력해 주세요." };
+  }
+
+  if (!(await canAccessTeam(teamId, profile.id, isAdminFlag))) {
+    return { success: false, error: "이 팀의 CTA 보고서를 작성할 권한이 없습니다." };
+  }
+
+  const contentBlocks = readReviewContentBlocks(formData);
+  const imageUrls = unique([
+    ...readStringArrayJson(formData, "image_urls"),
+    ...contentBlocks.flatMap((block) => block.type === "image" ? [block.url] : []),
+  ]);
+  const fileAttachments = [
+    ...readFileAttachmentsJson(formData, "file_attachments"),
+    ...contentBlocks.flatMap((block) => block.type === "file" ? [{ name: block.name, url: block.url }] : []),
+  ];
+
+  const adminSupabase = createAdminClient();
+  const { error } = await adminSupabase.from("team_review_posts").insert({
+    team_id: teamId,
+    author_id: profile.id,
+    title,
+    content,
+    content_blocks: contentBlocks.length > 0 ? contentBlocks : markdownTextBlock(content),
+    kpi_ids: [],
+    image_urls: imageUrls,
+    file_attachments: fileAttachments,
+    report_type: "cta",
+    round_number: readOptionalInteger(formData, "round_number"),
+    period_start: periodStart,
+    period_end: periodEnd,
+    published_to_feed: true,
+    source_id: null,
+  });
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath("/team-building-2026");
+  revalidateTeamSpace(teamId);
+  return { success: true };
+}
+
+export async function updateTeamReviewPost(postId: string, formData: FormData): Promise<ActionResult> {
+  const { supabase, profile, isAdminFlag } = await getAuthContext();
+  const { data: post, error: postError } = await supabase
+    .from("team_review_posts")
+    .select("*")
+    .eq("id", postId)
+    .single();
+
+  if (postError || !post) {
+    return { success: false, error: postError?.message ?? "보고서를 찾을 수 없습니다." };
+  }
+
+  if (!(await canAccessTeam(post.team_id, profile.id, isAdminFlag))) {
+    return { success: false, error: "보고서를 수정할 권한이 없습니다." };
+  }
+
+  const title = readText(formData, "title");
+  const content = readText(formData, "content");
+  if (!title) {
+    return { success: false, error: "보고서 제목을 입력해 주세요." };
+  }
+
+  const adminSupabase = createAdminClient();
+  const { error } = await adminSupabase
+    .from("team_review_posts")
+    .update({
+      title,
+      content,
+      content_blocks: markdownTextBlock(content),
+    })
+    .eq("id", postId);
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath("/team-building-2026");
+  revalidateTeamSpace(post.team_id);
+  return { success: true };
+}
+
+export async function deleteTeamReviewPost(postId: string): Promise<ActionResult> {
+  const { supabase, profile, isAdminFlag } = await getAuthContext();
+  const { data: post, error: postError } = await supabase
+    .from("team_review_posts")
+    .select("team_id")
+    .eq("id", postId)
+    .single();
+
+  if (postError || !post) {
+    return { success: false, error: postError?.message ?? "보고서를 찾을 수 없습니다." };
+  }
+
+  if (!(await canAccessTeam(post.team_id, profile.id, isAdminFlag))) {
+    return { success: false, error: "보고서를 삭제할 권한이 없습니다." };
+  }
+
+  const adminSupabase = createAdminClient();
+  const { error } = await adminSupabase.from("team_review_posts").delete().eq("id", postId);
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath("/team-building-2026");
+  revalidateTeamSpace(post.team_id);
   return { success: true };
 }
 
@@ -1104,11 +1393,13 @@ export async function deleteTeamKpi(kpiId: string): Promise<ActionResult> {
     return { success: false, error: "KPI를 삭제할 권한이 없습니다." };
   }
 
-  const { error } = await supabase.from("team_kpis").delete().eq("id", kpiId);
+  const adminSupabase = createAdminClient();
+  const { error } = await adminSupabase.from("team_kpis").delete().eq("id", kpiId);
   if (error) {
     return { success: false, error: error.message };
   }
 
+  revalidatePath("/team-building-2026");
   revalidateTeamSpace(kpi?.team_id);
   return { success: true };
 }
@@ -1126,15 +1417,20 @@ export async function createOfficeHour(formData: FormData): Promise<ActionResult
   }
 
   const adminSupabase = createAdminClient();
+  const heldAt = readText(formData, "held_at") || new Date().toISOString().slice(0, 10);
+  const nextDueAt = readText(formData, "next_due_at") || null;
+  const summary = readText(formData, "summary");
+  const decisions = readText(formData, "decisions");
+  const nextActions = readText(formData, "next_actions");
   const { data: officeHour, error } = await adminSupabase
     .from("office_hours")
     .insert({
       team_id: teamId,
-      held_at: readText(formData, "held_at") || new Date().toISOString().slice(0, 10),
-      next_due_at: readText(formData, "next_due_at") || null,
-      summary: readText(formData, "summary"),
-      decisions: readText(formData, "decisions"),
-      next_actions: readText(formData, "next_actions"),
+      held_at: heldAt,
+      next_due_at: nextDueAt,
+      summary,
+      decisions,
+      next_actions: nextActions,
       created_by: profile.id,
     })
     .select("id")
@@ -1158,6 +1454,32 @@ export async function createOfficeHour(formData: FormData): Promise<ActionResult
     }
   }
 
+  if (readText(formData, "publish_report") === "true") {
+    const imageUrls = readReportImageUrls(formData, readText(formData, "photo_proof"));
+    const content = [summary, decisions, nextActions].filter(Boolean).join("\n\n");
+    const { error: reportError } = await adminSupabase.from("team_review_posts").insert({
+      team_id: teamId,
+      author_id: profile.id,
+      title: readText(formData, "report_title") || `커피챗 보고서 · ${heldAt}`,
+      content,
+      content_blocks: [...markdownTextBlock(content), ...imageBlocksFromUrls(imageUrls)],
+      kpi_ids: [],
+      image_urls: imageUrls,
+      file_attachments: readFileAttachmentsJson(formData, "file_attachments"),
+      report_type: "coffee_chat",
+      round_number: readOptionalInteger(formData, "round_number"),
+      period_start: readText(formData, "period_start") || heldAt,
+      period_end: readText(formData, "period_end") || nextDueAt,
+      published_to_feed: true,
+      source_id: officeHour.id,
+    });
+
+    if (reportError) {
+      return { success: false, error: reportError.message };
+    }
+  }
+
+  revalidatePath("/team-building-2026");
   revalidateTeamSpace(teamId);
   return { success: true };
 }

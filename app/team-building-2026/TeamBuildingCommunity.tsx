@@ -1,25 +1,16 @@
 "use client";
 
 import Image from "next/image";
-import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
 import { Activity, BarChart3, CircleAlert, ListFilter, Target, Users } from "lucide-react";
 
 import FeedCard from "@/app/team-building-2026/FeedCard";
 import type { TeamKpiStatus } from "@/lib/supabase/types";
 
-const ReviewComposer = dynamic(() => import("@/app/team-building-2026/ReviewComposer"), {
-  ssr: false,
-  loading: () => (
-    <div className="mb-5 rounded-lg border border-[#ddd9cc] bg-white p-5 text-sm font-semibold text-[#6b6b5e]">
-      에디터를 불러오는 중입니다.
-    </div>
-  ),
-});
-
 export type FeedPost = {
   id: string;
   kind: "kpi" | "review";
+  reportType?: "cta" | "coffee_chat" | "free_review";
   teamId: string;
   status: TeamKpiStatus;
   achievementRate: number;
@@ -51,7 +42,17 @@ export type FeedPost = {
 export type TeamSummary = {
   id: string;
   name: string;
+  description: string;
+  tagline: string;
+  heroImageUrl: string;
+  stage: string;
+  problem: string;
+  solution: string;
+  targetCustomer: string;
+  coreValue: string;
   batch: string;
+  leadPreneurName: string | null;
+  members: Array<{ id: string; name: string; photo: string | null; role: string | null }>;
   totalKpis: number;
   activeKpis: number;
   atRiskKpis: number;
@@ -89,28 +90,14 @@ function Sidebar({
   onChange,
 }: {
   teams: TeamSummary[];
-  selectedTeamId: string | null;
-  onChange: (teamId: string | null) => void;
+  selectedTeamId: string;
+  onChange: (teamId: string) => void;
 }) {
   return (
     <aside className="lg:sticky lg:top-24 lg:self-start">
       <div className="hidden w-[220px] rounded-lg border border-[#ddd9cc] bg-white p-3 lg:block">
         <p className="px-3 pb-3 pt-2 text-xs font-bold uppercase tracking-wide text-[#6b6b5e]">Teams</p>
         <div className="space-y-1">
-          <button
-            type="button"
-            onClick={() => onChange(null)}
-            className={`flex w-full items-center gap-3 rounded-md px-3 py-3 text-left transition-colors ${
-              selectedTeamId === null ? "bg-[#16140f] text-white" : "text-[#4a4a40] hover:bg-[#f0efe6]"
-            }`}
-          >
-            <BarChart3 className="h-4 w-4 shrink-0" strokeWidth={2} />
-            <span>
-              <span className="block text-sm font-bold">전체</span>
-              <span className={`block text-xs ${selectedTeamId === null ? "text-white/65" : "text-[#6b6b5e]"}`}>KPI 진행 현황</span>
-            </span>
-          </button>
-
           {teams.map((team) => {
             const active = selectedTeamId === team.id;
             return (
@@ -123,9 +110,6 @@ function Sidebar({
                 }`}
               >
                 <span className="block truncate text-sm font-bold">{team.name}</span>
-                <span className={`mt-0.5 block text-xs ${active ? "text-white/65" : "text-[#6b6b5e]"}`}>
-                  {team.totalKpis} KPIs · {team.averageAchievement}%
-                </span>
               </button>
             );
           })}
@@ -133,15 +117,6 @@ function Sidebar({
       </div>
 
       <div className="mb-5 flex gap-2 overflow-x-auto pb-1 lg:hidden">
-        <button
-          type="button"
-          onClick={() => onChange(null)}
-          className={`h-10 shrink-0 rounded-lg px-4 text-sm font-bold ${
-            selectedTeamId === null ? "bg-[#16140f] text-white" : "border border-[#ddd9cc] bg-white text-[#4a4a40]"
-          }`}
-        >
-          전체
-        </button>
         {teams.map((team) => (
           <button
             key={team.id}
@@ -173,7 +148,7 @@ function PageHeader({
   return (
     <section className="mb-6">
       <h1 className="font-[system-ui] text-[clamp(2.25rem,7vw,4rem)] font-black leading-none text-[#1A1A1A]">
-        {selectedTeam ? selectedTeam.name : "전체"}
+        {selectedTeam?.name ?? "Teams"}
       </h1>
       {selectedTeam ? (
         <>
@@ -198,9 +173,7 @@ function PageHeader({
             {activeTab === "home" ? "Team Space 요약을 바탕으로 팀 현황을 확인합니다." : `${totalPosts} feed posts shared by this team`}
           </p>
         </>
-      ) : (
-        <p className="mt-3 text-sm text-[#6b6b5e]">각 팀의 전체 KPI 진행 현황을 한눈에 확인합니다.</p>
-      )}
+      ) : null}
     </section>
   );
 }
@@ -276,129 +249,144 @@ function DashboardView({ teams, totalPosts }: { teams: TeamSummary[]; totalPosts
 function TeamHomeView({
   team,
   posts,
-  kpis,
 }: {
   team: TeamSummary;
   posts: FeedPost[];
-  kpis: TeamKpiOption[];
 }) {
-  const measuredPosts = posts.filter((post) => post.isMeasured);
-  const northStar = measuredPosts[0] ?? posts[0] ?? null;
-  const actionPosts = posts.filter((post) => post.status === "in_progress" || post.status === "blocked" || post.status === "missed");
-  const completedPosts = posts.filter((post) => post.status === "achieved");
+  const reportPosts = posts.filter((post) => post.kind === "review");
+  const timelinePosts = [...reportPosts].reverse().slice(0, 8);
+  const mediaItems = reportPosts.flatMap((post) => [
+    ...(post.imageUrls ?? []).map((url) => ({ type: "image" as const, url, title: post.title })),
+    ...(post.contentBlocks ?? []).flatMap((block) => block.type === "image" ? [{ type: "image" as const, url: block.url, title: post.title }] : []),
+  ]).slice(0, 6);
+  const fileItems = reportPosts.flatMap((post) => [
+    ...(post.fileAttachments ?? []).map((file) => ({ ...file, title: post.title })),
+    ...(post.contentBlocks ?? []).flatMap((block) => block.type === "file" ? [{ name: block.name, url: block.url, title: post.title }] : []),
+  ]).slice(0, 6);
 
   return (
     <section className="space-y-5">
-      <div className="grid gap-3 lg:grid-cols-3">
-        <div className="rounded-lg border border-[#ddd9cc] bg-white p-5">
-          <div className="mb-3 flex items-center gap-2 text-xs font-semibold text-[#6b6b5e]">
-            <Target className="h-4 w-4 text-[#FF6C0F]" strokeWidth={2} />
-            Representative KPI
+      <section className="overflow-hidden rounded-lg border border-[#ddd9cc] bg-white">
+        <div className="grid min-h-[340px] lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="flex flex-col justify-center p-6 sm:p-8">
+            {team.stage ? (
+              <div className="mb-4 flex flex-wrap gap-2">
+                <span className="rounded-full bg-[#f0efe6] px-3 py-1 text-xs font-bold text-[#4a4a40]">{team.stage}</span>
+              </div>
+            ) : null}
+            <h2 className="text-[clamp(2.25rem,6vw,4.5rem)] font-black leading-none text-[#1A1A1A]">{team.name}</h2>
+            <p className="mt-4 max-w-2xl text-xl font-bold leading-8 text-[#FF6C0F]">{team.tagline || team.description || "팀 한 줄 소개를 준비 중입니다."}</p>
           </div>
-          {northStar ? (
-            <>
-              <p className="truncate text-sm font-bold text-[#16140f]">{northStar.title}</p>
-              <p className="mt-3 text-3xl font-black">{northStar.isMeasured ? `${northStar.achievementRate}%` : "Not measured"}</p>
-              <p className="mt-2 line-clamp-2 text-sm text-[#6b6b5e]">{northStar.paragraphs[0]}</p>
-            </>
+          {team.heroImageUrl ? (
+            <div className="relative min-h-[260px] bg-[#f0efe6]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={team.heroImageUrl} alt={`${team.name} 대표 이미지`} className="h-full min-h-[340px] w-full object-cover" />
+            </div>
           ) : (
-            <p className="text-sm text-[#6b6b5e]">등록된 KPI가 없습니다.</p>
+            <div className="grid min-h-[260px] place-items-center bg-[#f0efe6] text-sm font-bold text-[#8a877c]">대표 이미지 준비 중</div>
           )}
         </div>
+      </section>
 
-        <div className="rounded-lg border border-[#ddd9cc] bg-white p-5">
-          <p className="mb-3 text-xs font-semibold text-[#6b6b5e]">Goal Achievement</p>
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-            <div className="grid h-24 w-24 place-items-center rounded-full" style={{ background: `conic-gradient(#FF6C0F ${Math.min(team.averageAchievement, 100)}%, #f0efe6 0)` }}>
-              <div className="grid h-16 w-16 place-items-center rounded-full bg-white text-xl font-black">{team.averageAchievement}%</div>
-            </div>
-            <div className="text-sm text-[#6b6b5e]">
-              <p><span className="font-bold text-[#16140f]">{team.totalKpis}</span> KPIs tracked</p>
-              <p className="mt-1"><span className="font-bold text-[#16140f]">{team.measuredKpis}</span> measured</p>
-              <p className="mt-1"><span className="font-bold text-[#16140f]">{completedPosts.length}</span> achieved</p>
-            </div>
+      <section className="grid gap-5 lg:grid-cols-2">
+        {[
+          ["Problem", team.problem],
+          ["Solution", team.solution],
+          ["Target Customer", team.targetCustomer],
+          ["Core Value", team.coreValue],
+        ].map(([label, value]) => (
+          <div key={label} className="rounded-lg border border-[#ddd9cc] bg-white p-5">
+            <p className="text-xs font-bold uppercase text-[#6b6b5e]">{label}</p>
+            <p className="mt-3 whitespace-pre-line text-sm leading-7 text-[#4a4a40]">{value || "아직 입력되지 않았습니다."}</p>
           </div>
+        ))}
+      </section>
+
+      <section className="rounded-lg border border-[#ddd9cc] bg-white p-5">
+        <div className="mb-5 flex items-center gap-2">
+          <Users className="h-4 w-4 text-[#FF6C0F]" strokeWidth={2} />
+          <h2 className="text-sm font-black">Team</h2>
         </div>
-
-        <div className={`rounded-lg border p-5 ${team.atRiskKpis > 0 ? "border-[#f2b8b5] bg-[#fff5f5]" : "border-[#ddd9cc] bg-white"}`}>
-          <p className="mb-3 text-xs font-semibold text-[#6b6b5e]">Needs Review</p>
-          <p className="text-3xl font-black">{team.atRiskKpis}</p>
-          <p className="mt-2 text-sm text-[#6b6b5e]">{team.atRiskKpis > 0 ? "확인 필요한 KPI가 있습니다." : "현재 확인 필요 항목이 없습니다."}</p>
-          {team.atRiskKpis > 0 ? (
-            <span className="mt-3 inline-flex rounded-full bg-[#FEE2E2] px-2.5 py-1 text-xs font-bold text-[#b42318]">확인 필요</span>
-          ) : null}
-        </div>
-      </div>
-
-      <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
-        <section className="rounded-lg border border-[#ddd9cc] bg-white p-5">
-          <div className="mb-4 flex items-center gap-2">
-            <BarChart3 className="h-4 w-4 text-[#FF6C0F]" strokeWidth={2} />
-            <h2 className="text-sm font-black">KPI Progress</h2>
-          </div>
-          {posts.length === 0 ? (
-            <p className="rounded-lg bg-[#f5f5ee] p-4 text-sm text-[#6b6b5e]">KPI가 등록되면 진행 현황이 표시됩니다.</p>
-          ) : (
-            <div className="space-y-3">
-              {posts.slice(0, 6).map((post) => (
-                <article key={post.id} className="rounded-lg border border-[#ece8dc] bg-[#fbfaf4] p-4">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-black text-[#1A1A1A]">{post.title}</p>
-                      <p className="mt-1 truncate text-xs text-[#6b6b5e]">{post.date}</p>
-                    </div>
-                    <span className="shrink-0 rounded-full bg-[#FFF0E5] px-2.5 py-1 text-xs font-bold text-[#b45309]">
-                      {post.isMeasured ? `${post.achievementRate}%` : "Not measured"}
-                    </span>
-                  </div>
-                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#f0efe6]">
-                    <div className="h-full rounded-full bg-[#FF6C0F]" style={{ width: `${post.isMeasured ? Math.min(post.achievementRate, 100) : 0}%` }} />
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <section className="space-y-5">
-          <div className="rounded-lg border border-[#ddd9cc] bg-white p-5">
-            <div className="mb-4 flex items-center gap-2">
-              <Activity className="h-4 w-4 text-[#FF6C0F]" strokeWidth={2} />
-              <h2 className="text-sm font-black">Execution Status</h2>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <p className="mb-2 text-xs font-bold text-[#6b6b5e]">진행/막힘</p>
-                {actionPosts.length === 0 ? (
-                  <p className="text-sm text-[#6b6b5e]">진행 중이거나 막힌 KPI가 없습니다.</p>
-                ) : (
-                  <div className="space-y-2">
-                    {actionPosts.slice(0, 3).map((post) => (
-                      <p key={post.id} className="rounded-lg bg-[#f5f5ee] p-3 text-sm font-semibold text-[#4a4a40]">{post.title}</p>
-                    ))}
-                  </div>
-                )}
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {team.members.length === 0 ? (
+            <p className="text-sm text-[#6b6b5e]">팀원이 아직 연결되지 않았습니다.</p>
+          ) : team.members.map((member) => (
+            <div key={member.id} className="flex items-center gap-3 rounded-lg border border-[#ece8dc] bg-[#fbfaf4] p-3">
+              <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-[#e8e6dc] text-sm font-black">
+                {member.photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={member.photo} alt={member.name} className="h-full w-full object-cover" />
+                ) : member.name.slice(0, 2)}
               </div>
-              <div>
-                <p className="mb-2 text-xs font-bold text-[#6b6b5e]">완료한 일</p>
-                <p className="text-sm text-[#6b6b5e]">{completedPosts.length > 0 ? completedPosts.map((post) => post.title).join(", ") : "이번 기간 달성 KPI가 없습니다."}</p>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-black">{member.name}</p>
+                <p className="truncate text-xs text-[#6b6b5e]">{member.role === "preneur" ? "Preneur" : "Team member"}</p>
               </div>
             </div>
-          </div>
+          ))}
+        </div>
+        {team.leadPreneurName ? <p className="mt-4 text-sm text-[#6b6b5e]">담당 프러너: <span className="font-bold text-[#16140f]">{team.leadPreneurName}</span></p> : null}
+      </section>
 
-          <div className="rounded-lg border border-[#ddd9cc] bg-white p-5">
-            <div className="mb-4 flex items-center gap-2">
-              <Users className="h-4 w-4 text-[#FF6C0F]" strokeWidth={2} />
-              <h2 className="text-sm font-black">Team Meta</h2>
-            </div>
-            <div className="space-y-2 text-sm text-[#6b6b5e]">
-              <p><span className="font-bold text-[#16140f]">Batch</span> {team.batch}</p>
-              <p><span className="font-bold text-[#16140f]">Available KPIs</span> {kpis.length}</p>
-              <p><span className="font-bold text-[#16140f]">Latest</span> {team.latestTitle}</p>
-            </div>
+      <section className="rounded-lg border border-[#ddd9cc] bg-white p-5">
+        <div className="mb-5 flex items-center gap-2">
+          <Activity className="h-4 w-4 text-[#FF6C0F]" strokeWidth={2} />
+          <h2 className="text-sm font-black">Timeline</h2>
+        </div>
+        {timelinePosts.length === 0 ? (
+          <p className="rounded-lg bg-[#f5f5ee] p-4 text-sm text-[#6b6b5e]">CTA와 커피챗 보고서를 제출하면 회차별 활동이 이곳에 쌓입니다.</p>
+        ) : (
+          <div className="space-y-3">
+            {timelinePosts.map((post) => (
+              <article key={post.id} className="rounded-lg border border-[#ece8dc] bg-[#fbfaf4] p-4">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-sm font-black">{post.title}</p>
+                    <p className="mt-1 text-xs text-[#6b6b5e]">{post.date}</p>
+                  </div>
+                  <span className="w-fit rounded-full bg-[#FFF0E5] px-2.5 py-1 text-xs font-bold text-[#b45309]">
+                    {post.reportType === "coffee_chat" ? "커피챗" : post.reportType === "cta" ? "CTA" : "보고서"}
+                  </span>
+                </div>
+                <p className="mt-3 line-clamp-2 text-sm leading-6 text-[#6b6b5e]">{post.paragraphs[0]}</p>
+              </article>
+            ))}
           </div>
-        </section>
-      </div>
+        )}
+      </section>
+
+      <section className="rounded-lg border border-[#ddd9cc] bg-white p-5">
+        <div className="mb-5 flex items-center gap-2">
+          <ListFilter className="h-4 w-4 text-[#FF6C0F]" strokeWidth={2} />
+          <h2 className="text-sm font-black">Media / Proof</h2>
+        </div>
+        {mediaItems.length === 0 && fileItems.length === 0 ? (
+          <p className="rounded-lg bg-[#f5f5ee] p-4 text-sm text-[#6b6b5e]">보고서에 첨부한 이미지와 파일이 이곳에 모입니다.</p>
+        ) : (
+          <div className="space-y-4">
+            {mediaItems.length > 0 ? (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {mediaItems.map((item) => (
+                  <div key={`${item.url}-${item.title}`} className="overflow-hidden rounded-lg border border-[#ece8dc] bg-[#fbfaf4]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={item.url} alt={item.title} className="h-40 w-full object-cover" />
+                    <p className="truncate px-3 py-2 text-xs font-semibold text-[#4a4a40]">{item.title}</p>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+            {fileItems.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {fileItems.map((file) => (
+                  <a key={`${file.url}-${file.title}`} href={file.url} target="_blank" rel="noreferrer" className="rounded-md border border-[#ddd9cc] px-3 py-2 text-xs font-bold text-[#4a4a40] hover:border-[#FF6C0F]">
+                    {file.name}
+                  </a>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        )}
+      </section>
     </section>
   );
 }
@@ -427,21 +415,19 @@ export default function TeamBuildingCommunity({
   teams,
   posts,
   kpiOptions,
-  writableTeamIds,
   setupError,
 }: {
   teams: TeamSummary[];
   posts: FeedPost[];
   kpiOptions: TeamKpiOption[];
-  writableTeamIds: string[];
   setupError?: string;
 }) {
   const sortedTeams = useMemo(() => [...teams].sort((a, b) => a.name.localeCompare(b.name, "ko")), [teams]);
-  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+  const [selectedTeamId, setSelectedTeamId] = useState(() => sortedTeams[0]?.id ?? "");
   const [activeTab, setActiveTab] = useState<TeamDetailTab>("home");
   const selectedTeam = useMemo(() => sortedTeams.find((team) => team.id === selectedTeamId) ?? null, [selectedTeamId, sortedTeams]);
   const visiblePosts = useMemo(
-    () => (selectedTeam ? posts.filter((post) => post.teamId === selectedTeam.id) : posts),
+    () => (selectedTeam ? posts.filter((post) => post.teamId === selectedTeam.id) : []),
     [posts, selectedTeam],
   );
   const visibleFeedPosts = useMemo(() => visiblePosts.filter((post) => post.kind === "review"), [visiblePosts]);
@@ -449,8 +435,7 @@ export default function TeamBuildingCommunity({
     () => (selectedTeam ? kpiOptions.filter((kpi) => kpi.teamId === selectedTeam.id) : []),
     [kpiOptions, selectedTeam],
   );
-  const canWriteSelectedTeam = selectedTeam ? writableTeamIds.includes(selectedTeam.id) : false;
-  const changeSelectedTeam = (teamId: string | null) => {
+  const changeSelectedTeam = (teamId: string) => {
     setSelectedTeamId(teamId);
     setActiveTab("home");
   };
@@ -477,14 +462,15 @@ export default function TeamBuildingCommunity({
           ) : null}
 
           {selectedTeam === null ? (
-            <DashboardView teams={sortedTeams} totalPosts={posts.length} />
+            <div className="rounded-lg border border-[#ddd9cc] bg-white p-5 text-center sm:p-6">
+              <Users className="mx-auto mb-3 h-7 w-7 text-[#FF6C0F]" strokeWidth={2} />
+              <p className="font-bold">No teams found.</p>
+              <p className="mt-2 text-sm text-[#6b6b5e]">Teams created in Team Space will appear here.</p>
+            </div>
           ) : activeTab === "home" ? (
-            <TeamHomeView team={selectedTeam} posts={visiblePosts} kpis={selectedTeamKpis} />
+            <TeamHomeView team={selectedTeam} posts={visiblePosts} />
           ) : (
-            <>
-              {canWriteSelectedTeam ? <ReviewComposer team={selectedTeam} kpis={selectedTeamKpis} /> : null}
-              <FeedView posts={visibleFeedPosts} teamName={selectedTeam.name} />
-            </>
+            <FeedView posts={visibleFeedPosts} teamName={selectedTeam.name} />
           )}
         </div>
       </div>

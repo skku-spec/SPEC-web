@@ -109,6 +109,12 @@ function renderMarkdown(text: string, keyPrefix: string) {
   return nodes;
 }
 
+function reportTypeLabel(reportType: FeedPost["reportType"]) {
+  if (reportType === "cta") return "CTA 보고서";
+  if (reportType === "coffee_chat") return "커피챗 보고서";
+  return "팀 보고서";
+}
+
 export default function FeedCard({ post }: { post: FeedPost }) {
   const [expanded, setExpanded] = useState(false);
   const hasBlocks = Boolean(post.contentBlocks?.length);
@@ -129,6 +135,11 @@ export default function FeedCard({ post }: { post: FeedPost }) {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <h2 className="truncate text-sm font-bold text-[#1A1A1A]">{post.author.name}</h2>
+            {post.kind === "review" ? (
+              <span className="rounded-full bg-[#FFF0E5] px-2 py-0.5 text-[11px] font-bold text-[#b45309]">
+                {reportTypeLabel(post.reportType)}
+              </span>
+            ) : null}
             <span className="text-xs text-[#6b6b5e]">{post.date}</span>
           </div>
           <p className="mt-1 truncate text-xs text-[#6b6b5e]">{post.author.meta}</p>
