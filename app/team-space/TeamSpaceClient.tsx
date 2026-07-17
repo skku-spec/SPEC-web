@@ -1388,8 +1388,8 @@ export default function TeamSpaceClient({ initialData, initialTeamId }: TeamSpac
             <p className="mt-2 text-sm text-[#6b6b5e]">관리자 대시보드에서 팀 배정이 완료되면 이곳에 표시됩니다.</p>
           </div>
         ) : (
-          <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
-            <aside className="space-y-3">
+          <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
+            <aside className="min-w-0 space-y-3">
               {initialData.teams.map((team) => {
                 const latestOfficeHour = team.office_hours[0];
                 const activeKpisForTeam = team.kpis.filter((kpi) => kpi.status !== "achieved");
@@ -1407,7 +1407,7 @@ export default function TeamSpaceClient({ initialData, initialTeamId }: TeamSpac
                     }`}
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <div>
+                      <div className="min-w-0">
                         <p className="font-bold">{team.name}</p>
                         <p className="mt-1 text-xs text-[#6b6b5e]">{team.lead_preneur?.display_name ?? "담당 프러너 미정"}</p>
                       </div>
@@ -1425,10 +1425,10 @@ export default function TeamSpaceClient({ initialData, initialTeamId }: TeamSpac
             </aside>
 
             {selectedTeam ? (
-              <section className="space-y-6">
+              <section className="min-w-0 space-y-6">
                 <div className="rounded-lg border border-[#ddd9cc] bg-white p-6">
                   <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                    <div>
+                    <div className="min-w-0">
                       <h2 className="text-2xl font-black">{selectedTeam.name}</h2>
                       <div className="mt-4 flex flex-wrap gap-2">
                         {selectedTeam.members.map((member) => (

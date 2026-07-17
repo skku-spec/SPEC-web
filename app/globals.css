@@ -69,6 +69,7 @@
 
 html {
   /* scroll-behavior: smooth removed — causes jank with heavy pages */
+  overflow-x: clip;
 }
 
 body {
@@ -78,6 +79,7 @@ body {
   font-weight: 300;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
 }
 
 /* Dark theme for landing page */
