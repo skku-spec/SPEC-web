@@ -27,9 +27,9 @@ lib/
   storage.ts            # Image upload utilities (blog + spec-log)
   constants.ts          # CURRENT_BATCH = "4기"
   api.ts                # Static data (companies, people)
-components/             # 48 components → see components/AGENTS.md
+components/             # 40 components → see components/AGENTS.md
   blog/                 # Blog cards/editor/comments/reactions → see components/blog/AGENTS.md
-  profile/, home/, about/, ui/, layout/, project/, partners/, dashboard/, curriculum/
+  profile/, ui/, partners/, dashboard/, curriculum/
 contexts/UserContext.tsx # Client-side auth state with real-time subscription
 hooks/useUser.ts        # Convenience hook for UserContext
 middleware.ts           # Route protection (admin, blog write/edit, apply, private profile)
@@ -72,8 +72,6 @@ Request → middleware.ts (session + route protection)
 ```
 
 ### ANTI-PATTERNS (THIS PROJECT)
-- `components/CompanyShowcase.tsx` + `components/project/CompanyShowcase.tsx`: DO NOT use — hotlinked YC images
-- 22 duplicate components exist at root + subdirectory (e.g., `Navbar.tsx` vs `layout/Navbar.tsx`) — root versions are canonical
 - `profiles` and `members` tables have overlapping fields (name, bio, photo, linkedin_url) — known tech debt
 - `lib/api.ts` contains static mock data for companies/people — not a real API layer
 

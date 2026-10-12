@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 
@@ -34,7 +35,9 @@ const ROLE_LEVEL: Record<UserRole, number> = {
   preneur: 3,
 };
 
-export async function getCurrentUser(): Promise<AuthResult | { user: null; profile: null }> {
+// Deduped per request with React cache(): layouts, pages, and nested server
+// actions that all call this share one auth round-trip + one profiles query.
+export const getCurrentUser = cache(async (): Promise<AuthResult | { user: null; profile: null }> => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -54,7 +57,7 @@ export async function getCurrentUser(): Promise<AuthResult | { user: null; profi
     user,
     profile: profile ?? null,
   };
-}
+});
 
 export async function requireAuth(): Promise<AuthResult> {
   const currentUser = await getCurrentUser();

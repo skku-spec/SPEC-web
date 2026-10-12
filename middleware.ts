@@ -1,16 +1,8 @@
-import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+import { BLOG_WRITER_ROLES, TEAM_SPACE_ROLES, normalizeRole, type UserRole } from "@/lib/auth-shared";
+import { hasSupabasePublicEnv } from "@/lib/supabase/env";
 import { updateSession } from "@/lib/supabase/middleware";
-import type { Database } from "@/lib/supabase/types";
-
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-const SUPABASE_PUBLIC_KEY =
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
-
-const WRITER_ROLES = ["learner", "alumni", "preneur"];
-const TEAM_SPACE_ROLES = ["learner", "preneur"];
-type UserRole = "outsider" | "learner" | "alumni" | "preneur";
 
 function isAdminRoute(pathname: string) {
   return pathname === "/admin" || pathname.startsWith("/admin/");
@@ -69,43 +61,8 @@ function redirectWithCookies(request: NextRequest, response: NextResponse, pathn
   return redirectResponse;
 }
 
-async function getUserRole(
-  request: NextRequest,
-  response: NextResponse,
-  userId: string,
-): Promise<{ role: UserRole; isAdmin: boolean }> {
-  const supabase = createServerClient<Database>(
-    SUPABASE_URL,
-    SUPABASE_PUBLIC_KEY,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            request.cookies.set(name, value);
-            response.cookies.set(name, value, options);
-          });
-        },
-      },
-    },
-  );
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role, is_admin")
-    .eq("id", userId)
-    .maybeSingle();
-
-  return {
-    role: (profile?.role as UserRole | null) ?? "outsider",
-    isAdmin: profile?.is_admin === true,
-  };
-}
-
 export async function middleware(request: NextRequest) {
-  if (!SUPABASE_URL || !SUPABASE_PUBLIC_KEY) {
+  if (!hasSupabasePublicEnv()) {
     return NextResponse.next({ request });
   }
 
@@ -126,9 +83,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
-  const { response, user } = await updateSession(request);
+  const { response, userId, supabase } = await updateSession(request);
 
-  if (!user) {
+  if (!userId || !supabase) {
     if (needsWriter || needsAuth) {
       const redirectTarget = pathname === "/dashboard" || pathname.startsWith("/dashboard/")
         ? `${pathname}${request.nextUrl.search}`
@@ -140,13 +97,19 @@ export async function middleware(request: NextRequest) {
     return redirectWithCookies(request, response, "/");
   }
 
-  const { role, isAdmin } = await getUserRole(request, response, user.id);
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role, is_admin")
+    .eq("id", userId)
+    .maybeSingle();
+  const role: UserRole = normalizeRole(profile?.role);
+  const isAdmin = profile?.is_admin === true;
 
   if (needsAdmin && role !== "preneur" && !isAdmin) {
     return redirectWithCookies(request, response, "/");
   }
 
-  if (needsWriter && !WRITER_ROLES.includes(role)) {
+  if (needsWriter && !BLOG_WRITER_ROLES.includes(role)) {
     return redirectWithCookies(request, response, "/");
   }
 
