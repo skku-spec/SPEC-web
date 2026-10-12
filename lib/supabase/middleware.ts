@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { getSupabasePublicEnv, hasSupabasePublicEnv } from "@/lib/supabase/env";
@@ -7,11 +8,12 @@ import type { Database } from "@/lib/supabase/types";
 type SessionResult = {
   response: NextResponse;
   userId: string | null;
+  supabase: SupabaseClient<Database> | null;
 };
 
 export async function updateSession(request: NextRequest): Promise<SessionResult> {
   if (!hasSupabasePublicEnv()) {
-    return { response: NextResponse.next({ request }), userId: null };
+    return { response: NextResponse.next({ request }), userId: null, supabase: null };
   }
 
   const { supabaseUrl, supabasePublishableKey } = getSupabasePublicEnv();
@@ -46,5 +48,5 @@ export async function updateSession(request: NextRequest): Promise<SessionResult
   const { data } = await supabase.auth.getClaims();
   const userId = typeof data?.claims?.sub === "string" ? data.claims.sub : null;
 
-  return { response, userId };
+  return { response, userId, supabase };
 }
