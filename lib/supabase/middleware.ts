@@ -1,18 +1,17 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import type { User } from "@supabase/supabase-js";
 
 import { getSupabasePublicEnv, hasSupabasePublicEnv } from "@/lib/supabase/env";
 import type { Database } from "@/lib/supabase/types";
 
 type SessionResult = {
   response: NextResponse;
-  user: User | null;
+  userId: string | null;
 };
 
 export async function updateSession(request: NextRequest): Promise<SessionResult> {
   if (!hasSupabasePublicEnv()) {
-    return { response: NextResponse.next({ request }), user: null };
+    return { response: NextResponse.next({ request }), userId: null };
   }
 
   const { supabaseUrl, supabasePublishableKey } = getSupabasePublicEnv();
@@ -41,9 +40,11 @@ export async function updateSession(request: NextRequest): Promise<SessionResult
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getClaims() verifies the JWT locally when asymmetric signing keys are
+  // enabled and only falls back to a network call otherwise, so it is never
+  // slower than the always-remote getUser(). It still refreshes the session.
+  const { data } = await supabase.auth.getClaims();
+  const userId = typeof data?.claims?.sub === "string" ? data.claims.sub : null;
 
-  return { response, user };
+  return { response, userId };
 }

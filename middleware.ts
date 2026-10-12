@@ -126,9 +126,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
-  const { response, user } = await updateSession(request);
+  const { response, userId } = await updateSession(request);
 
-  if (!user) {
+  if (!userId) {
     if (needsWriter || needsAuth) {
       const redirectTarget = pathname === "/dashboard" || pathname.startsWith("/dashboard/")
         ? `${pathname}${request.nextUrl.search}`
@@ -140,7 +140,7 @@ export async function middleware(request: NextRequest) {
     return redirectWithCookies(request, response, "/");
   }
 
-  const { role, isAdmin } = await getUserRole(request, response, user.id);
+  const { role, isAdmin } = await getUserRole(request, response, userId);
 
   if (needsAdmin && role !== "preneur" && !isAdmin) {
     return redirectWithCookies(request, response, "/");

@@ -36,12 +36,19 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const supabase = createClient();
 
-    async function fetchUser() {
-      const {
-        data: { user: currentUser },
-      } = await supabase.auth.getUser();
+    let active = true;
+    let loadedUserId: string | null | undefined;
 
+    async function loadProfile(currentUser: User | null, force = false) {
+      const nextUserId = currentUser?.id ?? null;
       setUser(currentUser);
+
+      // Token refreshes re-emit the same user; skip the profiles refetch.
+      if (!force && nextUserId === loadedUserId) {
+        setIsLoading(false);
+        return;
+      }
+      loadedUserId = nextUserId;
 
       if (!currentUser) {
         setProfile(null);
@@ -55,20 +62,34 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         .eq("id", currentUser.id)
         .maybeSingle();
 
+      if (!active || loadedUserId !== currentUser.id) return;
       setProfile(currentProfile ?? null);
       setIsLoading(false);
     }
 
-    fetchRef.current = fetchUser;
-    fetchUser();
+    // Session is read from local storage/cookies (no network round-trip);
+    // the server re-verifies on every protected request.
+    fetchRef.current = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      await loadProfile(session?.user ?? null, true);
+    };
 
+    // onAuthStateChange emits INITIAL_SESSION on subscribe, so no separate
+    // initial fetch is needed. Supabase calls are deferred out of the callback
+    // because awaiting them inside it can block the auth lock.
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(() => {
-      fetchUser();
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      const force = event === "USER_UPDATED";
+      setTimeout(() => {
+        if (active) void loadProfile(session?.user ?? null, force);
+      }, 0);
     });
 
     return () => {
+      active = false;
       subscription.unsubscribe();
     };
   }, []);
